@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo> 
+    <record id="group_patrimoine_admin" model="res.groups" noupdate="1">
+        <field name="name">Administrateur Patrimoine</field>
+        <field name="category_id" ref="base.module_category_inventory"/>
+    </record>
+
+    <record id="group_patrimoine_manager" model="res.groups" noupdate="1">
+        <field name="name">Gestionnaire Patrimoine</field>
+        <field name="category_id" ref="base.module_category_inventory"/>
+    </record>
+
+    <record id="group_patrimoine_agent" model="res.groups" noupdate="1">
+        <field name="name">Agent</field>
+        <field name="category_id" ref="base.module_category_inventory"/>
+    </record>
+</odoo>
+
+
+
+

@@ -1,0 +1,23 @@
+{
+    'name': 'gestion du patrimoine',
+    'version': '1.0',
+    'category': 'Gestion/Patrimoine',
+    'summary': 'Module de gestion des biens matériels (véhicules, informatique, mobilier)',
+    'author': 'Coulibaly Yadjiman',
+    'website': 'http://www.example.com',
+    'depends': ['base', 'hr', 'stock', 'account', 'fleet'],
+    'data': [
+        'security/ir.model.access.csv',
+        'views/menu.xml',
+        'views/asset_views.xml',
+        'views/asset_informatique_views.xml',
+        'views/asset_mobilier_views.xml',
+        'views/asset_vehicule_views.xml',
+        'views/entretien_views.xml',
+        'views/mouvement_views.xml',
+        'views/categorie_views.xml',
+    ],
+    'installable': True,
+    'application': True,
+    'license': 'LGPL-3',
+}

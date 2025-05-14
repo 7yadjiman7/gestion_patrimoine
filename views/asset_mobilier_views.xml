@@ -1,0 +1,43 @@
+<odoo>
+    <record id="view_patrimoine_asset_mobilier_tree" model="ir.ui.view">
+        <field name="name">patrimoine.asset.mobilier.tree</field>
+        <field name="model">patrimoine.asset.mobilier</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="type_mobilier"/>
+                <field name="etat_conservation"/>
+                <!-- <field name="dimension"/> -->
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_patrimoine_asset_mobilier_form" model="ir.ui.view">
+        <field name="name">patrimoine.asset.mobilier.form</field>
+        <field name="model">patrimoine.asset.mobilier</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="asset_id"/>
+                        <field name="type_mobilier"/>
+                        <field name="etat_conservation"/>
+                        <!-- <field name="dimension"/> -->
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_patrimoine_asset_mobilier" model="ir.actions.act_window">
+        <field name="name">Mobilier</field>
+        <field name="res_model">patrimoine.asset.mobilier</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_patrimoine_asset_mobilier"
+            name="Mobilier"
+            parent="menu_patrimoine_assets"
+            action="action_patrimoine_asset_mobilier"
+            sequence="20"/>
+
+</odoo>

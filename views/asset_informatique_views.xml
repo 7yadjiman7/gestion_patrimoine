@@ -1,0 +1,50 @@
+<odoo>
+    <record id="view_patrimoine_asset_informatique_tree" model="ir.ui.view">
+        <field name="name">patrimoine.asset.informatique.tree</field>
+        <field name="model">patrimoine.asset.informatique</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="type_materiel"/>
+                <field name="marque"/>
+                <field name="modele"/>
+                <field name="numero_serie"/>
+                <field name="date_garantie_fin"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_patrimoine_asset_informatique_form" model="ir.ui.view">
+        <field name="name">patrimoine.asset.informatique.form</field>
+        <field name="model">patrimoine.asset.informatique</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="asset_id"/>
+                        <field name="type_materiel"/>
+                        <field name="marque"/>
+                        <field name="modele"/>
+                        <field name="numero_serie"/>
+                        <field name="date_garantie_fin"/>
+                        <field name="fournisseur"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+        <!-- Action -->
+    <record id="action_patrimoine_asset_informatique" model="ir.actions.act_window">
+        <field name="name">Matériel Informatique</field>
+        <field name="res_model">patrimoine.asset.informatique</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- Menu -->
+    <menuitem id="menu_patrimoine_asset_informatique"
+            name="Informatique"
+            parent="menu_patrimoine_assets"
+            action="action_patrimoine_asset_informatique"
+            sequence="10"/>
+
+</odoo>

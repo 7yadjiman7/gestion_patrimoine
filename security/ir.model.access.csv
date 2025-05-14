@@ -1,0 +1,11 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_asset,access.asset,model_patrimoine_asset,base.group_user,1,1,1,1
+access_asset_vehicule,access.asset.vehicule,model_patrimoine_asset_vehicule,base.group_user,1,1,1,1
+access_asset_informatique,access.asset.informatique,model_patrimoine_asset_informatique,base.group_user,1,1,1,1
+access_asset_mobilier,access.asset.mobilier,model_patrimoine_asset_mobilier,base.group_user,1,1,1,1
+access_categorie,access.categorie,model_patrimoine_categorie,base.group_user,1,1,1,1
+access_mouvement,access.mouvement,model_patrimoine_mouvement,base.group_user,1,1,1,1
+access_entretien,access.entretien,model_patrimoine_entretien,base.group_user,1,1,1,1
+
+
+

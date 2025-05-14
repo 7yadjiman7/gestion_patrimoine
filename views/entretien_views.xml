@@ -1,0 +1,50 @@
+<odoo>
+    <record id="view_patrimoine_entretien_tree" model="ir.ui.view">
+        <field name="name">patrimoine.entretien.tree</field>
+        <field name="model">patrimoine.entretien</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="asset_id"/>
+                <field name="date_intervention"/>
+                <field name="type_entretien"/>
+                <field name="etat"/>
+                <field name="cout"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_patrimoine_entretien_form" model="ir.ui.view">
+        <field name="name">patrimoine.entretien.form</field>
+        <field name="model">patrimoine.entretien</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="asset_id"/>
+                        <field name="date_intervention"/>
+                        <field name="type_entretien"/>
+                        <field name="prochain_rappel"/>
+                        <field name="description"/>
+                        <field name="prestataire"/>
+                        <field name="cout"/>
+                        <field name="etat"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_patrimoine_entretien" model="ir.actions.act_window">
+        <field name="name">Entretiens</field>
+        <field name="res_model">patrimoine.entretien</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_patrimoine_entretien"
+            name="Entretiens"
+            parent="menu_patrimoine_entretiens"
+            action="action_patrimoine_entretien"
+            sequence="1"/>
+
+</odoo>
+

@@ -1,0 +1,50 @@
+<odoo>
+    <record id="view_patrimoine_mouvement_tree" model="ir.ui.view">
+        <field name="name">patrimoine.mouvement.tree</field>
+        <field name="model">patrimoine.mouvement</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="date"/>
+                <field name="type_mouvement"/>
+                <field name="asset_id"/>
+                <field name="from_department_id"/>
+                <field name="to_department_id"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_patrimoine_mouvement_form" model="ir.ui.view">
+        <field name="name">patrimoine.mouvement.form</field>
+        <field name="model">patrimoine.mouvement</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="date"/>
+                        <field name="type_mouvement"/>
+                        <field name="asset_id"/>
+                        <field name="from_department_id"/>
+                        <field name="to_department_id"/>
+                        <field name="motif"/>
+                        <field name="state"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_patrimoine_mouvement" model="ir.actions.act_window">
+        <field name="name">Mouvements</field>
+        <field name="res_model">patrimoine.mouvement</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_patrimoine_mouvement"
+            name="Mouvements"
+            parent="menu_patrimoine_mouvements"
+            action="action_patrimoine_mouvement"
+            sequence="1"/>
+
+</odoo>
+

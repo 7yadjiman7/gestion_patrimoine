@@ -1,0 +1,50 @@
+<odoo>
+    <record id="view_patrimoine_asset_vehicule_tree" model="ir.ui.view">
+        <field name="name">patrimoine.asset.vehicule.tree</field>
+        <field name="model">patrimoine.asset.vehicule</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="immatriculation"/>
+                <field name="marque"/>
+                <field name="modele"/>
+                <field name="kilometrage"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_patrimoine_asset_vehicule_form" model="ir.ui.view">
+        <field name="name">patrimoine.asset.vehicule.form</field>
+        <field name="model">patrimoine.asset.vehicule</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="asset_id"/>
+                        <field name="immatriculation"/>
+                        <field name="marque"/>
+                        <field name="modele"/>
+                        <field name="kilometrage"/>
+                        <field name="date_achat"/>
+                        <field name="date_premiere_circulation"/>
+                        <field name="date_assurance"/>
+                        <field name="date_controle_technique"/>
+                        <field name="kilometrage_precedent"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_patrimoine_asset_vehicule" model="ir.actions.act_window">
+        <field name="name">Véhicules</field>
+        <field name="res_model">patrimoine.asset.vehicule</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_patrimoine_asset_vehicule"
+            name="Véhicules"
+            parent="menu_patrimoine_assets"
+            action="action_patrimoine_asset_vehicule"
+            sequence="30"/>
+
+</odoo>

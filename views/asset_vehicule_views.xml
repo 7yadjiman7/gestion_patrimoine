@@ -4,8 +4,8 @@
         <field name="model">patrimoine.asset.vehicule</field>
         <field name="arch" type="xml">
             <tree>
-                <field name="immatriculation"/>
                 <field name="marque"/>
+                <field name="immatriculation"/>
                 <field name="modele"/>
                 <field name="kilometrage"/>
             </tree>
@@ -39,6 +39,7 @@
         <field name="name">Véhicules</field>
         <field name="res_model">patrimoine.asset.vehicule</field>
         <field name="view_mode">tree,form</field>
+        <!-- <field name="groups_id" eval="[(4, ref('gestion_patrimoine.group_patrimoine_admin,gestion_patrimoine.group_patrimoine_manager,gestion_patrimoine.group_patrimoine_agent'))]"/> -->
     </record>
 
     <menuitem id="menu_patrimoine_asset_vehicule"

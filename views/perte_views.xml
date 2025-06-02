@@ -1,0 +1,51 @@
+<odoo>
+    <record id="view_form_patrimoine_perte" model="ir.ui.view">
+        <field name="name">patrimoine.perte.form</field>
+        <field name="model">patrimoine.perte</field>
+        <field name="arch" type="xml">
+            <form string="Déclaration de Perte">
+                <sheet>
+                    <header>
+                        <button name="action_confirmer" type="object" string="Confirmer"
+                                class="btn-primary" data-hotkey="v"
+                                invisible="context.get('show_confirm_button') != True"/>
+                       <button string="Annuler" special="cancel" class="btn-secondary"/>
+                    </header>
+                    <group>
+                        <field name="asset_id"/>
+                        <field name="date"/>
+                        <field name="responsable"/>
+                        <field name="motif"/>
+                        <field name="state" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_tree_patrimoine_perte" model="ir.ui.view">
+        <field name="name">patrimoine.perte.tree</field>
+        <field name="model">patrimoine.perte</field>
+        <field name="arch" type="xml">
+            <tree string="Déclarations de perte">
+                <field name="asset_id"/>
+                <field name="date"/>
+                <field name="responsable"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_patrimoine_perte" model="ir.actions.act_window">
+        <field name="name">Déclarations de Perte</field>
+        <field name="res_model">patrimoine.perte</field>
+        <field name="view_mode">tree,form</field>
+        <!-- <field name="groups_id" eval="[(4, ref('gestion_patrimoine.group_patrimoine_admin,gestion_patrimoine.group_patrimoine_manager,gestion_patrimoine.group_patrimoine_agent'))]"/> -->
+    </record>
+
+    <menuitem id="menu_patrimoine_perte"
+              name="Déclarations de perte"
+              parent="menu_patrimoine_entretiens"
+              action="action_patrimoine_perte"
+              sequence="50"/>
+</odoo>

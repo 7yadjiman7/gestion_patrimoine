@@ -4,11 +4,11 @@
         <field name="model">patrimoine.mouvement</field>
         <field name="arch" type="xml">
             <tree>
-                <field name="date"/>
-                <field name="type_mouvement"/>
                 <field name="asset_id"/>
-                <field name="from_department_id"/>
-                <field name="to_department_id"/>
+                <field name="type_mouvement"/>
+                <field name="from_location_id"/>
+                <field name="to_location_id"/>
+                <field name="date"/>
                 <field name="state"/>
             </tree>
         </field>
@@ -19,15 +19,35 @@
         <field name="model">patrimoine.mouvement</field>
         <field name="arch" type="xml">
             <form>
+                <header>
+                    <button name="action_valider" type="object" string="Valider Mouvement"
+                            class="oe_highlight" data-hotkey="v"
+                            invisible="state != 'draft'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,valide"/>
+                </header>
                 <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" nolabel="1"/></h1> 
+                    </div>
                     <group>
-                        <field name="date"/>
-                        <field name="type_mouvement"/>
-                        <field name="asset_id"/>
-                        <field name="from_department_id"/>
-                        <field name="to_department_id"/>
-                        <field name="motif"/>
-                        <field name="state"/>
+                        <group>
+                            <field name="asset_id"/>
+                            <field name="type_mouvement"/>
+                            <field name="date"/>
+                            <field name="motif"/>
+                        </group>
+                        <group string="Source (État actuel du bien)">
+                            <field name="from_location_id"/>
+                        </group>
+                    </group>
+                    <group string="Destination">
+                        <group>
+                            <field name="to_department_id"/>
+                            <field name="to_location_id"/>
+                        </group>
+                        <group>
+                            <field name="to_employee_id"/>
+                        </group>
                     </group>
                 </sheet>
             </form>
@@ -47,4 +67,5 @@
             sequence="1"/>
 
 </odoo>
+
 

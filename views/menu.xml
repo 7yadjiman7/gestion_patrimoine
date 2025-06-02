@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <menuitem id="menu_patrimoine_root" name="Gestion du Patrimoine" sequence="1"/>
+    <menuitem id="menu_patrimoine_root" 
+            name="Gestion du Patrimoine" 
+            groups="gestion_patrimoine.group_patrimoine_admin,gestion_patrimoine.group_patrimoine_director,gestion_patrimoine.group_patrimoine_agent" 
+            sequence="1"/>
 
-    <menuitem id="menu_patrimoine_assets" name="Biens" parent="menu_patrimoine_root" sequence="10" action="action_patrimoine_asset"/>
+    <menuitem id="menu_patrimoine_assets" name="Biens" parent="menu_patrimoine_root" sequence="10"/>
     <menuitem id="menu_patrimoine_mouvements" name="Mouvements" parent="menu_patrimoine_root" sequence="20"/>
     <menuitem id="menu_patrimoine_entretiens" name="Entretiens" parent="menu_patrimoine_root" sequence="30"/>
     <menuitem id="menu_patrimoine_config" name="Configuration" parent="menu_patrimoine_root" sequence="100"/>
 </odoo>
-
 

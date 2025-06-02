@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Rappel Entretien -->
+    <record id="ir_cron_rappel_entretien" model="ir.cron">
+        <field name="name">Rappel automatique entretien</field>
+        <field name="model_id" ref="model_patrimoine_entretien"/>
+        <field name="state">code</field>
+        <field name="code">model.check_upcoming_entretiens()</field>
+        <field name="interval_type">days</field>
+        <field name="interval_number">1</field>
+        <field name="numbercall">-1</field>
+        <field name="active">True</field>
+    </record>
+
+    <!-- Fin garantie informatique -->
+    <record id="ir_cron_fin_garantie_informatique" model="ir.cron">
+        <field name="name">Alerte fin de garantie - Informatique</field>
+        <field name="model_id" ref="model_patrimoine_asset_informatique"/>
+        <field name="state">code</field>
+        <field name="code">model.check_warranty_expiry()</field>
+        <field name="interval_type">days</field>
+        <field name="interval_number">1</field>
+        <field name="numbercall">-1</field>
+        <field name="active">True</field>
+    </record>
+
+    <!-- Fin assurance ou contrôle technique véhicule -->
+    <record id="ir_cron_alerte_vehicule" model="ir.cron">
+        <field name="name">Alerte contrôle technique ou assurance - Véhicules</field>
+        <field name="model_id" ref="model_patrimoine_asset_vehicule"/>
+        <field name="state">code</field>
+        <field name="code">model.check_vehicule_alerts()</field>
+        <field name="interval_type">days</field>
+        <field name="interval_number">1</field>
+        <field name="numbercall">-1</field>
+        <field name="active">True</field>
+    </record>
+
+</odoo>
+

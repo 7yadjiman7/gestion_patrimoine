@@ -1,5 +1,5 @@
-from odoo import models, fields
-
+from odoo import models, fields, api
+from datetime import timedelta, date
 class PatrimoineEntretien(models.Model):
     _name = 'patrimoine.entretien'
     _description = 'Entretien de Bien'
@@ -18,3 +18,22 @@ class PatrimoineEntretien(models.Model):
         ('planifie', 'Planifié'),
         ('effectue', 'Effectué'),
     ], string='État')
+
+
+    @api.model
+    def check_upcoming_entretiens(self):
+        today = date.today()
+        seuil = today + timedelta(days=7)
+
+        entretiens = self.search([
+            ('prochain_rappel', '!=', False),
+            ('prochain_rappel', '<=', seuil),
+            ('etat', '=', 'planifie')
+        ])
+
+        for entretien in entretiens:
+            # Exemple simple d'alerte : log ou notification
+            entretien.message_post(
+                body=f"📅 Rappel : entretien prévu le {entretien.prochain_rappel} pour {entretien.asset_id.name}.",
+                subject="Rappel d'entretien",
+            )

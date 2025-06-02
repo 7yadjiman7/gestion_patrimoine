@@ -1,0 +1,45 @@
+<odoo>
+    <record id="view_tree_fiche_vie" model="ir.ui.view">
+        <field name="name">patrimoine.fiche.vie.tree</field>
+        <field name="model">patrimoine.fiche.vie</field>
+        <field name="arch" type="xml">
+            <tree string="Fiche de vie">
+                <field name="asset_id"/>
+                <field name="date"/>
+                <field name="action"/>
+                <field name="utilisateur_id"/>
+                <field name="description"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_form_fiche_vie" model="ir.ui.view">
+        <field name="name">patrimoine.fiche.vie.form</field>
+        <field name="model">patrimoine.fiche.vie</field>
+        <field name="arch" type="xml">
+            <form string="Fiche de vie">
+                <sheet>
+                    <group>
+                        <field name="asset_id"/>
+                        <field name="date"/>
+                        <field name="action"/>
+                        <field name="utilisateur_id"/>
+                        <field name="description"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_fiche_vie" model="ir.actions.act_window">
+        <field name="name">Fiche de vie</field>
+        <field name="res_model">patrimoine.fiche.vie</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_fiche_vie" 
+            name="Fiche de vie"
+            parent="menu_patrimoine_config"
+            action="action_fiche_vie"
+            sequence="40"/>
+</odoo>

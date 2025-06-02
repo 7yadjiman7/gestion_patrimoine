@@ -1,0 +1,91 @@
+<odoo>
+    <template id="report_asset_fiche_vie_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h2 class="text-center">Fiche de Vie du Matériel</h2>
+                        <h3 class="text-center" t-field="o.name"/>
+                        <h4 class="text-center" t-field="o.code"/>
+
+                        <br/>
+                        <div class="row">
+                            <div class="col-6">
+                                <strong>Type:</strong> <span t-field="o.type"/><br/>
+                                <strong>Catégorie:</strong> <span t-field="o.categorie_id.name"/><br/>
+                                <strong>Date d'Acquisition:</strong> <span t-field="o.date_acquisition"/><br/>
+                                <strong>Valeur d'Acquisition:</strong> <span t-field="o.valeur_acquisition"/><br/>
+                                <strong>Fournisseur:</strong> <span t-field="o.fournisseur.name"/><br/>
+                            </div>
+                            <div class="col-6 text-right">
+                                <img t-if="o.image" t-att-src="image_data_uri(o.image)" style="max-width:150px;max-height:150px;"/><br/>
+                            </div>
+                        </div>
+                        <br/>
+                        
+                        <h4>Informations Actuelles</h4>
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>État</th>
+                                    <th>Département</th>
+                                    <th>Employé</th>
+                                    <th>Localisation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span t-field="o.etat"/></td>
+                                    <td><span t-field="o.department_id.name"/></td>
+                                    <td><span t-field="o.employee_id.name"/></td>
+                                    <td><span t-field="o.location_id.name"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <br/>
+
+                        <h4>Historique des Actions</h4>
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Action</th>
+                                    <th>Description</th>
+                                    <th>Utilisateur</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="o.mouvement_ids.sorted(key=lambda m: m.date)" t-as="mouv">
+                                    <tr>
+                                        <td><span t-field="mouv.date"/></td>
+                                        <td><span t-field="mouv.type_mouvement"/></td>
+                                        <td><span t-field="mouv.motif"/></td>
+                                        <td><span t-field="mouv.create_uid.name"/></td> </tr>
+                                </t>
+                                <t t-foreach="o.fiche_vie_ids.sorted(key=lambda f: f.date)" t-as="fiche_entry">
+                                    <tr>
+                                        <td><span t-field="fiche_entry.date"/></td>
+                                        <td><span t-field="fiche_entry.action"/></td>
+                                        <td><span t-field="fiche_entry.description"/></td>
+                                        <td><span t-field="fiche_entry.utilisateur_id.name"/></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+
+                        <h4>Documents Associés</h4>
+                        <p t-if="not o.facture_file and not o.bon_livraison_file">Aucun document attaché.</p>
+                        <p t-if="o.facture_file">
+                            Facture: <span t-field="o.facture_filename"/> (Non inclus directement dans le PDF, à télécharger séparément)
+                        </p>
+                        <p t-if="o.bon_livraison_file">
+                            Bon de Livraison: <span t-field="o.bon_livraison_filename"/> (Non inclus directement dans le PDF, à télécharger séparément)
+                        </p>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

@@ -4,9 +4,9 @@
         <field name="model">patrimoine.asset.mobilier</field>
         <field name="arch" type="xml">
             <tree>
-                <field name="type_mobilier"/>
+                <field name="asset_id"/>
+                <field name="categorie_mobilier"/>
                 <field name="etat_conservation"/>
-                <!-- <field name="dimension"/> -->
             </tree>
         </field>
     </record>
@@ -19,9 +19,8 @@
                 <sheet>
                     <group>
                         <field name="asset_id"/>
-                        <field name="type_mobilier"/>
+                        <field name="categorie_mobilier"/>
                         <field name="etat_conservation"/>
-                        <!-- <field name="dimension"/> -->
                     </group>
                 </sheet>
             </form>
@@ -32,6 +31,7 @@
         <field name="name">Mobilier</field>
         <field name="res_model">patrimoine.asset.mobilier</field>
         <field name="view_mode">tree,form</field>
+        <!-- <field name="groups_id" eval="[(4, ref('gestion_patrimoine.group_patrimoine_admin,gestion_patrimoine.group_patrimoine_manager,gestion_patrimoine.group_patrimoine_agent'))]"/> -->
     </record>
 
     <menuitem id="menu_patrimoine_asset_mobilier"

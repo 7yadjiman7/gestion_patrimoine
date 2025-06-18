@@ -16,7 +16,8 @@
                     </div>
                     <group>
                         <group>
-                            <field name="type"/>
+                            <field name="type" widget="selection"/>
+                            <field name="subcategory_id"/>
                             <field name="date_acquisition"/>
                             <field name="valeur_acquisition"/>
                             <field name="etat"/>
@@ -57,11 +58,6 @@
                             </field>
                         </page>
                     </notebook>
-
-                    <!-- <div class="oe_chatter">
-                        <field name="message_ids" widget="mail_thread"/>
-                        <field name="activity_ids" widget="mail_activity"/>
-                    </div> -->
                 </sheet>
             </form>
         </field>
@@ -75,8 +71,8 @@
                 <field name="name"/>
                 <field name="code"/>
                 <field name="type"/>
+                <field name="subcategory_id"/>
                 <field name="etat"/>
-                <field name="department_id"/>
             </tree>
         </field>
     </record>
@@ -88,11 +84,10 @@
     </record>
 
     <menuitem id="menu_patrimoine_assets" name="Biens" parent="menu_patrimoine_root" action="action_patrimoine_asset" sequence="10"/>
+
+    <menuitem id="menu_patrimoine_configuration" 
+        name="Configuration"
+        parent="menu_patrimoine_root"
+        sequence="99"
+        groups="base.group_user"/>
 </odoo>
-
-
-
-
-
-
-

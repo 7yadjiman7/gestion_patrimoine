@@ -1,17 +1,102 @@
 from odoo import models, fields, api
 
+# tables pour les catégories
+class AssetCategory(models.Model):
+    _name = 'asset.category'
+    _description = 'Catégorie principale de matériel'
+    
+    name = fields.Char('Nom', required=True)
+    code = fields.Char('Code', required=True)
+    image = fields.Image('Icône')
+    active = fields.Boolean('Actif', default=True)
+    type = fields.Selection([
+        ('informatique', 'Informatique'),
+        ('mobilier', 'Mobilier'), 
+        ('vehicule', 'Véhicule'),
+        ('roulant', 'Roulant')
+    ], string='Type', required=True)
+    subcategory_ids = fields.One2many('asset.subcategory', 'category_id', string='Sous-catégories')
+    # AJOUT : Champ calculé pour le nombre total de matériels dans toutes les sous-catégories de cette catégorie
+    total_item_count = fields.Integer(
+        string="Nb total Matériels",
+        compute='_compute_total_item_count',
+        store=True # Stocke la valeur pour la recherche et les rapports
+    )
+
+    def _compute_total_item_count(self):
+        for category in self:
+            count = 0
+            for subcategory in category.subcategory_ids:
+                count += len(subcategory.item_ids)
+            category.total_item_count = count
+
+    _sql_constraints = [
+        ('code_unique', 'unique(code)', 'Le code de la catégorie doit être unique !'),
+    ]
+
+# tables pour les sous-catégories
+class AssetSubCategory(models.Model):
+    _name = 'asset.subcategory'
+    _description = 'Sous-catégorie spécifique de matériel'
+    
+    name = fields.Char('Nom', required=True)
+    code = fields.Char('Code', required=True)
+    category_id = fields.Many2one('asset.category', string='Catégorie', required=True)
+    active = fields.Boolean('Actif', default=True)
+    custom_field_ids = fields.One2many('asset.custom.field', 'subcategory_id', string='Champs personnalisés')
+    item_ids = fields.One2many('patrimoine.asset', 'subcategory_id', string='Matériels')
+    # AJOUT : Champ calculé pour le nombre de matériels directement liés à cette sous-catégorie
+    item_count = fields.Integer(
+        string="Nb Matériels",
+        compute='_compute_item_count',
+        store=True
+    )
+
+    @api.depends('item_ids')
+    def _compute_item_count(self):
+        for subcategory in self:
+            subcategory.item_count = len(subcategory.item_ids)
+
+    _sql_constraints = [
+        ('code_unique', 'unique(code)', 'Le code de la sous-catégorie doit être unique !'),
+        ('name_category_unique', 'unique(name, category_id)', 'Le nom de la sous-catégorie doit être unique par catégorie principale !'),
+    ]
+
+
+class AssetCustomField(models.Model):
+    _name = 'asset.custom.field'
+    _description = 'Champ personnalisé pour sous-catégorie'
+    
+    name = fields.Char('Libellé', required=True)
+    technical_name = fields.Char('Nom technique', required=True, help="Nom utilisé pour l'API (sans espaces, en minuscule)")
+    field_type = fields.Selection([
+        ('char', 'Texte'),
+        ('integer', 'Nombre entier'),
+        ('float', 'Nombre décimal'),
+        ('boolean', 'Oui/Non'),
+        ('date', 'Date'),
+        ('selection', 'Liste de choix')
+    ], string='Type', required=True)
+    selection_values = fields.Text('Valeurs pour liste',
+        help="Entrez une valeur par ligne pour les champs de type liste")
+    required = fields.Boolean('Requis', default=True)
+    subcategory_id = fields.Many2one('asset.subcategory', string='Sous-catégorie', required=True)
+    sequence = fields.Integer('Ordre', default=10)
+    _sql_constraints = [
+        ('technical_name_unique_per_subcategory', 'unique(technical_name, subcategory_id)', 'Le nom technique du champ doit être unique par sous-catégorie !'),
+    ]
+
 class PatrimoineAsset(models.Model):
     _name = 'patrimoine.asset'
     _description = 'Bien patrimonial'
-    # _inherit = ['mail.thread', 'mail.activity.mixin']
+    _inherit = ['mail.thread', 'mail.activity.mixin']
 
     name = fields.Char(string="Nom du bien", required=True, tracking=True)
+    subcategory_id = fields.Many2one('asset.subcategory', string='Sous-catégorie', required=True)
+    category_id = fields.Many2one(related='subcategory_id.category_id', string='Catégorie', store=True)
+    custom_values = fields.Json('Valeurs personnalisées')
     image = fields.Image("Image du bien", max_width=1024, max_height=1024)
-    type = fields.Selection([
-        ('vehicule', 'Véhicule'),
-        ('informatique', 'Informatique'),
-        ('mobilier', 'Mobilier'),
-    ], string="Type de matériel", required=True)
+    type = fields.Selection(related='subcategory_id.category_id.type', string="Type de matériel", store=True)
     date_acquisition = fields.Date(string="Date d'acquisition", required=False, default=fields.Date.today())
     valeur_acquisition = fields.Float(string="Valeur")
     etat = fields.Selection([
@@ -44,7 +129,7 @@ class PatrimoineAsset(models.Model):
         readonly=True # Cet historique est géré par les événements, pas directement modifiable
     )
 
-   # Champ pour le code initial généré à la création
+    # Champ pour le code initial généré à la création
     initial_code = fields.Char(
         string='Code Initial',
         required=True,
@@ -98,32 +183,4 @@ class PatrimoineAsset(models.Model):
                 'utilisateur_id': self.env.uid, # L'utilisateur courant
             })
         return assets
-
-
-# Model pour la déclaration de perte
-
-class PatrimoineDeclarationPerte(models.Model):
-    _name = 'patrimoine.perte'
-    _description = 'Déclaration de perte'
-
-    asset_id = fields.Many2one('patrimoine.asset', required=True)
-    date = fields.Date(required=True)
-    motif = fields.Text()
-    responsable = fields.Many2one('res.users')
-    state = fields.Selection([
-        ('brouillon', 'Brouillon'),
-        ('confirme', 'Confirmé'),
-    ], default='brouillon')
-
-    show_confirm_button = fields.Boolean(compute="_compute_show_confirm_button", store=False)
-
-    @api.depends('state')
-    def _compute_show_confirm_button(self):
-        for rec in self:
-            rec.show_confirm_button = rec.state == 'brouillon'
-
-    def action_confirmer(self):
-        for rec in self:
-            rec.state = 'confirme'
-
 

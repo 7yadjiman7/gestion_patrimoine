@@ -1,47 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <odoo>
+    <data>
 
-    <!-- Agent : voit uniquement ses biens affectés -->
-    <record id="rule_asset_agent_read" model="ir.rule">
-        <field name="name">Agent - Lire ses biens</field>
-        <field name="model_id" ref="model_patrimoine_asset"/>
-        <field name="groups" eval="[(4, ref('gestion_patrimoine.group_patrimoine_agent'))]"/>
-        <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
-        <field name="perm_read" eval="1"/>
-    </record>
+        <!-- Admin : accès total -->
+        <record id="rule_asset_admin_all"
+            model="ir.rule">
+            <field name="name">Admin - Accès complet</field>
+            <field name="model_id"
+                ref="model_patrimoine_asset"/>
+            <field name="groups"
+                eval="[(4, ref('gestion_patrimoine.group_patrimoine_admin'))]"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="perm_read"
+                eval="1"/>
+            <field name="perm_write"
+                eval="1"/>
+            <field name="perm_create"
+                eval="1"/>
+            <field name="perm_unlink"
+                eval="1"/>
+        </record>
 
-    <!-- Directeur : tous les biens de son département -->
-    <record id="rule_asset_director_full" model="ir.rule">
-        <field name="name">Directeur - Biens de son département</field>
-        <field name="model_id" ref="model_patrimoine_asset"/>
-        <field name="groups" eval="[(4, ref('gestion_patrimoine.group_patrimoine_director'))]"/>
-        <field name="domain_force">[('department_id.manager_id.user_id', '=', user.id)]</field>
-        <field name="perm_read" eval="1"/>
-        <field name="perm_write" eval="1"/>
-        <field name="perm_create" eval="1"/>
-    </record>
+        <!-- Directeur : peut voir les catégories/sous-catégories de son département -->
+        <record id="rule_category_director_read"
+            model="ir.rule">
+            <field name="name">Directeur - Catégories département</field>
+            <field name="model_id"
+                ref="model_asset_category"/>
+            <field name="groups"
+                eval="[(4, ref('gestion_patrimoine.group_patrimoine_director'))]"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="perm_read"
+                eval="1"/>
+        </record>
 
-    <!-- Admin : accès total -->
-    <record id="rule_asset_admin_all" model="ir.rule">
-        <field name="name">Admin - Accès complet</field>
-        <field name="model_id" ref="model_patrimoine_asset"/>
-        <field name="groups" eval="[(4, ref('gestion_patrimoine.group_patrimoine_admin'))]"/>
-        <field name="domain_force">[(1, '=', 1)]</field>
-        <field name="perm_read" eval="1"/>
-        <field name="perm_write" eval="1"/>
-        <field name="perm_create" eval="1"/>
-        <field name="perm_unlink" eval="1"/>
-    </record>
+        <record id="rule_subcategory_director_read"
+            model="ir.rule">
+            <field name="name">Directeur - Sous-catégories département</field>
+            <field name="model_id"
+                ref="model_asset_subcategory"/>
+            <field name="groups"
+                eval="[(4, ref('gestion_patrimoine.group_patrimoine_director'))]"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="perm_read"
+                eval="1"/>
+        </record>
 
-    <!-- Agents peuvent créer une déclaration de perte pour un bien qui leur est affecté -->
-    <record id="rule_perte_agent_create" model="ir.rule">
-        <field name="name">Agent - Déclarer perte</field>
-        <field name="model_id" ref="model_patrimoine_perte"/>
-        <field name="groups" eval="[(4, ref('gestion_patrimoine.group_patrimoine_agent'))]"/>
-        <field name="domain_force">[('asset_id.employee_id.user_id', '=', user.id)]</field>
-        <field name="perm_read" eval="1"/>
-        <field name="perm_create" eval="1"/>
-    </record>
+        <record id="rule_subcategory_agent_read"
+            model="ir.rule">
+            <field name="name">Agent - Lire sous-catégories</field>
+            <field name="model_id"
+                ref="model_asset_subcategory"/>
+            <field name="groups"
+                eval="[(4, ref('gestion_patrimoine.group_patrimoine_agent'))]"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="perm_read"
+                eval="1"/>
+        </record>
 
+        <!-- Directeur : tous les biens de son département -->
+        <record id="rule_asset_director_full"
+            model="ir.rule">
+            <field name="name">Directeur - Biens de son département</field>
+            <field name="model_id"
+                ref="model_patrimoine_asset"/>
+            <field name="groups"
+                eval="[(4, ref('gestion_patrimoine.group_patrimoine_director'))]"/>
+            <field name="domain_force">[('department_id.manager_id.user_id', '=', user.id)]</field>
+            <field name="perm_read"
+                eval="1"/>
+            <field name="perm_write"
+                eval="1"/>
+            <field name="perm_create"
+                eval="1"/>
+        </record>
 
+        <!-- Directeur peut voir et faire des  demandes dans son département -->
+        <record id="rule_demande_materiel_director"
+            model="ir.rule">
+            <field name="name">Demande Matériel: Directeur Accès</field>
+            <field name="model_id"
+                ref="model_patrimoine_demande_materiel"/>
+            <field name="groups"
+                eval="[(4, ref('gestion_patrimoine.group_patrimoine_director'))]"/>
+            <field name="perm_read"
+                eval="1"/>
+            <field name="perm_write"
+                eval="1"/>
+            <field name="perm_create"
+                eval="1"/>
+            <field name="perm_unlink"
+                eval="0"/>
+            <field name="domain_force">
+                    ['|',
+                        ('demandeur_id', '=', user.id), # Mes propres demandes
+                        ('demandeur_id.department_id.manager_id.user_id', '=', user.id)
+                    ]
+            </field>
+        </record>
 
+        <!-- Agents peuvent créer une déclaration de perte pour un bien qui leur est affecté -->
+        <record id="rule_perte_agent_create"
+            model="ir.rule">
+            <field name="name">Agent - Déclarer perte</field>
+            <field name="model_id"
+                ref="model_patrimoine_perte"/>
+            <field name="groups"
+                eval="[(4, ref('gestion_patrimoine.group_patrimoine_agent'))]"/>
+            <field name="domain_force">[('asset_id.employee_id.user_id', '=', user.id)]</field>
+            <field name="perm_read"
+                eval="1"/>
+            <field name="perm_create"
+                eval="1"/>
+        </record>
+
+        <!-- Agent : voit uniquement ses biens affectés -->
+        <record id="rule_asset_agent_read"
+            model="ir.rule">
+            <field name="name">Agent - Lire ses biens</field>
+            <field name="model_id"
+                ref="model_patrimoine_asset"/>
+            <field name="groups"
+                eval="[(4, ref('gestion_patrimoine.group_patrimoine_agent'))]"/>
+            <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+            <field name="perm_read"
+                eval="1"/>
+        </record>
+
+        <!-- Agent : peut voir les catégories/sous-catégories -->
+        <record id="rule_category_agent_read"
+            model="ir.rule">
+            <field name="name">Agent - Lire catégories</field>
+            <field name="model_id"
+                ref="model_asset_category"/>
+            <field name="groups"
+                eval="[(4, ref('gestion_patrimoine.group_patrimoine_agent'))]"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="perm_read"
+                eval="1"/>
+        </record>
+            
+    </data>
+  
 </odoo>

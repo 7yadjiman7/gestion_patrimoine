@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_asset_subcategory_form" model="ir.ui.view">
+            <field name="name">asset.subcategory.form</field>
+            <field name="model">asset.subcategory</field>
+            <field name="arch" type="xml">
+                <form string="Sous-catégorie Détaillée">
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name"/>
+                            <h1><field name="name" placeholder="Nom de la sous-catégorie (ex: Ordinateurs)"/></h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="code"/>
+                                <field name="category_id" options="{'no_create_edit': False, 'no_open': False}"
+                                context="{'form_view_ref': 'gestion_patrimoine.view_asset_category_form'}"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Champs Personnalisés">
+                                <field name="custom_field_ids">
+                                    <tree editable="bottom">
+                                        <field name="name"/>
+                                        <field name="technical_name"/>
+                                        <field name="field_type"/>
+                                        <field name="required"/>
+                                        <field name="sequence" widget="handle"/>
+                                        <field name="selection_values" attrs="{'invisible': [('field_type', '!=', 'selection')]}"/>
+                                    </tree>
+                                </field>
+                            </page>
+                            <page string="Items associés">
+                                <field name="item_ids" readonly="1">
+                                    <tree>
+                                        <field name="name"/>
+                                        <field name="code"/>
+                                        <field name="etat"/>
+                                        <field name="employee_id"/>
+                                        <field name="location_id"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_asset_subcategory_tree" model="ir.ui.view">
+            <field name="name">asset.subcategory.tree</field>
+            <field name="model">asset.subcategory</field>
+            <field name="arch" type="xml">
+                <tree string="Sous-catégories Détaillées">
+                    <field name="name"/>
+                    <field name="code"/>
+                    <field name="category_id"/>
+                    <field name="item_count"/>
+                    <field name="custom_field_ids"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_asset_subcategory" model="ir.actions.act_window">
+            <field name="name">Sous-catégories Détaillées</field>
+            <field name="res_model">asset.subcategory</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <menuitem id="menu_asset_subcategory"
+            name="Sous-catégories Détaillées"
+            parent="gestion_patrimoine.menu_patrimoine_configuration" action="action_asset_subcategory"
+            sequence="20"/>
+    </data>
+</odoo>

@@ -5,6 +5,7 @@ class PatrimoineEntretien(models.Model):
     _description = 'Entretien de Bien'
 
     asset_id = fields.Many2one('patrimoine.asset', string='Bien concerné')
+    demande_id = fields.Many2one('patrimoine.demande.materiel', string='Demande associée')
     date_intervention = fields.Date(string="Date d'intervention", required=True)
     type_entretien = fields.Selection([
         ('preventif', 'Préventif'),

@@ -1,87 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <template id="report_asset_fiche_vie_template">
+    <template id="report_fiche_vie_template">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="o">
                 <t t-call="web.external_layout">
                     <div class="page">
-                        <h2 class="text-center">Fiche de Vie du Matériel</h2>
-                        <h3 class="text-center" t-field="o.name"/>
-                        <h4 class="text-center" t-field="o.code"/>
+                        <style>
+                            /* Styles CSS pour le PDF */
+                            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; }
+                            h1 { font-size: 24px; text-align: center; margin-bottom: 20px; color: #333; }
+                            h2 { font-size: 18px; margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; color: #555; }
+                            .header-info, .asset-info { margin-bottom: 15px; }
+                            .header-info p, .asset-info p { margin: 3px 0; }
+                            .table-header { background-color: #f2f2f2; font-weight: bold; padding: 8px; border: 1px solid #ddd; text-align: left; }
+                            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                            th { background-color: #f2f2f2; }
+                            .text-center { text-align: center; }
+                            .image-container { text-align: center; margin-bottom: 20px; }
+                            .asset-image { max-width: 200px; max-height: 200px; border: 1px solid #ddd; padding: 5px; }
+                        </style>
 
-                        <br/>
-                        <div class="row">
-                            <div class="col-6">
-                                <strong>Type:</strong> <span t-field="o.type"/><br/>
-                                <strong>Catégorie:</strong> <span t-field="o.categorie_id.name"/><br/>
-                                <strong>Date d'Acquisition:</strong> <span t-field="o.date_acquisition"/><br/>
-                                <strong>Valeur d'Acquisition:</strong> <span t-field="o.valeur_acquisition"/><br/>
-                                <strong>Fournisseur:</strong> <span t-field="o.fournisseur.name"/><br/>
-                            </div>
-                            <div class="col-6 text-right">
-                                <img t-if="o.image" t-att-src="image_data_uri(o.image)" style="max-width:150px;max-height:150px;"/><br/>
-                            </div>
+                        <h1>Fiche de Vie du Matériel: <span t-field="o.name"/></h1>
+
+                        <div class="asset-info">
+                            <p><strong>Code:</strong> <span t-field="o.code"/><br/></p>
+                            <p><strong>Type:</strong> <span t-field="o.type"/><br/></p>
+                            <p>
+                                <strong>Catégorie Générale:</strong>
+                                <span t-field="o.category_general_name"/>
+                                <br/>
+
+                            </p>
+                            <p>
+                                <strong>Sous-Catégorie Détaillée:</strong>
+                                <span t-field="o.category_detailed_name"/>
+                                <br/>
+
+                            </p>
+                            <p><strong>Date d'acquisition:</strong> <span t-field="o.date_acquisition"/><br/></p>
+                            <p><strong>Valeur d'acquisition:</strong> <span t-field="o.valeur_acquisition"/> € <br/></p>
+                            <p><strong>État actuel:</strong> <span t-field="o.etat"/><br/></p>
+                            <p><strong>Localisation:</strong> <span t-field="o.location_id.name"/><br/></p>
+                            <p><strong>Département:</strong> <span t-field="o.department_id.name"/><br/></p>
+                            <p><strong>Employé affecté:</strong> <span t-field="o.employee_id.name"/><br/></p>
+                            <p><strong>Fournisseur:</strong> <span t-field="o.fournisseur.name"/><br/></p>
                         </div>
-                        <br/>
-                        
-                        <h4>Informations Actuelles</h4>
-                        <table class="table table-sm table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>État</th>
-                                    <th>Département</th>
-                                    <th>Employé</th>
-                                    <th>Localisation</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><span t-field="o.etat"/></td>
-                                    <td><span t-field="o.department_id.name"/></td>
-                                    <td><span t-field="o.employee_id.name"/></td>
-                                    <td><span t-field="o.location_id.name"/></td>
-                                </tr>
-                            </tbody>
-                        </table>
 
-                        <br/>
+                        <div class="image-container" t-if="o.image">
+                            <img t-att-src="image_data_url(o.image)" class="asset-image" alt="Image du bien"/>
+                        </div>
 
-                        <h4>Historique des Actions</h4>
-                        <table class="table table-sm table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Action</th>
-                                    <th>Description</th>
-                                    <th>Utilisateur</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <t t-foreach="o.mouvement_ids.sorted(key=lambda m: m.date)" t-as="mouv">
+                        <h2>Historique des Actions et Mouvements</h2>
+                        <t t-if="o.fiche_vie_ids">
+                            <table>
+                                <thead>
                                     <tr>
-                                        <td><span t-field="mouv.date"/></td>
-                                        <td><span t-field="mouv.type_mouvement"/></td>
-                                        <td><span t-field="mouv.motif"/></td>
-                                        <td><span t-field="mouv.create_uid.name"/></td> </tr>
-                                </t>
-                                <t t-foreach="o.fiche_vie_ids.sorted(key=lambda f: f.date)" t-as="fiche_entry">
-                                    <tr>
-                                        <td><span t-field="fiche_entry.date"/></td>
-                                        <td><span t-field="fiche_entry.action"/></td>
-                                        <td><span t-field="fiche_entry.description"/></td>
-                                        <td><span t-field="fiche_entry.utilisateur_id.name"/></td>
+                                        <th>Date de l'action</th>
+                                        <th>Type d'action</th>
+                                        <th>Description</th>
+                                        <th>Utilisateur</th>
+                                        <th>Mouvement lié</th>
                                     </tr>
-                                </t>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="o.fiche_vie_ids.sorted(key=lambda f: f.date, reverse=False)" t-as="line">
+                                        <tr>
+                                            <td><span t-field="line.date"/></td>
+                                            <td><span t-field="line.action"/></td>
+                                            <td><span t-field="line.description"/></td>
+                                            <td><span t-field="line.utilisateur_id.name"/></td>
+                                            <td><span t-field="line.mouvement_id.name"/></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </t>
+                        <t t-else="">
+                            <p class="text-center">Aucun historique d'actions disponible pour ce matériel.</p>
+                        </t>
 
-                        <h4>Documents Associés</h4>
-                        <p t-if="not o.facture_file and not o.bon_livraison_file">Aucun document attaché.</p>
-                        <p t-if="o.facture_file">
-                            Facture: <span t-field="o.facture_filename"/> (Non inclus directement dans le PDF, à télécharger séparément)
-                        </p>
-                        <p t-if="o.bon_livraison_file">
-                            Bon de Livraison: <span t-field="o.bon_livraison_filename"/> (Non inclus directement dans le PDF, à télécharger séparément)
-                        </p>
+                        <t t-if="o.facture_file or o.bon_livraison_file">
+                            <h2>Documents Attachés</h2>
+                            <p t-if="o.facture_filename">Facture: <span t-field="o.facture_filename"/></p>
+                            <p t-if="o.bon_livraison_filename">Bon de Livraison: <span t-field="o.bon_livraison_filename"/></p>
+                        </t>
 
                     </div>
                 </t>

@@ -1,0 +1,50 @@
+{
+  "name": "patrimoine-mtnd",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext js,jsx,ts,tsx --fix",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "@radix-ui/react-hover-card": "^1.1.14",
+    "@radix-ui/react-label": "^2.1.7",
+    "@radix-ui/react-popover": "^1.1.14",
+    "@radix-ui/react-select": "^2.2.5",
+    "@radix-ui/react-separator": "^1.1.7",
+    "@radix-ui/react-switch": "^1.2.5",
+    "@radix-ui/react-tabs": "^1.1.12",
+    "@tanstack/react-query": "^5.13.1",
+    "@types/react-day-picker": "^5.2.1",
+    "axios": "^1.6.7",
+    "date-fns": "^2.30.0",
+    "lucide-react": "^0.513.0",
+    "next-themes": "^0.4.6",
+    "react": "^18.2.0",
+    "react-day-picker": "^9.7.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.22.1",
+    "recharts": "^2.15.3",
+    "sonner": "^2.0.5",
+    "tailwind-merge": "^3.3.0",
+    "zustand": "^4.4.6"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.56",
+    "@types/react-dom": "^18.2.19",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.17",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "postcss": "^8.4.35",
+    "prettier": "^3.2.5",
+    "tailwindcss": "^3.4.1",
+    "vite": "^5.1.4"
+  }
+}

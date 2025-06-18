@@ -5,5 +5,6 @@ from . import asset_vehicule
 from . import entretien
 from . import mouvement
 from . import fiche_vie
-
-
+from . import demande_materiel
+from . import demande_materiel_ligne
+from . import pertes

@@ -18,8 +18,6 @@ class PatrimoineAssetInformatique(models.Model):
     modele = fields.Char("Modèle")
     numero_serie = fields.Char("Numéro de série")
     date_garantie_fin = fields.Date("Fin de garantie")
-    fournisseur = fields.Char("Fournisseur")
-
 
     @api.model
     def check_warranty_expiry(self):

@@ -1,6 +1,15 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 
 
+access_category_admin,access.category.admin,model_asset_category,gestion_patrimoine.group_patrimoine_admin,1,1,1,1
+access_subcategory_admin,access.subcategory.admin,model_asset_subcategory,gestion_patrimoine.group_patrimoine_admin,1,1,1,1
+access_field_admin,access.field.admin,model_asset_custom_field,gestion_patrimoine.group_patrimoine_admin,1,1,1,1
+access_category_director,access.category.director,model_asset_category,gestion_patrimoine.group_patrimoine_director,1,0,0,0
+access_subcategory_director,access.subcategory.director,model_asset_subcategory,gestion_patrimoine.group_patrimoine_director,1,0,0,0
+access_field_director,access.field.director,model_asset_custom_field,gestion_patrimoine.group_patrimoine_director,1,0,0,0
+access_category_agent,access.category.agent,model_asset_category,gestion_patrimoine.group_patrimoine_agent,1,0,0,0
+access_subcategory_agent,access.subcategory.agent,model_asset_subcategory,gestion_patrimoine.group_patrimoine_agent,1,0,0,0
+access_field_agent,access.field.agent,model_asset_custom_field,gestion_patrimoine.group_patrimoine_agent,1,0,0,0
 access_asset_admin,access.asset.admin,model_patrimoine_asset,gestion_patrimoine.group_patrimoine_admin,1,1,1,1
 access_asset_vehicule_admin,access.asset.vehicule.admin,model_patrimoine_asset_vehicule,gestion_patrimoine.group_patrimoine_admin,1,1,1,1
 access_asset_informatique_admin,access.asset.informatique.admin,model_patrimoine_asset_informatique,gestion_patrimoine.group_patrimoine_admin,1,1,1,1
@@ -9,6 +18,7 @@ access_mouvement_admin,access.mouvement.admin,model_patrimoine_mouvement,gestion
 access_entretien_admin,access.entretien.admin,model_patrimoine_entretien,gestion_patrimoine.group_patrimoine_admin,1,1,1,1
 access_fiche_vie_admin,access.fiche.vie.admin,model_patrimoine_fiche_vie,gestion_patrimoine.group_patrimoine_admin,1,1,1,1
 access_perte_admin,access.perte.admin,model_patrimoine_perte,gestion_patrimoine.group_patrimoine_admin,1,1,1,1
+access_demande_materiel_admin,access.demande.materiel.admin,model_patrimoine_demande_materiel,gestion_patrimoine.group_patrimoine_admin,1,1,1,1
 
 
 access_asset_director,access.asset.director,model_patrimoine_asset,gestion_patrimoine.group_patrimoine_director,1,1,1,0
@@ -16,6 +26,7 @@ access_mouvement_director,access.mouvement.director,model_patrimoine_mouvement,g
 access_entretien_director,access.entretien.director,model_patrimoine_entretien,gestion_patrimoine.group_patrimoine_director,1,1,1,0
 access_perte_director,access.perte.director,model_patrimoine_perte,gestion_patrimoine.group_patrimoine_director,1,1,1,0
 access_fiche_vie_director,access.fiche.vie.director,model_patrimoine_fiche_vie,gestion_patrimoine.group_patrimoine_director,1,1,1,0
+access_demande_materiel_director,access.demande.materiel.director,model_patrimoine_demande_materiel,gestion_patrimoine.group_patrimoine_director,1,1,1,1
 
 
 access_asset_agent,access.asset.agent,model_patrimoine_asset,gestion_patrimoine.group_patrimoine_agent,1,0,0,0

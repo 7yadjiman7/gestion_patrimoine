@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_asset_custom_field_form" model="ir.ui.view">
+            <field name="name">asset.custom.field.form</field>
+            <field name="model">asset.custom.field</field>
+            <field name="arch" type="xml"><form string="Champ Personnalisé">
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                                <field name="technical_name"/>
+                                <field name="field_type"/>
+                                <field name="required"/>
+                                <field name="sequence"/>
+                            </group>
+                            <group>
+                                <field name="subcategory_id"/>
+                                <field name="selection_values" invisible="field_type != 'selection'"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_asset_custom_field_tree" model="ir.ui.view">
+            <field name="name">asset.custom.field.tree</field>
+            <field name="model">asset.custom.field</field>
+            <field name="arch" type="xml">
+                <tree string="Champs Personnalisés">
+                    <field name="name"/>
+                    <field name="technical_name"/>
+                    <field name="field_type"/>
+                    <field name="required"/>
+                    <field name="subcategory_id"/>
+                    <field name="sequence"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_asset_custom_field" model="ir.actions.act_window">
+            <field name="name">Champs Personnalisés</field>
+            <field name="res_model">asset.custom.field</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <menuitem id="menu_asset_custom_field"
+            name="Champs Personnalisés"
+            parent="gestion_patrimoine.menu_patrimoine_configuration" action="action_asset_custom_field"
+            sequence="30"/>
+    </data>
+</odoo>

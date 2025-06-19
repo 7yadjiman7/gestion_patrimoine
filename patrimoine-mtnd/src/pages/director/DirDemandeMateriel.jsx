@@ -93,7 +93,7 @@ export default function DirDemandeMateriel() {
                     <CardHeader>
                         <CardTitle>Nouvelle Demande de Matériel (Multi-lignes)</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-6">
+                    <CardContent className="space-y-6 overflow-visible">
                         
                         {/* --- BOUCLE SUR LES LIGNES --- */}
                         {lignes.map((ligne, index) => (
@@ -104,7 +104,7 @@ export default function DirDemandeMateriel() {
                                         <Label>Matériel</Label>
                                         <Select value={ligne.demande_subcategory_id} onValueChange={val => handleLigneChange(index, 'demande_subcategory_id', val)} required>
                                             <SelectTrigger><SelectValue placeholder="Choisir un matériel..." /></SelectTrigger>
-                                            <SelectContent>{subcategories.map(sc => <SelectItem key={sc.id} value={sc.id}>{sc.category_name} / {sc.name}</SelectItem>)}</SelectContent>
+                                            <SelectContent className="z-50">{subcategories.map(sc => <SelectItem key={sc.id} value={sc.id}>{sc.category_name} / {sc.name}</SelectItem>)}</SelectContent>
                                         </Select>
                                     </div>
                                     <div>
@@ -115,21 +115,21 @@ export default function DirDemandeMateriel() {
                                         <Label>Employé Destinataire</Label>
                                         <Select value={ligne.destinataire_employee_id} onValueChange={val => handleLigneChange(index, 'destinataire_employee_id', val)}>
                                             <SelectTrigger><SelectValue placeholder="Optionnel..." /></SelectTrigger>
-                                            <SelectContent>{employees.map(emp => <SelectItem key={emp.id} value={emp.id}>{emp.name}</SelectItem>)}</SelectContent>
+                                            <SelectContent className="z-50">{employees.map(emp => <SelectItem key={emp.id} value={emp.id}>{emp.name}</SelectItem>)}</SelectContent>
                                         </Select>
                                     </div>
                                     <div>
                                         <Label>Bureau/Localisation</Label>
                                         <Select value={ligne.destinataire_location_id} onValueChange={val => handleLigneChange(index, 'destinataire_location_id', val)}>
                                             <SelectTrigger><SelectValue placeholder="Optionnel..." /></SelectTrigger>
-                                            <SelectContent>{locations.map(loc => <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>)}</SelectContent>
+                                            <SelectContent className="z-50">{locations.map(loc => <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>)}</SelectContent>
                                         </Select>
                                     </div>
                                     <div>
                                         <Label>Departement/Direction</Label>
                                         <Select value={ligne.destinataire_department_id} onValueChange={val => handleLigneChange(index, 'destinataire_department_id', val)}>
                                             <SelectTrigger><SelectValue placeholder="Optionnel..." /></SelectTrigger>
-                                            <SelectContent>{departments.map(loc => <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>)}</SelectContent>
+                                            <SelectContent className="z-50">{departments.map(loc => <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>)}</SelectContent>
                                         </Select>
                                     </div>
                                 </div>

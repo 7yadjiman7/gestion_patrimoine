@@ -298,7 +298,7 @@ export default function AdminAjouterMateriel() {
                             <CardHeader className="pb-2">
                                 <CardTitle className="text-lg font-semibold text-gray-800">Catégorisation</CardTitle>
                             </CardHeader>
-                            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 overflow-visible">
                                 <div className="space-y-2">
                                     <Label className="text-gray-700">Type de matériel</Label>
                                     <Select
@@ -348,7 +348,7 @@ export default function AdminAjouterMateriel() {
                             <CardHeader className="pb-2">
                                 <CardTitle className="text-lg font-semibold text-gray-800">Description</CardTitle>
                             </CardHeader>
-                            <CardContent className="space-y-6">
+                            <CardContent className="space-y-6 overflow-visible">
                                 <div className="space-y-2">
                                     <Label className="text-gray-700">Nom du matériel</Label>
                                     <Input
@@ -407,7 +407,7 @@ export default function AdminAjouterMateriel() {
                             <CardHeader className="pb-2">
                                 <CardTitle className="text-lg font-semibold text-gray-800">Localisation</CardTitle>
                             </CardHeader>
-                            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 overflow-visible">
                                 <div className="space-y-2">
                                     <Label className="text-gray-700">Localisation actuelle</Label>
                                     <Select
@@ -495,7 +495,7 @@ export default function AdminAjouterMateriel() {
                             <CardHeader className="pb-2">
                                 <CardTitle className="text-lg font-semibold text-gray-800">Documents</CardTitle>
                             </CardHeader>
-                            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6 overflow-visible">
                                 <div className="space-y-2">
                                     <Label className="text-gray-700">Image</Label>
                                     <Input
@@ -531,7 +531,7 @@ export default function AdminAjouterMateriel() {
                             <CardHeader className="pb-2">
                                 <CardTitle className="text-lg font-semibold text-gray-800">Détails spécifiques</CardTitle>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="overflow-visible">
                                 {selectedSubcategoryId ? (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         {renderDynamicCustomFields()}
@@ -545,7 +545,7 @@ export default function AdminAjouterMateriel() {
                         </Card>
                     </TabsContent>
 
-                    <div className="mt-8 flex justify-end gap-4 sticky bottom-0 bg-white py-4 border-t">
+                    <div className="mt-8 flex justify-end gap-4 sticky bottom-0 z-40 bg-white py-4 border-t">
                         <Button
                             type="button"
                             variant="outline"

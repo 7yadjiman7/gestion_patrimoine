@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import materialService from '@/services/materialService';
@@ -64,12 +65,13 @@ export default function DirDemandeMateriel() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!lignes.length === 0) {
+        if (!motif || lignes.length === 0) {
             alert("Veuillez renseigner le motif et au moins une ligne de demande.");
             return;
         }
 
         const dataToSend = {
+            motif_demande: motif,
             lignes: lignes.map(l => ({
                 ...l,
                 quantite: parseInt(l.quantite, 10),
@@ -79,7 +81,7 @@ export default function DirDemandeMateriel() {
         try {
             await materialService.createDemande(dataToSend);
             alert("Demande soumise avec succès !");
-            navigate("/director");
+            navigate("/director/dashboard");
         } catch (error) {
             console.error("Erreur lors de la soumission :", error);
             alert(`Erreur: ${error.message}`);
@@ -94,7 +96,15 @@ export default function DirDemandeMateriel() {
                         <CardTitle>Nouvelle Demande de Matériel (Multi-lignes)</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                        
+                        <div>
+                            <Label htmlFor="motif">Motif de la demande</Label>
+                            <Textarea
+                                value={motif}
+                                onChange={e => setMotif(e.target.value)}
+                                required
+                            />
+                        </div>
+
                         {/* --- BOUCLE SUR LES LIGNES --- */}
                         {lignes.map((ligne, index) => (
                             <div key={index} className="p-4 border rounded-md space-y-4 relative">

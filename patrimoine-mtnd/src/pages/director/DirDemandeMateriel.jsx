@@ -29,7 +29,7 @@ export default function DirDemandeMateriel() {
         const loadDropdownData = async () => {
             try {
                 // On a besoin de TOUTES les sous-catégories, et non par type
-                const [allSubcats, locs, emps] = await Promise.all([
+                const [allSubcats, deptData, locs, emps] = await Promise.all([
                     // Note: Il vous faudra peut-être une nouvelle route API qui renvoie toutes les subcategories
                     // ou modifier la route existante pour ne pas exiger de category_id
                     materialService.fetchSubcategories(0), // "0" ou une valeur pour "toutes"
@@ -38,7 +38,7 @@ export default function DirDemandeMateriel() {
                     materialService.fetchEmployees()
                 ]);
                 setSubcategories(allSubcats);
-                setDepartments(deptData)
+                setDepartments(deptData);
                 setLocations(locs);
                 setEmployees(emps);
             } catch (error) {

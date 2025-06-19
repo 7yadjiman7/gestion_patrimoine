@@ -1,14 +1,26 @@
 // pages/admin/AdminStatsPage.jsx
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, BarChart, XAxis, YAxis, Bar, CartesianGrid } from 'recharts';
+import { PieChart, Pie, Cell, Legend, BarChart, XAxis, YAxis, Bar, CartesianGrid } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { TrendingUp, Filter, Download } from 'lucide-react';
 import materialService from '@/services/materialService';
 import AppSidebar from '@/components/app-sidebar';
 import { StatCard } from '@/components/ui/stat-card';
 
-const COLORS_PIE = ['#6366f1', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'];
-const COLORS_BAR = ['#6366f1', '#8b5cf6', '#06b6d4', '#10b981'];
+const COLORS_PIE = [
+    'var(--chart-1)',
+    'var(--chart-2)',
+    'var(--chart-3)',
+    'var(--chart-4)',
+    'var(--chart-5)'
+];
+const COLORS_BAR = [
+    'var(--chart-1)',
+    'var(--chart-2)',
+    'var(--chart-3)',
+    'var(--chart-4)'
+];
 
 export default function AdminStatsPage() {
     // États pour les différentes statistiques
@@ -52,10 +64,20 @@ export default function AdminStatsPage() {
 
     // Préparer les données pour le Pie Chart des statuts globaux
     const statusPieData = globalStatusStats ? [
-        { name: 'En Service', value: globalStatusStats.inService },
-        { name: 'En Stock', value: globalStatusStats.inStock },
-        { name: 'Hors Service', value: globalStatusStats.outOfService },
+        { name: 'En Service', value: globalStatusStats.inService, fill: COLORS_PIE[0] },
+        { name: 'En Stock', value: globalStatusStats.inStock, fill: COLORS_PIE[1] },
+        { name: 'Hors Service', value: globalStatusStats.outOfService, fill: COLORS_PIE[2] },
     ].filter(s => s.value > 0) : [];
+
+    const statusChartConfig = {
+        'En Service': { label: 'En Service', color: COLORS_PIE[0] },
+        'En Stock': { label: 'En Stock', color: COLORS_PIE[1] },
+        'Hors Service': { label: 'Hors Service', color: COLORS_PIE[2] },
+    };
+
+    const barChartConfig = {
+        count: { label: 'Matériels', color: COLORS_BAR[0] }
+    };
 
     if (isLoading) {
         return (
@@ -103,7 +125,7 @@ export default function AdminStatsPage() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-6">
+                <div className="grid gap-6 md:grid-cols-2">
                     {/* Statistique par Statut Global - Style moderne */}
                     <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow">
                         <CardHeader className="pb-4">
@@ -116,8 +138,9 @@ export default function AdminStatsPage() {
                         </CardHeader>
                         <CardContent>
                             {statusPieData.length > 0 ? (
-                                <ResponsiveContainer width="100%" height={300}>
+                                <ChartContainer config={statusChartConfig} className="h-[300px] w-full">
                                     <PieChart>
+                                        <ChartTooltip content={<ChartTooltipContent />} />
                                         <Pie
                                             data={statusPieData}
                                             dataKey="value"
@@ -126,25 +149,16 @@ export default function AdminStatsPage() {
                                             cy="50%"
                                             innerRadius={60}
                                             outerRadius={120}
-                                            fill="#8884d8"
                                             label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
                                             labelLine={false}
                                         >
                                             {statusPieData.map((entry, index) => (
-                                                <Cell key={`cell-status-${index}`} fill={COLORS_PIE[index % COLORS_PIE.length]} />
+                                                <Cell key={`cell-status-${index}`} fill={entry.fill} />
                                             ))}
                                         </Pie>
-                                        <Tooltip 
-                                            contentStyle={{
-                                                backgroundColor: 'white',
-                                                border: 'none',
-                                                borderRadius: '8px',
-                                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                                            }}
-                                        />
                                         <Legend />
                                     </PieChart>
-                                </ResponsiveContainer>
+                                </ChartContainer>
                             ) : (
                                 <p className="text-gray-500 text-center py-12">Aucune donnée de statut global.</p>
                             )}
@@ -163,31 +177,24 @@ export default function AdminStatsPage() {
                         </CardHeader>
                         <CardContent>
                             {statsByDepartment.length > 0 ? (
-                                <ResponsiveContainer width="100%" height={300}>
+                                <ChartContainer config={barChartConfig} className="h-[300px] w-full">
                                     <BarChart data={statsByDepartment} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                                        <XAxis 
-                                            dataKey="name" 
-                                            axisLine={false} 
+                                        <XAxis
+                                            dataKey="name"
+                                            axisLine={false}
                                             tickLine={false}
                                             tick={{ fontSize: 12, fill: '#6b7280' }}
                                         />
-                                        <YAxis 
-                                            axisLine={false} 
+                                        <YAxis
+                                            axisLine={false}
                                             tickLine={false}
                                             tick={{ fontSize: 12, fill: '#6b7280' }}
                                         />
-                                        <Tooltip 
-                                            contentStyle={{
-                                                backgroundColor: 'white',
-                                                border: 'none',
-                                                borderRadius: '8px',
-                                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                                            }}
-                                        />
+                                        <ChartTooltip content={<ChartTooltipContent />} />
                                         <Bar dataKey="count" fill={COLORS_BAR[0]} radius={[4, 4, 0, 0]} />
                                     </BarChart>
-                                </ResponsiveContainer>
+                                </ChartContainer>
                             ) : (
                                 <p className="text-gray-500 text-center py-12">Aucune donnée par département.</p>
                             )}
@@ -206,31 +213,24 @@ export default function AdminStatsPage() {
                         </CardHeader>
                         <CardContent>
                             {statsByType.length > 0 ? (
-                                <ResponsiveContainer width="100%" height={300}>
+                                <ChartContainer config={barChartConfig} className="h-[300px] w-full">
                                     <BarChart data={statsByType} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                                        <XAxis 
-                                            dataKey="name" 
-                                            axisLine={false} 
+                                        <XAxis
+                                            dataKey="name"
+                                            axisLine={false}
                                             tickLine={false}
                                             tick={{ fontSize: 12, fill: '#6b7280' }}
                                         />
-                                        <YAxis 
-                                            axisLine={false} 
+                                        <YAxis
+                                            axisLine={false}
                                             tickLine={false}
                                             tick={{ fontSize: 12, fill: '#6b7280' }}
                                         />
-                                        <Tooltip 
-                                            contentStyle={{
-                                                backgroundColor: 'white',
-                                                border: 'none',
-                                                borderRadius: '8px',
-                                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                                            }}
-                                        />
+                                        <ChartTooltip content={<ChartTooltipContent />} />
                                         <Bar dataKey="count" fill={COLORS_BAR[1]} radius={[4, 4, 0, 0]} />
                                     </BarChart>
-                                </ResponsiveContainer>
+                                </ChartContainer>
                             ) : (
                                 <p className="text-gray-500 text-center py-12">Aucune donnée par type général.</p>
                             )}
@@ -249,31 +249,24 @@ export default function AdminStatsPage() {
                         </CardHeader>
                         <CardContent>
                             {statsByDetailedCategory.length > 0 ? (
-                                <ResponsiveContainer width="100%" height={300}>
+                                <ChartContainer config={barChartConfig} className="h-[300px] w-full">
                                     <BarChart data={statsByDetailedCategory} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                                        <XAxis 
-                                            dataKey="name" 
-                                            axisLine={false} 
+                                        <XAxis
+                                            dataKey="name"
+                                            axisLine={false}
                                             tickLine={false}
                                             tick={{ fontSize: 12, fill: '#6b7280' }}
                                         />
-                                        <YAxis 
-                                            axisLine={false} 
+                                        <YAxis
+                                            axisLine={false}
                                             tickLine={false}
                                             tick={{ fontSize: 12, fill: '#6b7280' }}
                                         />
-                                        <Tooltip 
-                                            contentStyle={{
-                                                backgroundColor: 'white',
-                                                border: 'none',
-                                                borderRadius: '8px',
-                                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                                            }}
-                                        />
+                                        <ChartTooltip content={<ChartTooltipContent />} />
                                         <Bar dataKey="count" fill={COLORS_BAR[2]} radius={[4, 4, 0, 0]} />
                                     </BarChart>
-                                </ResponsiveContainer>
+                                </ChartContainer>
                             ) : (
                                 <p className="text-gray-500 text-center py-12">Aucune donnée par catégorie détaillée.</p>
                             )}

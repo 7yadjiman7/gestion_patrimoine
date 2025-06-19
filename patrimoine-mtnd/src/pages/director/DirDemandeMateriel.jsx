@@ -79,7 +79,7 @@ export default function DirDemandeMateriel() {
         try {
             await materialService.createDemande(dataToSend);
             alert("Demande soumise avec succès !");
-            navigate("/director");
+            navigate("/director/dashboard");
         } catch (error) {
             console.error("Erreur lors de la soumission :", error);
             alert(`Erreur: ${error.message}`);

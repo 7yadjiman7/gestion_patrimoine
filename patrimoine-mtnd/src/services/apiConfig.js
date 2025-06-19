@@ -41,7 +41,7 @@ export const apiConfig = {
 
         // NOUVELLES CONSTANTES POUR LES ROUTES DÉDIÉES AU FILTRAGE DE STATS
         GENERAL_STATS: '/api/patrimoine/stats', // Stats générales
-        STATS_BY_TYPE: (generalType) => `/api/patrimoine/stats/type/${generalType}`,
+        STATS_BY_TYPE: '/api/patrimoine/stats/by_type',
         STATS_BY_SUBCATEGORY: (subcategoryCode) => `/api/patrimoine/stats/category/${subcategoryCode}`,
 
         // Endpoints pour les dropdowns et autres données de référence
@@ -71,7 +71,6 @@ export const apiConfig = {
 
         // --- NOUVEAUX ENDPOINTS POUR LES STATISTIQUES SPÉCIFIQUES ---
         STATS_BY_DEPARTMENT: '/api/patrimoine/stats/by_department',
-        // STATS_BY_TYPE: '/api/patrimoine/stats/by_type',
         STATS_BY_DETAILED_CATEGORY: '/api/patrimoine/stats/by_detailed_category',
 
     },

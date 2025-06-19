@@ -153,7 +153,7 @@ class PatrimoineAssetController(http.Controller):
             return Response(status=500)
 
     @http.route(
-        "/api/patrimoine/items", auth="user", type="json", methods=["POST"], csrf=False
+        "/api/patrimoine/items", auth="user", type="http", methods=["POST"], csrf=False
     )
     def create_item(self, **post):
         _logger.info("Début de la création d'un item (matériel)")

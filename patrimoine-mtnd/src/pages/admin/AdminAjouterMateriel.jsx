@@ -146,8 +146,12 @@ export default function AdminAjouterMateriel() {
         e.preventDefault();
         try {
             const formData = new FormData();
-            
-            Object.entries(assetData).forEach(([key, value]) => {
+
+            // Préparer les données en mappant "etat" vers le champ backend "status"
+            const assetValues = { ...assetData, status: assetData.etat };
+            delete assetValues.etat;
+
+            Object.entries(assetValues).forEach(([key, value]) => {
                 if (['department_id', 'employee_id', 'location_id', 'fournisseur'].includes(key) && value) {
                     formData.append(key, parseInt(value));
                 } else if (key === 'valeur_acquisition' && value) {

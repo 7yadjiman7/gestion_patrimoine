@@ -235,6 +235,19 @@ const fetchDemandes = async () => {
     }
 };
 
+// Pour récupérer le détail d'une demande spécifique
+const fetchDemandeDetails = async (demandeId) => {
+    try {
+        const sessionId = localStorage.getItem('odoo_session_id');
+        if (!sessionId) throw new Error('Session expirée - Veuillez vous reconnecter');
+        const response = await get(apiConfig.ENDPOINTS.DEMANDES_DETAIL(demandeId));
+        return response;
+    } catch (error) {
+        console.error(`Error fetching details for demande ${demandeId}:`, error);
+        throw error;
+    }
+};
+
 // Pour approuver ou rejeter une demande
 const processDemande = async (demandeId, action) => { // action: 'approve' ou 'reject'
     try {
@@ -365,9 +378,10 @@ export default {
   saveMouvement,
   printFicheViePdf,
   getMaterialsByCategory, 
-  getCategoryItems, 
-  getCategoryStats, 
+  getCategoryItems,
+  getCategoryStats,
   fetchDemandes,
+  fetchDemandeDetails,
   processDemande,
   createDemande,
   fetchDeclarationsPerte,

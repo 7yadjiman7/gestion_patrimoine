@@ -940,10 +940,18 @@ class PatrimoineAssetController(http.Controller):
     ):
         # <-- NOUVEAUX LOGS ICI (au début de la fonction)
         _logger.info(
-            f"create_mouvement: Arguments reçus: asset_id={asset_id}, type_mouvement={type_mouvement}, date={date}, to_employee_id={to_employee_id}, to_location_id={to_location_id}, motif={motif}, to_department_id={to_department_id}"
+            "create_mouvement: Arguments reçus: asset_id=%s, type_mouvement=%s, date=%s, demande_employee_id=%s, demande_location_id=%s, motif=%s, demande_department_id=%s",
+            asset_id,
+            type_mouvement,
+            date,
+            demande_employee_id or kw.get("demande_employee_id"),
+            demande_location_id or kw.get("demande_location_id"),
+            motif,
+            demande_department_id or kw.get("demande_department_id"),
         )
         _logger.info(
-            f"create_mouvement: Type de to_employee_id: {type(to_employee_id)}"
+            "create_mouvement: Type de demande_employee_id: %s",
+            type(demande_employee_id or kw.get("demande_employee_id")),
         )
 
         try:

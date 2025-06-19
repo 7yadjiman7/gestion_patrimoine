@@ -1733,6 +1733,55 @@ class PatrimoineAssetController(http.Controller):
                 headers={"Content-Type": "application/json"},
             )
 
+    # --- NOUVELLE API : Statistiques pour un Département donné ---
+    @http.route(
+        "/api/patrimoine/stats/department/<int:dept_id>",
+        auth="user",
+        type="http",
+        methods=["GET"],
+    )
+    def get_stats_for_department(self, dept_id, **kw):
+        try:
+            domain = [("department_id", "=", dept_id)]
+
+            stats_raw = request.env["patrimoine.asset"].read_group(
+                domain, fields=["etat", "__count"], groupby=["etat"], lazy=False
+            )
+
+            total = 0
+            in_service = 0
+            in_stock = 0
+            out_of_service = 0
+
+            for stat in stats_raw:
+                count = stat["__count"]
+                total += count
+                if stat["etat"] == "service":
+                    in_service = count
+                elif stat["etat"] == "stock":
+                    in_stock = count
+                elif stat["etat"] in ("hs", "reforme"):
+                    out_of_service += count
+
+            stats = {
+                "total": total,
+                "inService": in_service,
+                "inStock": in_stock,
+                "outOfService": out_of_service,
+            }
+            return Response(
+                json.dumps(stats), headers={"Content-Type": "application/json"}
+            )
+        except Exception as e:
+            _logger.error(
+                "Error getting stats for department %s: %s", dept_id, str(e)
+            )
+            return Response(
+                json.dumps({"status": "error", "message": str(e)}),
+                status=500,
+                headers={"Content-Type": "application/json"},
+            )
+
     # --- NOUVELLE API : Statistiques par Type Général (informatique, mobilier, vehicule) ---
     @http.route(
         "/api/patrimoine/stats/by_type", auth="user", type="http", methods=["GET"]

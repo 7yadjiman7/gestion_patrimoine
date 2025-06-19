@@ -323,12 +323,19 @@ const getMaterialsByDepartment = async (departmentId) => {
 };
 
 
-const fetchStatsByDepartment = async () => {
+const fetchStatsByDepartment = async (departmentId) => {
   try {
-    const sessionId = localStorage.getItem('odoo_session_id'); if (!sessionId) throw new Error('Session expirée');
-    const response = await get(apiConfig.ENDPOINTS.STATS_BY_DEPARTMENT);
+    const sessionId = localStorage.getItem('odoo_session_id');
+    if (!sessionId) throw new Error('Session expirée');
+    const url = departmentId
+      ? apiConfig.ENDPOINTS.STATS_FOR_DEPARTMENT(departmentId)
+      : apiConfig.ENDPOINTS.STATS_BY_DEPARTMENT;
+    const response = await get(url);
     return response;
-  } catch (error) { console.error('Error fetching stats by department:', error); throw error; }
+  } catch (error) {
+    console.error('Error fetching stats by department:', error);
+    throw error;
+  }
 };
 
 const fetchStatsByType = async () => {

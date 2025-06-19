@@ -51,9 +51,8 @@ export default function DirDashboardPage() { // Renommage du composant
         // Nouvelle fonction materialService.getMaterialsByDepartment
         const materialsApiResult = await materialService.getMaterialsByDepartment(directorDepartmentId);
         
-        // Récupérer les statistiques pour ce département
-        // materialService.getStatsByDepartment renvoie déjà les stats agrégées.
-        const departmentStatsData = await materialService.fetchStatsByDepartment(directorDepartmentId); 
+        // Récupérer les statistiques pour ce département via la nouvelle route
+        const departmentStatsData = await materialService.fetchStatsByDepartment(directorDepartmentId);
 
         setMaterials(Array.isArray(materialsApiResult) ? materialsApiResult : []); // Assurez-vous que c'est le tableau de données directement
         setStats(departmentStatsData); // statsApiResult est déjà l'objet stats

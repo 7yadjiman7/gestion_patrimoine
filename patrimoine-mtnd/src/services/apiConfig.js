@@ -71,6 +71,7 @@ export const apiConfig = {
 
         // --- NOUVEAUX ENDPOINTS POUR LES STATISTIQUES SPÉCIFIQUES ---
         STATS_BY_DEPARTMENT: '/api/patrimoine/stats/by_department',
+        STATS_FOR_DEPARTMENT: (deptId) => `/api/patrimoine/stats/department/${deptId}`,
         // STATS_BY_TYPE: '/api/patrimoine/stats/by_type',
         STATS_BY_DETAILED_CATEGORY: '/api/patrimoine/stats/by_detailed_category',
 

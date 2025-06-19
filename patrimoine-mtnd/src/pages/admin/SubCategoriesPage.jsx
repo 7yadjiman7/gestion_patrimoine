@@ -1,46 +1,76 @@
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Card } from '../../components/ui/card';
+import materialService from '@/services/materialService';
 
 export default function SubCategoriesPage() {
   const { type } = useParams();
   const navigate = useNavigate();
+  const [subCategories, setSubCategories] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Données statiques des sous-catégories par type
-  const subCategories = {
-    informatique: [
-      { id: 1, name: 'Ordinateurs', image: '/public/images/pc2.jpeg' },
-      { id: 2, name: 'Imprimantes', image: '/public/images/imprimante1.jpeg' },
-      { id: 3, name: 'Accessoires', image: '/public/images/pc3.jpeg' }
-    ],
-    mobilier: [
-      { id: 1, name: 'Bureaux', image: '/public/images/tableBureau2.jpeg' },
-      { id: 2, name: 'Chaises', image: '/public/images/fauteuille1.jpeg' },
-      { id: 3, name: 'Armoires', image: '/public/images/tableBureau3.jpeg' }
-    ],
-    vehicule: [
-      { id: 1, name: 'Voitures', image: '/public/images/voiture2.jpeg' },
-      { id: 2, name: 'Motos', image: '/public/images/voiture3.jpeg' }
-    ]
+  useEffect(() => {
+    const loadSubcategories = async () => {
+      try {
+        setIsLoading(true);
+        const categories = await materialService.fetchTypesGeneraux();
+        const filtered = categories.filter((c) => c.type === type);
+
+        let allSubcats = [];
+        for (const cat of filtered) {
+          const subs = await materialService.fetchSubcategories(cat.id);
+          allSubcats = [...allSubcats, ...subs];
+        }
+        setSubCategories(allSubcats);
+      } catch (err) {
+        console.error('Error loading subcategories:', err);
+        setError('Erreur lors du chargement des catégories');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadSubcategories();
+  }, [type]);
+
+  const cardClasses = {
+    base: 'group relative w-64 h-80 overflow-hidden rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer',
+    image: 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-500',
+    overlay: 'absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity',
+    title: 'absolute bottom-0 left-0 right-0 p-4 text-white text-xl font-semibold'
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen text-red-600">
+        {error}
+      </div>
+    );
+  }
+
   return (
-    <div className="flex justify-center items-center h-screen gap-8">
-      {subCategories[type]?.map((category) => (
-        <Card 
+    <div className="flex justify-center items-center h-screen gap-8 flex-wrap">
+      {subCategories.map((category) => (
+        <Card
           key={category.id}
-          className="w-64 h-80 relative overflow-hidden cursor-pointer transition-all hover:scale-105"
-          onClick={() => navigate(`/admin/${type}/${category.name.toLowerCase()}`)}
+          className={cardClasses.base}
+          onClick={() => navigate(`/admin/${type}/${category.code}`)}
         >
-          <img 
-            src={category.image} 
+          <img
+            src={category.image || '/images/default-material.jpg'}
             alt={category.name}
-            className="w-full h-full object-cover"
+            className={cardClasses.image}
           />
-          <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-50 flex items-center justify-center transition-all">
-            <h2 className="text-white text-2xl font-bold opacity-0 hover:opacity-100 transition-all">
-              {category.name}
-            </h2>
-          </div>
+          <div className={cardClasses.overlay} />
+          <h2 className={cardClasses.title}>{category.name}</h2>
         </Card>
       ))}
     </div>

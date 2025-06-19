@@ -174,7 +174,7 @@ export default function DirDashboardPage() { // Renommage du composant
                 />
               </div>
             </div>
-            <Button className="gap-2" onClick={() => navigate(`/director/demander-materiel`)}>
+            <Button className="gap-2" onClick={() => navigate(`/director/demandes`)}>
               <PlusCircle className="h-4 w-4" />
               Faire une demande
             </Button>
@@ -220,7 +220,7 @@ export default function DirDashboardPage() { // Renommage du composant
           ) : (
             <div className="col-span-full text-center py-12">
               <p className="text-gray-500">Aucun matériel trouvé pour votre direction.</p>
-              <Button onClick={() => navigate(`/director/demander-materiel`)} className="mt-4">Faire une demande de matériel</Button>
+              <Button onClick={() => navigate(`/director/demandes`)} className="mt-4">Faire une demande de matériel</Button>
             </div>
           )}
         </div>

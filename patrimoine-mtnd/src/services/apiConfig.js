@@ -62,6 +62,7 @@ export const apiConfig = {
         DEMANDES_LIST: '/api/patrimoine/demandes', // Pour fetchDemandes
         DEMANDES_CREATE: '/api/patrimoine/demandes', // Pour createDemande
         DEMANDES_PROCESS: (demandeId, action) => `/api/patrimoine/demandes/${demandeId}/${action}`, // Pour processDemande
+        DEMANDES_DETAIL: (demandeId) => `/api/patrimoine/demandes/${demandeId}`, // Pour fetchDemandeDetails
 
 
         // --- Endpoints pour les Déclarations de Perte ---

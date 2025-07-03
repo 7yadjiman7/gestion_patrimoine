@@ -28,8 +28,7 @@
         <field name="number_next">1</field>
     </record>
     
-    <record id="seq_patrimoine_perte"
-        model="ir.sequence">
+    <record id="seq_patrimoine_perte" model="ir.sequence">
         <field name="name">Déclaration Perte</field>
         <field name="code">patrimoine.perte.code</field>
         <field name="prefix">PERTE/%(year)s/</field>

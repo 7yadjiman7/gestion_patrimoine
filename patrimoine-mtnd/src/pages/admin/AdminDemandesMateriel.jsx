@@ -1,186 +1,249 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import materialService from '@/services/materialService'; // Importez le service
-import AppSidebar from '@/components/app-sidebar'; // Assurez-vous d'avoir la sidebar pour le layout
+import React, { useState, useEffect, useRef } from "react"
+import { toast } from "react-hot-toast"
+import {
+    Table,
+    TableHeader,
+    TableBody,
+    TableRow,
+    TableHead,
+    TableCell,
+} from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import materialService from "@/services/materialService"
+import DemandeDetailModal from "@/components/DemandeDetailModal" // Importer la modal
+import { Printer } from "lucide-react" 
 
-// Définition des colonnes du tableau
-const tableHeaders = [
-  "Référence", "Demandeur", "Département (Demandeur)", "Type Demandé", "Quantité", "Motif", "Date Demande", "Statut", "Actions"
-];
+export default function AdminDemandeMateriel() {
+    const [demandes, setDemandes] = useState([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
+    const tableRef = useRef()
 
-export default function AdminDemandesMateriel() {
-  const navigate = useNavigate();
-  const [demandes, setDemandes] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+    // États pour gérer la modal
+    const [isModalOpen, setIsModalOpen] = useState(false)
+    const [selectedDemande, setSelectedDemande] = useState(null)
 
-  // Fonction pour charger les demandes depuis l'API
-  const loadDemandes = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      // Appel à la fonction de service pour lister les demandes
-      const data = await materialService.fetchDemandes();
-      setDemandes(Array.isArray(data) ? data : []); // S'assurer que c'est un tableau
-      console.log("Demandes chargées:", data);
-    } catch (err) {
-      console.error("Erreur chargement des demandes:", err);
-      setError(err.message || "Impossible de charger les demandes.");
-    } finally {
-      setIsLoading(false);
+    // --- FONCTION D'IMPRESSION AMÉLIORÉE ---
+    const handlePrint = () => {
+        const printContent = tableRef.current
+        if (!printContent) return
+
+        const printWindow = window.open("", "_blank", "height=800,width=1000")
+        printWindow.document.write(
+            "<html><head><title>Imprimer la Liste</title>"
+        )
+
+        // 1. On copie tous les styles de la page actuelle (la méthode la plus fiable)
+        Array.from(
+            document.querySelectorAll('link[rel="stylesheet"], style')
+        ).forEach(link => {
+            printWindow.document.head.appendChild(link.cloneNode(true))
+        })
+
+        // 2. On ajoute des styles spécifiques pour l'impression
+        printWindow.document.write(`
+        <style>
+            body {
+                padding: 20px;
+                font-family: Arial, sans-serif;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            th, td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+            }
+            th {
+                background-color: #f2f2f2;
+            }
+            .no-print {
+                display: none !important;
+            }
+        </style>
+    `)
+
+        printWindow.document.write("</head><body>")
+        printWindow.document.write(printContent.innerHTML)
+        printWindow.document.write("</body></html>")
+        printWindow.document.close()
+
+        setTimeout(() => {
+            printWindow.focus()
+            printWindow.print()
+            printWindow.close()
+        }, 500)
     }
-  };
 
-  // Chargement des demandes au montage du composant
-  useEffect(() => {
-    loadDemandes();
-  }, []);
-
-  // Gère l'action "Accepter" ou "Refuser"
-  const handleProcessDemande = async (demandeId, action) => {
-    if (!window.confirm(`Voulez-vous vraiment ${action === 'approve' ? 'ACCEPTER' : 'REJETER'} cette demande (Référence: ${demandeId}) ?`)) {
-      return; // Annuler si l'utilisateur ne confirme pas
+    const fetchDemandesData = async () => {
+        setLoading(true)
+        try {
+            const data = await materialService.fetchDemandes()
+            setDemandes(data)
+        } catch (err) {
+            setError("Impossible de charger les demandes.")
+            console.error("Error fetching demandes:", err)
+        } finally {
+            setLoading(false)
+        }
     }
-    try {
-      setIsLoading(true); // Afficher un spinner pendant le traitement
-      const response = await materialService.processDemande(demandeId, action);
-      
-      if (response && response.status === 'success') {
-          alert(`Demande ${action === 'approve' ? 'approuvée' : 'rejetée'} avec succès !`);
-          // Recharger les demandes pour mettre à jour l'affichage
-          loadDemandes(); // Re-appel de la fonction de chargement
-          
-          // Si acceptée, et s'il s'agit d'une seule demande de matériel,
-          // rediriger vers le formulaire de mouvement pour l'affectation.
-          // Note: La redirection directe pour "Accepter" vers AdminMouvement.jsx
-          // est une logique front-end. Le backend a déjà changé le statut.
-          if (action === 'approve') {
-            // Vous devrez récupérer les détails de la demande (type, quantité)
-            // et les passer au formulaire de mouvement si vous voulez pré-remplir.
-            // Pour l'instant, on redirige vers le formulaire de mouvement générique.
-            navigate(`/admin/mouvement?demandeId=${demandeId}`); // Redirige vers AdminMouvement avec l'ID de la demande
-          }
-      } else {
-          // Gérer les erreurs spécifiques renvoyées par le backend
-          throw new Error(response.message || "Réponse inattendue du serveur lors du traitement.");
-      }
-    } catch (err) {
-      console.error(`Erreur lors du traitement de la demande ${demandeId}:`, err);
-      alert(`Erreur lors du traitement: ${err.message || "Veuillez réessayer."}`);
-    } finally {
-      // setIsLoading(false); // Sera géré par loadDemandes() qui se termine en finally
+
+    useEffect(() => {
+        fetchDemandesData()
+    }, [])
+
+    const handleProcessDemand = async (demandeId, action) => {
+        try {
+            await materialService.processDemande(demandeId, action)
+            toast.success(
+                `Demande ${action === "approve" ? "approuvée" : "rejetée"} avec succès !`
+            )
+            fetchDemandesData() // Rafraîchir la liste
+        } catch (err) {
+            toast.error(`Échec de l'opération : ${err.message}`)
+            console.error(`Processing demand failed:`, err)
+        }
     }
-  };
 
-  // Gère l'action "Voir" les détails de la demande (si vous avez une page dédiée pour ça)
-  const handleVoirDetails = (demandeId) => {
-    // Par exemple, naviguer vers une page de détail de demande
-    // navigate(`/admin/demande/${demandeId}`); 
-    alert(`Action: Voir les détails de la demande ID ${demandeId}`);
-  };
+    const handleViewDetails = demande => {
+        setSelectedDemande(demande)
+        setIsModalOpen(true)
+    }
 
-  // Affichage des états (loading, error)
-  if (isLoading) {
+    const getStatusBadge = status => {
+        switch (status) {
+            case "pending":
+                return <Badge variant="secondary">En attente</Badge>
+            case "approved":
+                return (
+                    <Badge className="bg-green-500 text-white">Approuvée</Badge>
+                )
+            case "rejected":
+                return <Badge variant="destructive">Rejetée</Badge>
+            default:
+                return <Badge variant="outline">{status}</Badge>
+        }
+    }
+
+    if (loading) return <div>Chargement des demandes...</div>
+    if (error) return <div className="text-red-500">{error}</div>
+
     return (
-      <div className="flex min-h-screen">
-        <AppSidebar />
-        <div className="flex-1 p-6 ml-[250px] flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-        </div>
-      </div>
-    );
-  }
+        <div >
+            <h1 className="text-5xl mb-10 text-center font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
+                Gestion des Demandes de Matériel
+            </h1>
+            <Button
+                onClick={handlePrint}
+                variant="outline"
+                className="hover:bg-orange-500 hover:text-white"
+            >
+                <Printer className="h-4 w-4 mr-2" />
+                Imprimer le tableau
+            </Button>
+            <div ref={tableRef} className="rounded-md border">
+                <div className="print-only:block hidden p-4 border-b">
+                    <h2 className="text-xl font-bold">
+                        Liste des Demandes de matériel
+                    </h2>
+                    <p>Imprimé le {new Date().toLocaleDateString("fr-FR")}</p>
+                </div>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Demandeur</TableHead>
+                            <TableHead>Département</TableHead>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Statut</TableHead>
+                            <TableHead className="text-right no-print">
+                                Actions
+                            </TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {demandes.length > 0 ? (
+                            demandes.map(demande => (
+                                <TableRow key={demande.id}>
+                                    <TableCell className="font-medium">
+                                        {demande.demandeur_name}
+                                    </TableCell>
+                                    <TableCell>
+                                        {demande.departement_demandeur}
+                                    </TableCell>
+                                    <TableCell>
+                                        {new Date(
+                                            demande.date_demande
+                                        ).toLocaleDateString()}
+                                    </TableCell>
+                                    <TableCell>
+                                        {getStatusBadge(demande.state)}
+                                    </TableCell>
+                                    <TableCell className="text-right space-x-2 no-print">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() =>
+                                                handleViewDetails(demande)
+                                            }
+                                        >
+                                            Voir
+                                        </Button>
+                                        {demande.state === "pending" && (
+                                            <>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-green-600 hover:bg-green-100"
+                                                    onClick={() =>
+                                                        handleProcessDemand(
+                                                            demande.id,
+                                                            "approve"
+                                                        )
+                                                    }
+                                                >
+                                                    Confirmer
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-red-600 hover:bg-red-100"
+                                                    onClick={() =>
+                                                        handleProcessDemand(
+                                                            demande.id,
+                                                            "reject"
+                                                        )
+                                                    }
+                                                >
+                                                    Rejeter
+                                                </Button>
+                                            </>
+                                        )}
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell
+                                    colSpan="5"
+                                    className="h-24 text-center"
+                                >
+                                    Aucune demande trouvée.
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
 
-  if (error) {
-    return (
-      <div className="flex min-h-screen">
-        <AppSidebar />
-        <div className="flex-1 p-6 ml-[250px] text-center text-red-600">
-          <h2 className="text-xl font-bold mb-4">Erreur de chargement</h2>
-          <p>{error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex min-h-screen">
-      <AppSidebar /> {/* Inclusion de la sidebar pour le layout */}
-
-      <div className="flex-1 p-6 ml-[180px]"> {/* Ajustez la marge si AppSidebar est plus large */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">Gestion des Demandes de Matériel</h1>
-          <p className="text-gray-600">Liste des demandes soumises par les directeurs.</p>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Demandes en attente de traitement</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {demandes.length === 0 ? (
-              <p className="text-gray-500 text-center">Aucune demande de matériel à traiter pour le moment.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full bg-white border border-gray-200">
-                  <thead>
-                    <tr>
-                      {tableHeaders.map((header, index) => (
-                        <th key={index} className="py-2 px-4 border-b text-left text-sm font-semibold text-gray-700">{header}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {demandes.map((demande) => (
-                      <tr key={demande.id} className="hover:bg-gray-50">
-                        <td className="py-2 px-4 border-b text-sm text-gray-900">{demande.name}</td>
-                        <td className="py-2 px-4 border-b text-sm text-gray-900">{demande.demandeur_name}</td>
-                        <td className="py-2 px-4 border-b text-sm text-gray-900">{demande.demandeur_department || 'N/A'}</td>
-                        <td className="py-2 px-4 border-b text-sm text-gray-900">
-                          {demande.demande_subcategory_name || demande.demande_type_general}
-                        </td>
-                        <td className="py-2 px-4 border-b text-sm text-gray-900">{demande.quantite}</td>
-                        <td className="py-2 px-4 border-b text-sm text-gray-900">{demande.motif_demande}</td>
-                        <td className="py-2 px-4 border-b text-sm text-gray-900">{demande.date_demande ? new Date(demande.date_demande).toLocaleDateString() : 'N/A'}</td>
-                        <td className="py-2 px-4 border-b text-sm text-gray-900">
-                          <Badge variant={demande.state === 'pending' ? 'secondary' : (demande.state === 'approved' ? 'default' : 'destructive')}>
-                            {demande.state}
-                          </Badge>
-                        </td>
-                        <td className="py-2 px-4 border-b text-sm text-gray-900">
-                          {demande.state === 'pending' && (
-                            <div className="flex gap-2">
-                              <Button size="sm" onClick={() => handleProcessDemande(demande.id, 'approve')}>Accepter</Button>
-                              <Button size="sm" variant="outline" onClick={() => handleProcessDemande(demande.id, 'reject')}>Refuser</Button>
-                            </div>
-                          )}
-                          {demande.state === 'approved' && (
-                            <div className="flex gap-2 items-center text-green-600">
-                                <span className="font-semibold">Approuvée</span>
-                                {/* Bouton pour allouer le matériel (facultatif si le processus est manuel après approbation) */}
-                                {/* <Button size="sm" onClick={() => navigate(`/admin/allouer-materiel?demandeId=${demande.id}`)}>Allouer</Button> */}
-                            </div>
-                          )}
-                          {demande.state === 'rejected' && (
-                            <p className="text-red-600 font-semibold">Rejetée</p>
-                          )}
-                           {demande.state === 'allocated' && (
-                            <p className="text-blue-600 font-semibold">Allouée</p>
-                          )}
-                           <Button size="sm" variant="secondary" onClick={() => handleVoirDetails(demande.id)} className="ml-2">Voir</Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            {isModalOpen && (
+                <DemandeDetailModal
+                    demande={selectedDemande}
+                    onClose={() => setIsModalOpen(false)}
+                />
             )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
+        </div>
+    )
 }

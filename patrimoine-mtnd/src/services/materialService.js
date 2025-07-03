@@ -1,380 +1,548 @@
-// services/materialService.js (COMPLETE AND CONSOLIDATED)
-import { get, post } from './baseService'; 
-import { apiConfig } from './apiConfig';   
+// services/materialService.js (Version Complète et Corrigée)
+import api from "./apiConfig"
 
 // --- Fonctions de récupération de listes de données ---
 
 const fetchMaterials = async () => {
-  try {
-    const sessionId = localStorage.getItem('odoo_session_id');
-    if (!sessionId) { throw new Error('Session expired - Please login again'); }
-    const response = await get(apiConfig.ENDPOINTS.ALL_ASSETS); 
-    return response; 
-  } catch (error) {
-    console.error('Error fetching materials:', error);
-    throw error;
-  }
-};
+    try {
+        const response = await api.get("/api/patrimoine/assets")
+        return response.data
+    } catch (error) {
+        console.error("Error fetching materials:", error)
+        throw error
+    }
+}
 
-const fetchMaterialDetails = async (id) => {
-  try {
-    const sessionId = localStorage.getItem('odoo_session_id');
-    if (!sessionId) { throw new Error('Session expired - Please login again'); }
-    const response = await get(apiConfig.ENDPOINTS.ITEM_DETAILS(id)); 
-    return response; 
-  } catch (error) {
-    console.error('Error fetching material details:', error);
-    throw error;
-  }
-};
+const fetchMaterialsByUser = async () => {
+    try {
+        const response = await api.get("/api/patrimoine/assets/user")
+        return response.data
+    } catch (error) {
+        console.error("Error fetching user materials:", error)
+        throw error
+    }
+}
+
+const fetchMaterialDetails = async id => {
+    try {
+        const response = await api.get(`/api/patrimoine/assets/${id}`)
+
+        // CORRECTION DÉFINITIVE : On vérifie que la réponse a le bon format
+        // et on retourne UNIQUEMENT l'objet qui nous intéresse.
+        if (response.data && response.data.data) {
+            return response.data.data
+        } else {
+            throw new Error("Le format de la réponse de l'API est incorrect.")
+        }
+    } catch (error) {
+        console.error("Error fetching material details:", error)
+        throw error
+    }
+}
 
 const fetchLocations = async () => {
     try {
-        const sessionId = localStorage.getItem('odoo_session_id'); if (!sessionId) throw new Error('Session expirée - Veuillez vous reconnecter');
-        const response = await get(apiConfig.ENDPOINTS.LOCATIONS);
-        return response;
-    } catch (error) { console.error('Error fetching locations:', error); throw error; }
-};
+        const response = await api.get("/api/patrimoine/locations")
+        return response.data
+    } catch (error) {
+        console.error("Error fetching locations:", error)
+        throw error
+    }
+}
 
 const fetchEmployees = async () => {
     try {
-        const sessionId = localStorage.getItem('odoo_session_id'); if (!sessionId) throw new Error('Session expirée - Veuillez vous reconnecter');
-        const response = await get(apiConfig.ENDPOINTS.EMPLOYEES);
-        return response;
-    } catch (error) { console.error('Error fetching employees:', error); throw error; }
-};
+        const response = await api.get("/api/patrimoine/employees")
+        return response.data
+    } catch (error) {
+        console.error("Error fetching employees:", error)
+        throw error
+    }
+}
 
 const fetchDepartments = async () => {
     try {
-        const sessionId = localStorage.getItem('odoo_session_id'); if (!sessionId) throw new Error('Session expirée - Veuillez vous reconnecter');
-        const response = await get(apiConfig.ENDPOINTS.DEPARTMENTS);
-        return response;
-    } catch (error) { console.error('Error fetching departments:', error); throw error; }
-};
+        const response = await api.get("/api/patrimoine/departments")
+        return response.data
+    } catch (error) {
+        console.error("Error fetching departments:", error)
+        throw error
+    }
+}
 
 const fetchFournisseurs = async () => {
     try {
-        const sessionId = localStorage.getItem('odoo_session_id'); if (!sessionId) throw new Error('Session expirée - Veuillez vous reconnecter');
-        const response = await get(apiConfig.ENDPOINTS.FOURNISSEURS);
-        return response;
-    } catch (error) { console.error('Error fetching fournisseur:', error); throw error; }
-};
+        const response = await api.get("/api/patrimoine/fournisseurs")
+        return response.data
+    } catch (error) {
+        console.error("Error fetching fournisseur:", error)
+        throw error
+    }
+}
 
-const fetchStats = async () => { // Plus de paramètres ici, c'est pour le GLOBAL
-  try {
-    const sessionId = localStorage.getItem('odoo_session_id'); if (!sessionId) throw new Error('Session expirée - Veuillez vous reconnecter');
-    const url = apiConfig.ENDPOINTS.GENERAL_STATS; // <-- Utilise la route correcte sans filtre
-    const response = await get(url);
-    return response; // baseService.get retourne response.data
-  } catch (error) {
-    console.error('Error fetching global stats:', error);
-    throw error;
-  }
-};
+const fetchStats = async () => {
+    try {
+        const response = await api.get("/api/patrimoine/stats")
+        return response.data
+    } catch (error) {
+        console.error("Error fetching global stats:", error)
+        throw error
+    }
+}
 
-// Fonctions pour la catégorisation dynamique (pour AdminAjouterMateriel)
 const fetchTypesGeneraux = async () => {
-  try {
-    const sessionId = localStorage.getItem('odoo_session_id'); if (!sessionId) throw new Error('Session expirée - Veuillez vous reconnecter');
-    const url = apiConfig.ENDPOINTS.CATEGORIES(); 
-    const response = await get(url);
-    return response.map(cat => ({ id: cat.id, name: cat.name, code: cat.code, type: cat.type }));
-  } catch (error) { console.error('Error fetching general asset types:', error); throw error; }
-};
+    try {
+        const response = await api.get("/api/patrimoine/categories")
+        return response.data
+    } catch (error) {
+        console.error("Error fetching general asset types:", error)
+        throw error
+    }
+}
 
-const fetchSubcategories = async (categoryId) => { 
-  try {
-    const sessionId = localStorage.getItem('odoo_session_id'); if (!sessionId) throw new Error('Session expirée - Veuillez vous reconnecter');
-    const url = apiConfig.ENDPOINTS.SUBCATEGORIES(categoryId);
-    const response = await get(url);
-    return response;
-  } catch (error) { console.error('Error fetching subcategories for category ID', categoryId, ':', error); throw error; }
-};
+const fetchSubcategories = async categoryId => {
+    try {
+        const response = await api.get(
+            `/api/patrimoine/subcategories/${categoryId}`
+        )
 
-const fetchCustomFields = async (subcategoryId) => {
-  try {
-    const sessionId = localStorage.getItem('odoo_session_id'); if (!sessionId) throw new Error('Session expirée - Veuillez vous reconnecter');
-    const url = apiConfig.ENDPOINTS.CUSTOM_FIELDS(subcategoryId);
-    const response = await get(url);
-    return response;
-  } catch (error) { console.error('Error fetching custom fields for subcategory ID', subcategoryId, ':', error); throw error; }
-};
+        // CORRECTION DÉFINITIVE :
+        // Votre API renvoie maintenant le format correct : { status: 'success', data: [...] }
+        // Nous nous adaptons à ce format stable.
+        if (response.data && Array.isArray(response.data.data)) {
+            // On retourne le tableau qui se trouve DANS la clé "data".
+            return response.data.data
+        } else {
+            // Sécurité au cas où la réponse serait mal formée.
+            console.error(
+                "Format de réponse inattendu pour les sous-catégories:",
+                response.data
+            )
+            throw new Error(
+                "La réponse de l'API pour les sous-catégories est mal formée."
+            )
+        }
+    } catch (error) {
+        console.error(
+            `Erreur lors de la récupération des sous-catégories pour l'ID ${categoryId} :`,
+            error
+        )
+        throw error
+    }
+}
 
+const fetchCustomFields = async subcategoryId => {
+    try {
+        const response = await api.get(
+            `/api/patrimoine/subcategories/${subcategoryId}/fields`
+        )
+        return response.data
+    } catch (error) {
+        console.error(
+            "Error fetching custom fields for subcategory ID",
+            subcategoryId,
+            ":",
+            error
+        )
+        throw error
+    }
+}
 
 // --- Fonctions d'opérations sur les Matériels / Mouvements ---
 
-const createItem = async (formData) => { 
-  try {
-    const sessionId = localStorage.getItem('odoo_session_id');
-    if (!sessionId) { throw new Error('Session expirée - Veuillez vous reconnecter'); }
-
-    const response = await fetch(apiConfig.ENDPOINTS.CREATE_ITEM, { 
-      method: 'POST',
-      headers: {
-        'X-Openerp-Session-Id': sessionId 
-      },
-      credentials: 'include',
-      body: formData 
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Erreur serveur lors de la création d'item:", errorText);
-      throw new Error(`Erreur ${response.status}: ${errorText || 'Erreur inconnue'}`);
+const createItem = async formData => {
+    try {
+        const response = await api.post("/api/patrimoine/assets", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+        })
+        return response.data
+    } catch (error) {
+        console.error("Error creating item:", error)
+        throw new Error(
+            error.response?.data?.message ||
+                error.message ||
+                "Erreur inconnue lors de la création"
+        )
     }
-    return await response.json();
-  } catch (error) { console.error('Error creating item:', error); throw error; }
-};
+}
 
-const validerMouvement = async (mouvementId) => {
-  try {
-    const sessionId = localStorage.getItem('odoo_session_id');
-    if (!sessionId) { throw new Error('Session expirée - Veuillez vous reconnecter'); }
-
-    const response = await fetch(apiConfig.ENDPOINTS.MOVEMENT_VALIDATE(mouvementId), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Openerp-Session-Id': sessionId },
-      credentials: 'include', body: JSON.stringify({})
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Erreur lors de la validation du mouvement');
+const updateItem = async (id, formData) => {
+    try {
+        const response = await api.put(
+            `/api/patrimoine/assets/${id}`,
+            formData,
+            {
+                headers: { "Content-Type": "multipart/form-data" },
+            }
+        )
+        return response.data
+    } catch (error) {
+        console.error(`Error updating item ${id}:`, error)
+        throw new Error(
+            error.response?.data?.message ||
+                error.message ||
+                "Erreur inconnue lors de la mise à jour"
+        )
     }
-    return await response.json();
-  } catch (error) { console.error('Error validating mouvement:', error); throw error; }
-};
+}
 
-const saveMouvement = async (data) => {
-  try {
-    const sessionId = localStorage.getItem('odoo_session_id');
-    if (!sessionId) { throw new Error('Session expirée - Veuillez vous reconnecter'); }
-
-    const response = await fetch(apiConfig.ENDPOINTS.MOVEMENT_CREATE, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Openerp-Session-Id': sessionId },
-      credentials: 'include', body: JSON.stringify(data)
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Erreur lors de la sauvegarde du mouvement');
+const validerMouvement = async mouvementId => {
+    try {
+        const response = await api.post(
+            `/api/patrimoine/mouvements/${mouvementId}/validate`,
+            {}
+        )
+        return response.data
+    } catch (error) {
+        console.error("Error validating mouvement:", error)
+        throw error
     }
-    return await response.json();
-  } catch (error) { console.error('Error saving mouvement:', error); throw error; }
-};
+}
 
-const printFicheViePdf = async (assetId) => {
-  try {
-    const sessionId = localStorage.getItem('odoo_session_id');
-    if (!sessionId) { throw new Error('Session expired - Please login again'); }
+const saveMouvement = async mouvementData => {
+    try {
+        // La vérification de session ici est inutile, l'intercepteur Axios s'en charge déjà.
+        const requiredFields = ["asset_id", "type_mouvement", "date", "motif"]
+        const missingFields = requiredFields.filter(
+            field => !mouvementData[field]
+        )
 
-    const requestUrl = apiConfig.ENDPOINTS.PRINT_FICHE_VIE(assetId);
-    const response = await fetch(requestUrl, {
-      method: 'GET',
-      headers: { 'X-Openerp-Session-Id': sessionId, 'Accept': 'application/pdf' },
-      credentials: 'include',
-    });
+        if (missingFields.length > 0) {
+            throw new Error(
+                `Champs obligatoires manquants: ${missingFields.join(", ")}`
+            )
+        }
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Erreur ${response.status} lors de la génération du PDF: ${errorText}`);
+        const response = await api.post(
+            "/api/patrimoine/mouvements",
+            mouvementData
+        )
+        return response.data
+    } catch (error) {
+        console.error("Error saving mouvement:", {
+            error: error.message,
+            stack: error.stack,
+            requestData: mouvementData,
+        })
+        throw error
     }
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob); window.open(url, '_blank'); window.URL.revokeObjectURL(url);
-    return { status: 'success' };
-  } catch (error) { console.error('Error printing fiche vie PDF:', error); throw error; }
-};
+}
 
+const printFicheViePdf = async assetId => {
+    try {
+        const response = await api.get(
+            `/api/patrimoine/assets/${assetId}/print_fiche_vie`,
+            {
+                responseType: "blob",
+            }
+        )
+        const blob = new Blob([response.data], { type: "application/pdf" })
+        const url = window.URL.createObjectURL(blob)
+        window.open(url, "_blank")
+        window.URL.revokeObjectURL(url)
+        return { status: "success" }
+    } catch (error) {
+        console.error("Error printing fiche vie PDF:", error)
+        throw error
+    }
+}
 
-// Fonctions pour les items par catégorie (utilisées par CategoryItemsPage)
-// C'est cette fonction qui doit appeler la NOUVELLE ROUTE Odoo avec les paramètres dans le chemin.
-const getMaterialsByCategory = (generalType, subcategoryCode) => { 
-  let url;
-  if (subcategoryCode) {
-      url = apiConfig.ENDPOINTS.ASSETS_BY_SUBCATEGORY(subcategoryCode); // Cible /api/patrimoine/assets/category/<code_subcat>
-  } else if (generalType) {
-      url = apiConfig.ENDPOINTS.ASSETS_BY_TYPE(generalType); // Cible /api/patrimoine/assets/type/<type_general>
-  } else {
-      url = apiConfig.ENDPOINTS.ALL_ASSETS; // Cible /api/patrimoine/assets (pour tout lister si aucun filtre)
-  }
+const getMaterialsByCategory = async (generalType, subcategoryCode) => {
+    let url
+    if (subcategoryCode) {
+        url = `/api/patrimoine/assets/category/${subcategoryCode}`
+    } else if (generalType) {
+        url = `/api/patrimoine/assets/type/${generalType}`
+    } else {
+        url = "/api/patrimoine/assets"
+    }
+    const response = await api.get(url)
+    return response.data
+}
 
-  console.log(`Fetching materials (final URL): ${url}`);
-  return get(url); 
-};
+const getCategoryItems = (generalType, subcategoryCode) => {
+    return getMaterialsByCategory(generalType, subcategoryCode)
+}
 
-const getCategoryItems = (generalType, subcategoryCode) => { // Alias de getMaterialsByCategory
-  return getMaterialsByCategory(generalType, subcategoryCode);
-};
+const getCategoryStats = async (generalType, subcategoryCode) => {
+    let url
+    if (subcategoryCode) {
+        url = `/api/patrimoine/stats/category/${subcategoryCode}`
+    } else if (generalType) {
+        url = `/api/patrimoine/stats/type/${generalType}`
+    } else {
+        url = "/api/patrimoine/stats"
+    }
+    const response = await api.get(url)
+    return response.data
+}
 
-// La fonction getCategoryStats doit aussi utiliser les nouvelles routes par path variable
-const getCategoryStats = (generalType, subcategoryCode) => { 
-  let url;
-  if (subcategoryCode) {
-      url = apiConfig.ENDPOINTS.STATS_BY_SUBCATEGORY(subcategoryCode); // Cible /api/patrimoine/stats/category/<code_subcat>
-  } else if (generalType) {
-      url = `/api/patrimoine/stats/type/${generalType}`; // Cible /api/patrimoine/stats/type/<type_general>
-  } else {
-      url = apiConfig.ENDPOINTS.GENERAL_STATS; // Cible /api/patrimoine/stats (pour les stats globales)
-  }
-  
-  console.log(`Fetching stats (final URL): ${url}`);
-  return get(url); 
-};
+// --- Fonctions pour les demandes de matériel ---
 
-// Pour lister toutes les demandes
 const fetchDemandes = async () => {
     try {
-        const sessionId = localStorage.getItem('odoo_session_id');
-        if (!sessionId) throw new Error('Session expirée - Veuillez vous reconnecter');
-        const response = await get(apiConfig.ENDPOINTS.DEMANDES_LIST); 
-        return response; 
+        const response = await api.get("/api/patrimoine/demandes")
+        return response.data
     } catch (error) {
-        console.error('Error fetching demandes:', error);
-        throw error;
+        console.error("Error fetching demandes:", error)
+        throw error
     }
-};
+}
 
-// Pour approuver ou rejeter une demande
-const processDemande = async (demandeId, action) => { // action: 'approve' ou 'reject'
+const fetchDemandeDetails = async demandeId => {
     try {
-        const sessionId = localStorage.getItem('odoo_session_id');
-        if (!sessionId) throw new Error('Session expirée - Veuillez vous reconnecter');
-        const response = await post(apiConfig.ENDPOINTS.DEMANDES_PROCESS(demandeId), { action }); // Envoie l'action dans le body
-        return response; 
+        const response = await api.get(
+            `/api/patrimoine/demande_materiel/${demandeId}`
+        )
+        return {
+            ...response.data,
+            materiels: response.data.ligne_ids || [],
+        }
     } catch (error) {
-        console.error(`Error processing demande ${demandeId} with action ${action}:`, error);
-        throw error;
+        console.error(`Error fetching details for demande ${demandeId}:`, error)
+        throw error
     }
-};
+}
 
-// Pour qu'un directeur puisse créer une demande
-const createDemande = async (demandeData) => { // demandeData contiendra les nouveaux champs
+const processDemande = async (demandeId, action) => {
     try {
-        const sessionId = localStorage.getItem('odoo_session_id');
-        if (!sessionId) throw new Error('Session expirée - Veuillez vous reconnecter');
-
-        // Note: Le contrôleur Odoo pour create_demande est de type='json'
-        // Donc, nous envoyons un objet JSON
-        const response = await post(apiConfig.ENDPOINTS.DEMANDES_CREATE, demandeData); 
-        return response; 
+        const url =
+            action === "approve"
+                ? `/api/patrimoine/demandes/${demandeId}/approval`
+                : `/api/patrimoine/demandes/${demandeId}/rejection`
+        const response = await api.post(url, {})
+        return response.data
     } catch (error) {
-        console.error('Error creating demande:', error);
-        throw error;
+        console.error(`Erreur lors du traitement de la demande ${demandeId}:`, {
+            error: error.message,
+            stack: error.stack,
+            action,
+        })
+        throw error
     }
-};
+}
+
+const createDemande = async demandeData => {
+    try {
+        const response = await api.post("/api/patrimoine/demandes", demandeData)
+        return response.data
+    } catch (error) {
+        console.error("Error creating demande:", error)
+        throw error
+    }
+}
 
 // --- Fonctions de gestion des Déclarations de Perte ---
 
-// --- Fonction de création d'une Déclaration de Perte ---
-const createPerte = async (perteData) => { // perteData contiendra asset_id et motif
+const createPerte = async perteData => {
     try {
-        const sessionId = localStorage.getItem('odoo_session_id');
-        if (!sessionId) throw new Error('Session expirée - Veuillez vous reconnecter');
-
-        const response = await post(apiConfig.ENDPOINTS.PERTES_CREATE, perteData); // Nouvelle constante d'endpoint
-        return response; // {status: 'success', perte_id: X, perte_name: 'PERTE/2025/0001'}
+        const response = await api.post("/api/patrimoine/pertes", perteData)
+        return response.data
     } catch (error) {
-        console.error('Error creating perte:', error);
-        throw error;
+        console.error("Error creating perte:", error)
+        throw error
     }
-};
+}
 
-// Pour lister toutes les déclarations de perte
 const fetchDeclarationsPerte = async () => {
     try {
-        const sessionId = localStorage.getItem('odoo_session_id');
-        if (!sessionId) throw new Error('Session expirée - Veuillez vous reconnecter');
-        const response = await get(apiConfig.ENDPOINTS.PERTES_LIST); // Nouvelle constante d'endpoint
-        return response; // Tableau de déclarations
+        const response = await api.get("/api/patrimoine/pertes")
+        return response.data
     } catch (error) {
-        console.error('Error fetching pertes:', error);
-        throw error;
+        console.error("Error fetching pertes:", error)
+        throw error
     }
-};
+}
 
-// Pour confirmer ou rejeter une déclaration de perte
-const processPerte = async (perteId, action) => { // action: 'confirm' ou 'reject'
+const processPerte = async (perteId, action) => {
     try {
-        const sessionId = localStorage.getItem('odoo_session_id');
-        if (!sessionId) throw new Error('Session expirée - Veuillez vous reconnecter');
-        const response = await post(apiConfig.ENDPOINTS.PERTES_PROCESS(perteId), { action }); // Envoie l'action dans le body
-        return response; // {status: 'success', new_state: 'confirmed'|'rejected'}
+        const response = await api.post(
+            `/api/patrimoine/pertes/${perteId}/process`,
+            { action }
+        )
+        return response.data
     } catch (error) {
-        console.error(`Erreur lors du traitement de la perte ${perteId} avec action ${action}:`, error);
-        throw error;
+        console.error(
+            `Erreur lors du traitement de la perte ${perteId} avec action ${action}:`,
+            error
+        )
+        throw error
     }
-};
+}
 
-
-// --- NOUVELLE FONCTION : Obtenir les matériels par département ---
-const getMaterialsByDepartment = async (departmentId) => {
+const getMaterialsByDepartment = async departmentId => {
     try {
-        const sessionId = localStorage.getItem('odoo_session_id');
-        if (!sessionId) throw new Error('Session expirée');
-        // Appel de la nouvelle API
-        const url = `/api/patrimoine/assets/department/${departmentId}`; // <-- URL avec l'ID du département dans le chemin
-        const response = await get(url);
-        return response; // Tableau de matériels
+        const url = `/api/patrimoine/assets/department/${departmentId}`
+        const response = await api.get(url)
+        return response.data
     } catch (error) {
-        console.error('Error fetching materials by department:', error);
+        console.error("Error fetching materials by department:", error)
+        throw error
+    }
+}
+
+// --- Fonctions pour les statistiques ---
+
+// Fonction pour la page de l'ADMIN : récupère les stats de TOUS les départements
+const fetchAllDepartmentStats = async () => {
+    try {
+        const response = await api.get("/api/patrimoine/stats/by_department");
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching all department stats:", error);
         throw error;
     }
 };
 
-
-const fetchStatsByDepartment = async () => {
-  try {
-    const sessionId = localStorage.getItem('odoo_session_id'); if (!sessionId) throw new Error('Session expirée');
-    const response = await get(apiConfig.ENDPOINTS.STATS_BY_DEPARTMENT);
-    return response;
-  } catch (error) { console.error('Error fetching stats by department:', error); throw error; }
+// Fonction pour la page du DIRECTEUR : récupère les stats d'UN SEUL département
+const fetchStatsForOneDepartment = async (departmentId) => {
+    try {
+        const response = await api.get(`/api/patrimoine/stats/department/${departmentId}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching stats for one department:", error);
+        throw error;
+    }
 };
 
 const fetchStatsByType = async () => {
-  try {
-    const sessionId = localStorage.getItem('odoo_session_id'); if (!sessionId) throw new Error('Session expirée');
-    const response = await get(apiConfig.ENDPOINTS.STATS_BY_TYPE);
-    return response;
-  } catch (error) { console.error('Error fetching stats by type:', error); throw error; }
-};
+    try {
+        const response = await api.get("/api/patrimoine/stats/by_type")
+        return response.data
+    } catch (error) {
+        console.error("Error fetching stats by type:", error)
+        return []
+    }
+}
 
 const fetchStatsByDetailedCategory = async () => {
-  try {
-    const sessionId = localStorage.getItem('odoo_session_id'); if (!sessionId) throw new Error('Session expirée');
-    const response = await get(apiConfig.ENDPOINTS.STATS_BY_DETAILED_CATEGORY);
-    return response;
-  } catch (error) { console.error('Error fetching stats by detailed category:', error); throw error; }
+    try {
+        const response = await api.get(
+            "/api/patrimoine/stats/by_detailed_category"
+        )
+        return response.data
+    } catch (error) {
+        console.error("Error fetching stats by detailed category:", error)
+        throw error
+    }
+}
+
+// Fonction pour la page de l'AGENT : récupère les stats de l'utilisateur connecté
+const fetchStatsForCurrentUser = async () => {
+    try {
+        const response = await api.get("/api/patrimoine/stats/user");
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching stats for current user:", error);
+        throw error;
+    }
 };
 
+// NOUVELLE FONCTION pour la page de validation du manager
+const fetchPertesForManager = async () => {
+    try {
+        const response = await api.get("/api/patrimoine/pertes/manager");
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching pertes for manager:", error);
+        throw error;
+    }
+};
 
-// --- EXPORT DE L'OBJET PAR DÉFAUT QUI CONTIENT TOUTES LES FONCTIONS ---
+const fetchFilteredMaterials = async filters => {
+    // On transforme l'objet de filtres en chaîne de requête URL (ex: "?status=service&type=info")
+    const queryParams = new URLSearchParams(filters).toString()
+    try {
+        const response = await api.get(
+            `/api/patrimoine/assets/filter?${queryParams}`
+        )
+        return response.data
+    } catch (error) {
+        console.error("Error fetching filtered materials:", error)
+        throw error
+    }
+}
+
+// NOUVELLE FONCTION pour la validation par le manager
+const processPerteForManager = async (perteId, action) => {
+    try {
+        const response = await api.post(`/api/patrimoine/pertes/manager_process/${perteId}`, { action });
+        return response.data;
+    } catch (error) {
+        console.error("Error processing perte for manager:", error);
+        throw error;
+    }
+};
+
+const fetchStatsByAge = async () => {
+    try {
+        const response = await api.get("/api/patrimoine/stats/by_age")
+        return response.data
+    } catch (error) {
+        console.error("Error fetching stats by age:", error)
+        throw error
+    }
+}
+
+const fetchStatsByDepartmentValue = async () => {
+    try {
+        const response = await api.get(
+            "/api/patrimoine/stats/by_department_value"
+        )
+        return response.data
+    } catch (error) {
+        console.error("Error fetching stats by department value:", error)
+        throw error
+    }
+}
+
+const deleteMaterial = async assetId => {
+    try {
+        const response = await api.delete(`/api/patrimoine/items/${assetId}`)
+        return response.data
+    } catch (error) {
+        console.error("Error deleting material:", error)
+        throw error
+    }
+}
+
 export default {
-  fetchMaterials,
-  fetchMaterialDetails,
-  fetchLocations,
-  fetchEmployees,
-  fetchDepartments,
-  fetchFournisseurs,
-  fetchStats, 
-  fetchTypesGeneraux, 
-  fetchSubcategories, 
-  fetchCustomFields,  
-  createItem,
-  validerMouvement,
-  saveMouvement,
-  printFicheViePdf,
-  getMaterialsByCategory, 
-  getCategoryItems, 
-  getCategoryStats, 
-  fetchDemandes,
-  processDemande,
-  createDemande,
-  fetchDeclarationsPerte,
-  processPerte,
-  createPerte,
-  fetchStatsByDepartment, 
-  fetchStatsByType,       
-  fetchStatsByDetailedCategory, 
-  getMaterialsByDepartment
-};
+    fetchMaterials,
+    fetchMaterialsByUser,
+    fetchMaterialDetails,
+    fetchLocations,
+    fetchEmployees,
+    fetchDepartments,
+    fetchFournisseurs,
+    fetchStats,
+    fetchTypesGeneraux,
+    fetchSubcategories,
+    fetchCustomFields,
+    createItem,
+    updateItem,
+    validerMouvement,
+    saveMouvement,
+    printFicheViePdf,
+    getMaterialsByCategory,
+    getCategoryItems,
+    getCategoryStats,
+    fetchDemandes,
+    fetchDemandeDetails,
+    processDemande,
+    createDemande,
+    fetchDeclarationsPerte,
+    processPerte,
+    createPerte,
+    fetchStatsByType,
+    fetchStatsByDetailedCategory,
+    getMaterialsByDepartment,
+    deleteMaterial,
+    fetchAllDepartmentStats,
+    fetchStatsForOneDepartment,
+    fetchStatsForCurrentUser,
+    fetchPertesForManager,
+    processPerteForManager,
+    fetchFilteredMaterials,
+    fetchStatsByAge,
+    fetchStatsByDepartmentValue,
+}

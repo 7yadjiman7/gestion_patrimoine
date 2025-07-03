@@ -20,6 +20,7 @@
         "views/menu.xml",
         "views/mouvement_views.xml",
         "views/perte_views.xml",
+        "views/demande_materiel_views.xml",
         "views/asset_category_views.xml",
         "views/asset_custom_field_views.xml",
         "views/asset_subcategory_views.xml",

@@ -1,43 +1,50 @@
-# Dans un de vos fichiers contrôleur Odoo, par exemple asset_controller.py
-from odoo import http
-from odoo.http import request, Response
-import json
-import logging
+# Dans votre fichier de contrôleur, ex: userApi_controller.py
 
-_logger = logging.getLogger(__name__)
+from odoo import http
+from odoo.http import request
+
 
 class UserApiController(http.Controller):
 
-    @http.route("/api/users/me", type="http", auth="user", methods=["POST"], csrf=False)
-    def get_current_user_info(self, **kw):
+    @http.route("/api/users/me", auth="user", type="json", methods=["POST"], csrf=False)
+    def get_user_info(self, **kw):
         """
-        Retourne les informations de l'utilisateur courant, y compris ses rôles.
+        Retourne les informations détaillées de l'utilisateur connecté,
+        y compris son rôle et son département.
         """
         user = request.env.user
+        # Recherche de l'employé lié à l'utilisateur pour trouver le département
+        employee = request.env["hr.employee"].search(
+            [("user_id", "=", user.id)], limit=1
+        )
 
-        # Déterminez les rôles en fonction des groupes de sécurité Odoo
-        # Assurez-vous que les noms des groupes correspondent à ceux dans vos fichiers XML
+        # Détermination des rôles de l'utilisateur pour le frontend
         roles = []
         if user.has_group("gestion_patrimoine.group_patrimoine_admin"):
-            roles.append("admin_patrimoine")
+            roles.append("admin")
         if user.has_group("gestion_patrimoine.group_patrimoine_director"):
             roles.append("director")
-        if user.has_group("gestion_patrimoine.group_patrimoine_manager"):
-            roles.append("manager")
         if user.has_group("gestion_patrimoine.group_patrimoine_agent"):
             roles.append("agent")
+        if not roles:
+            roles.append("user")  # Rôle par défaut
 
-        # Si aucun rôle spécifique n'est trouvé, assigner un rôle par défaut
-        if not roles and user.has_group("base.group_user"):
-            roles.append("user")
-
-        user_info = {
-        'uid': user.id,
-        'name': user.name,
-        'username': user.login,
-        'roles': roles,
+        user_data = {
+            "uid": user.id,
+            "name": user.name,
+            "username": user.login,
+            "roles": roles,
+            # --- AJOUTS CRUCIAUX ---
+            # On ajoute l'ID et le nom du département à la réponse
+            "department_id": (
+                employee.department_id.id
+                if employee and employee.department_id
+                else None
+            ),
+            "department_name": (
+                employee.department_id.name
+                if employee and employee.department_id
+                else None
+            ),
         }
-    
-        # Pour un type='http', il faut retourner une odoo.http.Response
-        return http.Response(json.dumps(user_info), content_type='application/json')
-    
+        return user_data

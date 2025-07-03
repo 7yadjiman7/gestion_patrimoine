@@ -66,12 +66,16 @@
                 ref="model_patrimoine_asset"/>
             <field name="groups"
                 eval="[(4, ref('gestion_patrimoine.group_patrimoine_director'))]"/>
-            <field name="domain_force">[('department_id.manager_id.user_id', '=', user.id)]</field>
+
+            <field name="domain_force">[('department_id', '=', user.employee_id.department_id.id)]</field>
+
             <field name="perm_read"
                 eval="1"/>
             <field name="perm_write"
                 eval="1"/>
             <field name="perm_create"
+                eval="1"/>
+            <field name="perm_unlink"
                 eval="1"/>
         </record>
 

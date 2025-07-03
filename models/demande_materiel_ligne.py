@@ -1,5 +1,6 @@
 # gestion_patrimoine/models/demande_materiel_ligne.py
-from odoo import models, fields
+from odoo import models, fields, api
+from odoo.exceptions import ValidationError
 
 class PatrimoineDemandeMaterielLigne(models.Model):
     _name = 'patrimoine.demande.materiel.ligne'
@@ -32,4 +33,16 @@ class PatrimoineDemandeMaterielLigne(models.Model):
         string='Employé Destinataire'
     )
 
+    quantite = fields.Integer(
+        string="Quantité",
+        required=True,
+        default=1
+    )
+    
     description = fields.Text(string="Notes pour cette ligne")
+
+    @api.constrains('quantite')
+    def _check_quantite_positive(self):
+        for record in self:
+            if record.quantite <= 0:
+                raise ValidationError("La quantité doit être un nombre positif.")

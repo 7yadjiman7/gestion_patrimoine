@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="seq_patrimoine_demande_materiel"
+            model="ir.sequence">
+            <field name="name">Séquence Demande de Matériel</field>
+            <field name="code">patrimoine.demande.materiel.code</field>
+            <field name="prefix">DEM/</field>
+            <field name="padding">4</field>
+            <field name="company_id"
+                eval="False"/>
+        </record>
+
+        <record id="view_patrimoine_demande_materiel_tree"
+            model="ir.ui.view">
+            <field name="name">patrimoine.demande.materiel.tree</field>
+            <field name="model">patrimoine.demande.materiel</field>
+            <field name="arch"
+                type="xml">
+                <tree string="Demandes de Matériel"
+                    decoration-info="state == 'pending'"
+                    decoration-success="state == 'approved' or state == 'allocated'"
+                    decoration-muted="state == 'rejected'">
+                    <field name="name"/>
+                    <field name="demandeur_id"/>
+                    <field name="date_demande"/>
+                    <field name="motif_demande"
+                        optional="show"/>
+                    <field name="state"
+                        widget="badge"
+                        decoration-success="state == 'approved' or state == 'allocated'"
+                        decoration-info="state == 'pending'"
+                        decoration-danger="state == 'rejected'"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_patrimoine_demande_materiel_form"
+            model="ir.ui.view">
+            <field name="name">patrimoine.demande.materiel.form</field>
+            <field name="model">patrimoine.demande.materiel</field>
+            <field name="arch"
+                type="xml">
+                <form string="Demande de Matériel">
+                    <header>
+                        <button name="action_approve"
+                            type="object"
+                            string="Approuver"
+                            class="oe_highlight"
+                            invisible="state != 'pending'"/>
+                        <button name="action_reject"
+                            type="object"
+                            string="Rejeter"
+                            invisible="state != 'pending'"/>
+                        <field name="state"
+                            widget="statusbar"
+                            statusbar_visible="pending,approved,allocated"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name"
+                                    readonly="1"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="demandeur_id"
+                                    readonly="1"/>
+                                <!-- <field name="demandeur_department_id"
+                                    readonly="1"/> -->
+                            </group>
+                            <group>
+                                <field name="date_demande"
+                                    readonly="1"/>
+                                <field name="date_traitement"
+                                    readonly="1"/>
+                            </group>
+                        </group>
+                        <group>
+                            <field name="motif_demande"
+                                placeholder="Motif général de la demande..."/>
+                        </group>
+                        <notebook>
+                            <page string="Lignes de la Demande"
+                                name="lignes_demande">
+                                <field name="ligne_ids">
+                                    <tree string="Lignes de Matériel"
+                                        editable="bottom">
+                                        <field name="demande_subcategory_id"
+                                            string="Matériel Demandé"
+                                            required="1"/>
+                                        <field name="quantite"
+                                            string="Quantité"
+                                            required="1"/>
+                                        <field name="destinataire_department_id"
+                                            string="Département Dest."
+                                            optional="show"/>
+                                        <field name="destinataire_location_id"
+                                            string="Bureau Dest."
+                                            optional="show"/>
+                                        <field name="destinataire_employee_id"
+                                            string="Employé Dest."
+                                            optional="show"/>
+                                        <field name="description"
+                                            optional="show"/>
+                                    </tree>
+                                </field>
+                            </page>
+                            <page string="Matériels Alloués"
+                                name="materiels_alloues">
+                                <field name="allocated_asset_ids"/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids"/>
+                        <field name="activity_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_patrimoine_demande_materiel"
+            model="ir.actions.act_window">
+            <field name="name">Demandes de Matériel</field>
+            <field name="res_model">patrimoine.demande.materiel</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help"
+                type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Créez une nouvelle demande de matériel.
+                </p>
+            </field>
+        </record>
+
+        <menuitem id="menu_patrimoine_demande_materiel"
+            name="Demandes de Matériel"
+            parent="menu_patrimoine_root"
+            action="action_patrimoine_demande_materiel"
+            sequence="20"/>
+
+    </data>
+</odoo>

@@ -38,13 +38,14 @@ class AssetCategory(models.Model):
 class AssetSubCategory(models.Model):
     _name = 'asset.subcategory'
     _description = 'Sous-catégorie spécifique de matériel'
-    
+
     name = fields.Char('Nom', required=True)
     code = fields.Char('Code', required=True)
     category_id = fields.Many2one('asset.category', string='Catégorie', required=True)
     active = fields.Boolean('Actif', default=True)
     custom_field_ids = fields.One2many('asset.custom.field', 'subcategory_id', string='Champs personnalisés')
     item_ids = fields.One2many('patrimoine.asset', 'subcategory_id', string='Matériels')
+    image = fields.Image(string="Image")
     # AJOUT : Champ calculé pour le nombre de matériels directement liés à cette sous-catégorie
     item_count = fields.Integer(
         string="Nb Matériels",
@@ -85,6 +86,9 @@ class AssetCustomField(models.Model):
     _sql_constraints = [
         ('technical_name_unique_per_subcategory', 'unique(technical_name, subcategory_id)', 'Le nom technique du champ doit être unique par sous-catégorie !'),
     ]
+
+from odoo import http
+import json
 
 class PatrimoineAsset(models.Model):
     _name = 'patrimoine.asset'
@@ -183,4 +187,3 @@ class PatrimoineAsset(models.Model):
                 'utilisateur_id': self.env.uid, # L'utilisateur courant
             })
         return assets
-

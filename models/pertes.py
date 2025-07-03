@@ -1,95 +1,99 @@
-# gestion_patrimoine/models/perte.py (Version Corrigée)
-from odoo import models, fields, api
-from odoo.exceptions import ValidationError
-import logging
+# dans models/pertes.py
 
-_logger = logging.getLogger(__name__)
+from odoo import models, fields, api, _
+from odoo.exceptions import UserError
 
 
-class PatrimoineDeclarationPerte(models.Model):
+class PatrimoinePerte(models.Model):
     _name = "patrimoine.perte"
-    _description = "Déclaration de perte de Matériel"
-    _inherit = [
-        "mail.thread",
-        "mail.activity.mixin",
-    ]  # Ajouté pour le chatter et notifications
-    _order = "date desc"
+    _description = "Déclaration de Perte de Matériel"
+    _inherit = ["mail.thread", "mail.activity.mixin"]
 
     name = fields.Char(
-        string="Référence Déclaration",
+        string="Référence",
         required=True,
         copy=False,
         readonly=True,
-        default=lambda self: self.env["ir.sequence"].next_by_code(
-            "patrimoine.perte.code"
-        ),
-    )  # Séquence à définir
-
-    asset_id = fields.Many2one(
-        "patrimoine.asset", string="Bien concerné", required=True, tracking=True
+        default=lambda self: _("Nouveau"),
     )
-
-    date = fields.Datetime(
-        string="Date de la déclaration",
+    asset_id = fields.Many2one(
+        "patrimoine.asset", string="Bien Concerné", required=True, tracking=True
+    )
+    motif = fields.Text(string="Motif de la Perte", required=True, tracking=True)
+    date_perte = fields.Date(
+        string="Date de la Perte",
         required=True,
-        default=fields.Datetime.now,
+        default=fields.Date.context_today,
         tracking=True,
-    )  # Datetime pour cohérence avec les autres dates
-    motif = fields.Text(string="Motif de la perte", tracking=True)
+    )
+    circonstances = fields.Text(string="Circonstances Détaillées")
+    lieu_perte = fields.Char(string="Lieu de la Perte")
+    actions_entreprises = fields.Text(string="Actions Immédiates Entreprises")
+    rapport_police = fields.Boolean(string="Déclaration à la Police Effectuée ?")
+
     declarer_par_id = fields.Many2one(
         "res.users",
         string="Déclaré par",
+        required=True,
         default=lambda self: self.env.user,
         readonly=True,
-        tracking=True,
-    )  # Renommé
+    )
+    manager_id = fields.Many2one(
+        "hr.employee", string="Manager", compute="_compute_manager", store=True
+    )
+    valide_par_id = fields.Many2one(
+        "res.users", string="Validé par (Admin)", readonly=True
+    )
+    date_validation = fields.Datetime(string="Date de Validation", readonly=True)
 
     state = fields.Selection(
-        [  # Statuts harmonisés pour le workflow
-            ("pending", "En attente de validation"),  # Brouillon
-            ("confirmed", "Confirmée"),  # Approuvée
-            ("rejected", "Rejetée"),  # Refusée
-            ("processed", "Traitée"),  # Si le matériel est mis au rebut ou remplacé
+        [
+            ("draft", "Brouillon"),
+            ("to_approve", "En attente de validation Manager"),
+            ("manager_approved", "En attente de validation Admin"),
+            ("approved", "Approuvée"),
+            ("rejected", "Rejetée"),
         ],
         string="Statut",
-        default="pending",
+        default="draft",
+        required=True,
         tracking=True,
-    )  # Statut par défaut 'pending'
-
-    # Méthodes d'action pour le workflow
-    def action_confirm(self):  # Remplace action_confirmer
-        self.ensure_one()
-        if self.state == "pending":
-            self.write({"state": "confirmed"})
-            # self.asset_id.write({'etat': 'hs'}) # Optionnel: Mettre l'asset hors service/réformé
-            return True
-        raise ValidationError(
-            "La déclaration doit être en statut 'En attente de validation' pour être confirmée."
-        )
-
-    def action_reject(self):
-        self.ensure_one()
-        if self.state == "pending":
-            self.write({"state": "rejected"})
-            return True
-        raise ValidationError(
-            "La déclaration doit être en statut 'En attente de validation' pour être rejetée."
-        )
-
-    def action_process(self):  # Action pour marquer comme 'traitée' après confirmation
-        self.ensure_one()
-        if self.state == "confirmed":
-            self.write({"state": "processed"})
-            return True
-        raise ValidationError("La déclaration doit être 'Confirmée' pour être traitée.")
+    )
 
     @api.model
     def create(self, vals):
-        if vals.get("name", "/") == "/":
-            vals["name"] = (
-                self.env["ir.sequence"].next_by_code("patrimoine.perte.code")
-                or "Nouvelle Déclaration"
-            )
-        return super(PatrimoineDeclarationPerte, self).create(vals)
+        if vals.get("name", _("Nouveau")) == _("Nouveau"):
+            vals["name"] = self.env["ir.sequence"].next_by_code(
+                "patrimoine.perte"
+            ) or _("Nouveau")
+        return super(PatrimoinePerte, self).create(vals)
 
-    # Assurez-vous d'ajouter cette séquence dans sequence.xml
+    @api.depends("declarer_par_id")
+    def _compute_manager(self):
+        for rec in self:
+            employee = self.env["hr.employee"].search(
+                [("user_id", "=", rec.declarer_par_id.id)], limit=1
+            )
+            rec.manager_id = employee.parent_id if employee else False
+
+    def action_submit(self):
+        self.write({"state": "to_approve"})
+
+    def action_manager_approve(self):
+        self.write({"state": "manager_approved"})
+
+    def action_approve(self):
+        for rec in self:
+            rec.asset_id.write(
+                {"etat": "hs", "active": False}
+            )  # Désactive et met HS le matériel
+            rec.write(
+                {
+                    "state": "approved",
+                    "valide_par_id": self.env.user.id,
+                    "date_validation": fields.Datetime.now(),
+                }
+            )
+
+    def action_reject(self):
+        self.write({"state": "rejected"})

@@ -32,7 +32,7 @@ export function StatCard({
     )}>
       <div className="flex justify-between">
         <div>
-          <p className="text-sm text-gray-500">{title}</p>
+          <p className="text-sm text-white">{title}</p>
           <p className="text-2xl font-bold mt-1">{value}</p>
           {description && <p className="text-xs text-gray-400 mt-1">{description}</p>}
         </div>

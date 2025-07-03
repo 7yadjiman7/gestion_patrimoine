@@ -1,169 +1,263 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import materialService from '@/services/materialService'; // Importez le service
-import AppSidebar from '@/components/app-sidebar'; // Inclusion de la sidebar
-
-// Définition des colonnes du tableau pour les déclarations de perte
-const tableHeaders = [
-  "Référence", "Bien concerné", "Code Bien", "Date Déclaration", "Motif", "Déclaré par", "Statut", "Actions"
-];
+import PerteDetailModal from "@/components/PerteDetailModal"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table"
+import materialService from "@/services/materialService"
+import { Printer } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import { toast } from "react-hot-toast"
 
 export default function AdminDeclarationsPerte() {
-  const navigate = useNavigate();
-  const [pertes, setPertes] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+    const [declarations, setDeclarations] = useState([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
+    const [selectedPerte, setSelectedPerte] = useState(null)
+    const [isModalOpen, setIsModalOpen] = useState(false)
 
-  // Fonction pour charger les déclarations de perte depuis l'API
-  const loadPertes = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const data = await materialService.fetchDeclarationsPerte();
-      setPertes(Array.isArray(data) ? data : []); // S'assurer que c'est un tableau
-      console.log("Déclarations de perte chargées:", data);
-    } catch (err) {
-      console.error("Erreur chargement des déclarations de perte:", err);
-      setError(err.message || "Impossible de charger les déclarations de perte.");
-    } finally {
-      setIsLoading(false);
+    // La référence pour cibler le tableau est toujours nécessaire
+    const tableRef = useRef()
+
+    // --- FONCTION D'IMPRESSION AMÉLIORÉE ---
+    const handlePrint = () => {
+        const printContent = tableRef.current
+        if (!printContent) return
+
+        // --- CORRECTION DÉFINITIVE ---
+
+        // 1. Définissez ici les titres et dates que vous souhaitez.
+        const documentTitle = "Liste des Déclarations de Perte"
+        const printDate = `Date d'impression : ${new Date().toLocaleDateString("fr-FR")}`
+
+        const printWindow = window.open("", "_blank", "height=800,width=1000")
+
+        // On passe le titre personnalisé à la fenêtre
+        printWindow.document.write(
+            `<html><head><title>${documentTitle}</title>`
+        )
+
+        // On copie les styles pour que le tableau soit joli
+        Array.from(
+            document.querySelectorAll('link[rel="stylesheet"], style')
+        ).forEach(link => {
+            printWindow.document.head.appendChild(link.cloneNode(true))
+        })
+
+        // On ajoute des styles spécifiques pour l'impression
+        printWindow.document.write(`
+            <style>
+                body { padding: 30px; font-family: Arial, sans-serif; }
+                .print-header { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+                .print-header h2 { font-size: 24px; margin: 0; }
+                .print-header p { font-size: 14px; margin: 5px 0 0 0; color: #555; }
+                table { width: 100%; border-collapse: collapse; }
+                th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+                th { background-color: #f2f2f2; }
+                .no-print { display: none !important; }
+            </style>
+        `)
+
+        printWindow.document.write("</head><body>")
+
+        // 2. On injecte notre en-tête personnalisé
+        printWindow.document.write(`
+            <div class="print-header">
+                <h2>${documentTitle}</h2>
+                <p>${printDate}</p>
+            </div>
+        `)
+
+        // 3. On injecte le contenu du tableau
+        printWindow.document.write(printContent.innerHTML)
+
+        printWindow.document.write("</body></html>")
+        printWindow.document.close()
+
+        setTimeout(() => {
+            printWindow.focus()
+            printWindow.print()
+            printWindow.close()
+        }, 500)
     }
-  };
 
-  // Chargement des déclarations de perte au montage du composant
-  useEffect(() => {
-    loadPertes();
-  }, []);
-
-  // Gère l'action "Confirmer" ou "Rejeter" une déclaration de perte
-  const handleProcessPerte = async (perteId, action) => {
-    if (!window.confirm(`Voulez-vous vraiment ${action === 'confirm' ? 'CONFIRMER' : 'REJETER'} cette déclaration (Référence: ${perteId}) ?`)) {
-      return;
+    const loadDeclarations = () => {
+        setLoading(true)
+        materialService
+            .fetchDeclarationsPerte()
+            .then(setDeclarations)
+            .catch(err => {
+                setError("Erreur de chargement des déclarations.")
+                console.error(err)
+            })
+            .finally(() => setLoading(false))
     }
-    try {
-      setIsLoading(true);
-      const response = await materialService.processPerte(perteId, action);
-      
-      if (response && response.status === 'success') {
-          alert(`Déclaration ${action === 'confirm' ? 'confirmée' : 'rejetée'} avec succès !`);
-          loadPertes(); // Recharger les déclarations pour mettre à jour l'affichage
-          // Si confirmée, vous pouvez rediriger vers une page de suivi ou d'allocation si nécessaire.
-          // navigate(`/admin/traiter-perte?perteId=${perteId}`);
-      } else {
-          throw new Error(response.message || "Réponse inattendue du serveur lors du traitement.");
-      }
-    } catch (err) {
-      console.error(`Erreur lors du traitement de la déclaration ${perteId}:`, err);
-      alert(`Erreur lors du traitement: ${err.message || "Veuillez réessayer."}`);
-    } finally {
-      // setIsLoading(false); // Sera géré par loadPertes() qui se termine en finally
+
+    useEffect(loadDeclarations, [])
+
+    const handleProcess = async (id, action) => {
+        try {
+            const status = action === "confirm" ? "approved" : "rejected"
+            await materialService.processPerte(id, status)
+            toast.success(
+                `Déclaration ${status === "approved" ? "approuvée" : "rejetée"} avec succès.`
+            )
+            loadDeclarations()
+        } catch (err) {
+            toast.error(`Échec de l'opération: ${err.message}`)
+        }
     }
-  };
 
-  // Gère l'action "Voir" les détails de la déclaration de perte
-  const handleVoirDetails = (perteId) => {
-    alert(`Action: Voir les détails de la déclaration de perte ID ${perteId}`);
-    // navigate(`/admin/perte/${perteId}`); // Exemple de redirection vers une page de détail de perte
-  };
+    const handleViewDetails = perte => {
+        setSelectedPerte(perte)
+        setIsModalOpen(true)
+    }
 
-  // Affichage des états (loading, error)
-  if (isLoading) {
+    const getStatusBadge = status => {
+        const statusMap = {
+            draft: { label: "Brouillon", variant: "outline" },
+            to_approve: { label: "Attente Manager", variant: "secondary" },
+            manager_approved: {
+                label: "Attente Admin",
+                className: "bg-yellow-500 text-white",
+            },
+            approved: {
+                label: "Approuvée",
+                className: "bg-green-500 text-white",
+            },
+            rejected: {
+                label: "Rejetée",
+                variant: "destructive",
+            },
+            confirm: {
+                label: "Confirmée",
+                className: "bg-green-500 text-white",
+            },
+            reject: {
+                label: "Rejetée",
+                variant: "destructive",
+            },
+        }
+        const { label, ...props } = statusMap[status] || {
+            label: status,
+            variant: "outline",
+        }
+        return <Badge {...props}>{label}</Badge>
+    }
+
+    if (loading) return <div className="p-8 text-center">Chargement...</div>
+    if (error)
+        return <div className="p-8 text-center text-red-500">{error}</div>
+
     return (
-      <div className="flex min-h-screen">
-        <AppSidebar />
-        <div className="flex-1 p-6 ml-[250px] flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-        </div>
-      </div>
-    );
-  }
+        <div className="min-h-screen w-full">
+            <h1 className="text-5xl mb-10 text-center font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
+                Gestion des Déclarations de Perte
+            </h1>
+            <Button
+                onClick={handlePrint}
+                variant="outline"
+                className="hover:bg-orange-500 hover:text-white"
+            >
+                <Printer className="h-4 w-4 mr-2" />
+                Imprimer le tableau
+            </Button>
+            <div ref={tableRef} className="rounded-md border ">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Déclaré par</TableHead>
+                            <TableHead>Matériel</TableHead>
+                            <TableHead>Date de la Perte</TableHead>
+                            <TableHead>Statut</TableHead>
+                            <TableHead className="text-right no-print">
+                                Actions
+                            </TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {declarations.length > 0 ? (
+                            declarations.map(perte => (
+                                <TableRow key={perte.id}>
+                                    <TableCell className="font-medium">
+                                        {perte.declarer_par_name}
+                                    </TableCell>
+                                    <TableCell>{perte.asset_name}</TableCell>
+                                    <TableCell>
+                                        {new Date(
+                                            perte.date_perte
+                                        ).toLocaleDateString()}
+                                    </TableCell>
+                                    <TableCell>
+                                        {getStatusBadge(perte.state)}
+                                    </TableCell>
+                                    <TableCell className="text-right space-x-2 no-print">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() =>
+                                                handleViewDetails(perte)
+                                            }
+                                        >
+                                            Voir Détails
+                                        </Button>
+                                        {(perte.state === "manager_approved" ||
+                                            perte.state === "to_approve") && (
+                                            <>
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() =>
+                                                        handleProcess(
+                                                            perte.id,
+                                                            "confirm"
+                                                        )
+                                                    }
+                                                    className="bg-green-600 hover:bg-green-700"
+                                                >
+                                                    Approuver
+                                                </Button>
+                                                <Button
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    onClick={() =>
+                                                        handleProcess(
+                                                            perte.id,
+                                                            "reject"
+                                                        )
+                                                    }
+                                                >
+                                                    Rejeter
+                                                </Button>
+                                            </>
+                                        )}
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell
+                                    colSpan="5"
+                                    className="h-24 text-center"
+                                >
+                                    Aucune déclaration trouvée.
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
 
-  if (error) {
-    return (
-      <div className="flex min-h-screen">
-        <AppSidebar />
-        <div className="flex-1 p-6 ml-[250px] text-center text-red-600">
-          <h2 className="text-xl font-bold mb-4">Erreur de chargement</h2>
-          <p>{error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex min-h-screen">
-      <AppSidebar />
-
-      <div className="flex-1 p-6 ml-[180px]">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">Gestion des Déclarations de Perte</h1>
-          <p className="text-gray-600">Liste des déclarations de perte soumises.</p>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Déclarations en attente de traitement</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {pertes.length === 0 ? (
-              <p className="text-gray-500 text-center">Aucune déclaration de perte à traiter pour le moment.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full bg-white border border-gray-200">
-                  <thead>
-                    <tr>
-                      {tableHeaders.map((header, index) => (
-                        <th key={index} className="py-2 px-4 border-b text-left text-sm font-semibold text-gray-700">{header}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pertes.map((perte) => (
-                      <tr key={perte.id} className="hover:bg-gray-50">
-                        <td className="py-2 px-4 border-b text-sm text-gray-900">{perte.name}</td>
-                        <td className="py-2 px-4 border-b text-sm text-gray-900">{perte.asset_name} ({perte.asset_code})</td>
-                        <td className="py-2 px-4 border-b text-sm text-gray-900">{perte.date ? new Date(perte.date).toLocaleDateString() : 'N/A'}</td>
-                        <td className="py-2 px-4 border-b text-sm text-gray-900">{perte.motif}</td>
-                        <td className="py-2 px-4 border-b text-sm text-gray-900">{perte.declarer_par_name}</td>
-                        <td className="py-2 px-4 border-b text-sm text-gray-900">
-                          <Badge variant={perte.state === 'pending' ? 'secondary' : (perte.state === 'confirmed' ? 'default' : 'destructive')}>
-                            {perte.state}
-                          </Badge>
-                        </td>
-                        <td className="py-2 px-4 border-b text-sm text-gray-900">
-                          {perte.state === 'pending' && (
-                            <div className="flex gap-2">
-                              <Button size="sm" onClick={() => handleProcessPerte(perte.id, 'confirm')}>Confirmer</Button>
-                              <Button size="sm" variant="outline" onClick={() => handleProcessDemande(perte.id, 'reject')}>Refuser</Button>
-                            </div>
-                          )}
-                          {perte.state === 'confirmed' && (
-                            <div className="flex gap-2 items-center text-green-600">
-                                <span className="font-semibold">Confirmée</span>
-                                {/* Optionnel: Bouton pour marquer comme 'traitée' après la confirmation */}
-                                {/* <Button size="sm" onClick={() => handleProcessPerte(perte.id, 'processed')}>Traiter</Button> */}
-                            </div>
-                          )}
-                          {perte.state === 'rejected' && (
-                            <p className="text-red-600 font-semibold">Rejetée</p>
-                          )}
-                          {perte.state === 'processed' && (
-                            <p className="text-blue-600 font-semibold">Traitée</p>
-                          )}
-                          <Button size="sm" variant="secondary" onClick={() => handleVoirDetails(perte.id)} className="ml-2">Voir</Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            {isModalOpen && (
+                <PerteDetailModal
+                    perte={selectedPerte}
+                    onClose={() => setIsModalOpen(false)}
+                />
             )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
+        </div>
+    )
 }

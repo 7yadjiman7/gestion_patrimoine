@@ -33,6 +33,16 @@
   }
 }
 
+@media print {
+    /* Ces classes spéciales permettent de cacher/montrer des éléments à l'impression */
+    .print-only\\:block {
+      display: block !important;
+    }
+    .print-only\\:hidden {
+      display: none !important;
+    }
+  }
+
 .card {
   padding: 2em;
 }

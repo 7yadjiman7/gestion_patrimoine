@@ -98,27 +98,3 @@ class PatrimoineDemandeMateriel(models.Model):
                 or "Nouvelle Demande"
             )
         return super(PatrimoineDemandeMateriel, self).create(vals)
-
-    @api.constrains("quantite")
-    def _check_quantite_positive(self):
-        for record in self:
-            if record.quantite <= 0:
-                raise ValidationError(
-                    "La quantité demandée doit être un nombre positif."
-                )
-
-    @api.constrains("demande_type_general", "demande_subcategory_id")
-    def _check_demande_type(self):
-        for record in self:
-            if (
-                record.demande_subcategory_id
-                and record.demande_subcategory_id.category_id.type
-                != record.demande_type_general
-            ):
-                raise ValidationError(
-                    "La sous-catégorie sélectionnée ne correspond pas au type général demandé."
-                )
-            if not record.demande_subcategory_id and not record.demande_type_general:
-                raise ValidationError(
-                    "Vous devez spécifier un type général de matériel ou une sous-catégorie détaillée demandée."
-                )

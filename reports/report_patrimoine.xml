@@ -1,11 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <report
-        id="action_report_asset_fiche_vie"
-        model="patrimoine.asset"
-        string="Fiche de vie du matériel"
-        report_type="qweb-pdf"
-        name="gestion_patrimoine.report_asset_fiche_vie_template"
-        file="gestion_patrimoine.report_asset_fiche_vie"
-        print_report_name="(object.name or '').replace('/', '_') + '_Fiche_Vie'"
-    />
+    <data>
+
+        <record id="action_report_asset_fiche_vie"
+            model="ir.actions.report">
+            <field name="name">Fiche de Vie du Matériel</field>
+            <field name="model">patrimoine.asset</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">gestion_patrimoine.report_fiche_vie_template</field>
+            <field name="report_file">gestion_patrimoine.report_fiche_vie_template</field>
+            <field name="binding_model_id"
+                ref="model_patrimoine_asset"/>
+            <field name="binding_type">report</field>
+        </record>
+
+    </data>
 </odoo>

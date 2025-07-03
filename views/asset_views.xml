@@ -23,7 +23,9 @@
                             <field name="etat"/>
                         </group>
                         <group>
+                            <field name="department_id"/>
                             <field name="location_id"/>
+                            <field name="employee_id"/>
                         </group>
                     </group>
 

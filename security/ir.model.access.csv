@@ -28,6 +28,9 @@ access_perte_director,access.perte.director,model_patrimoine_perte,gestion_patri
 access_fiche_vie_director,access.fiche.vie.director,model_patrimoine_fiche_vie,gestion_patrimoine.group_patrimoine_director,1,1,1,0
 access_demande_materiel_director,access.demande.materiel.director,model_patrimoine_demande_materiel,gestion_patrimoine.group_patrimoine_director,1,1,1,1
 
+access_demande_materiel_ligne_admin,access.demande.materiel.ligne.admin,model_patrimoine_demande_materiel_ligne,gestion_patrimoine.group_patrimoine_admin,1,1,1,1
+access_demande_materiel_ligne_director,access.demande.materiel.ligne.director,model_patrimoine_demande_materiel_ligne,gestion_patrimoine.group_patrimoine_director,1,1,1,1
+access_demande_materiel_ligne_agent,access.demande.materiel.ligne.agent,model_patrimoine_demande_materiel_ligne,gestion_patrimoine.group_patrimoine_agent,1,0,0,0
 
 access_asset_agent,access.asset.agent,model_patrimoine_asset,gestion_patrimoine.group_patrimoine_agent,1,0,0,0
 access_mouvement_agent,access.mouvement.agent,model_patrimoine_mouvement,gestion_patrimoine.group_patrimoine_agent,1,0,0,0

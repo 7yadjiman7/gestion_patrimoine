@@ -1,19 +1,124 @@
-from odoo import http
+from odoo import http, _
+from odoo.fields import Date
+from dateutil.relativedelta import relativedelta
 from odoo.http import request, Response
+from odoo.exceptions import AccessError, ValidationError
 import json
 from odoo.osv import expression
-from werkzeug.exceptions import (
-    BadRequest,
-)  # Assurez-vous d'avoir cet import si vous utilisez BadRequest
+from werkzeug.exceptions import BadRequest
 import base64  # Pour encoder/décoder les fichiers
 import logging
+from functools import wraps
 
 _logger = logging.getLogger(__name__)
+
+# Headers CORS standard
+CORS_HEADERS = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Origin, Content-Type, X-Auth-Token, X-Openerp-Session-Id",
+    "Access-Control-Allow-Credentials": "true"
+}
+
+def handle_api_errors(f):
+    """Decorator pour standardiser la gestion des erreurs API"""
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        except AccessError as e:
+            _logger.error("AccessError in API: %s", str(e))
+            return Response(
+                json.dumps({
+                    "status": "error",
+                    "code": 403,
+                    "message": str(e)
+                }),
+                status=403,
+                headers=CORS_HEADERS
+            )
+        except ValidationError as e:
+            _logger.error("ValidationError in API: %s", str(e))
+            return Response(
+                json.dumps({
+                    "status": "error",
+                    "code": 400,
+                    "message": str(e)
+                }),
+                status=400,
+                headers=CORS_HEADERS
+            )
+        except Exception as e:
+            _logger.error("Unexpected error in API: %s", str(e))
+            return Response(
+                json.dumps({
+                    "status": "error",
+                    "code": 500,
+                    "message": "Internal server error"
+                }),
+                status=500,
+                headers=CORS_HEADERS
+            )
+    return wrapper
 
 
 class PatrimoineAssetController(http.Controller):
     @http.route("/api/patrimoine/categories", auth="user", type="http", methods=["GET"])
     def list_categories(self, **kw):
+        try:
+            domain = []
+            if kw.get("type"):
+                domain.append(("code", "=", kw["type"]))
+            categories = request.env["asset.category"].search(domain)
+            category_data = [
+                {
+                    "id": cat.id,
+                    "name": cat.name,
+                    "code": cat.code,
+                    "type": cat.type,
+                    "filter_type": cat.code,  # Pour le filtrage frontend
+                    "image": (
+                        f"/web/image/asset.category/{cat.id}/image"
+                        if cat.image
+                        else None
+                    ),
+                    "subcategories": [
+                        {"id": sub.id, "name": sub.name, "code": sub.code}
+                        for sub in cat.subcategory_ids
+                    ],
+                }
+                for cat in categories
+            ]
+            return Response(
+                json.dumps(category_data), headers={"Content-Type": "application/json"}
+            )
+        except Exception as e:
+            _logger.error("Error listing categories: %s", str(e))
+            return Response(status=500)
+
+    @http.route("/api/patrimoine/demande_materiel/<int:demande_id>", auth="user", type="json", methods=["GET"])
+    def get_demande_details(self, demande_id):
+        try:
+            demande = http.request.env['patrimoine.demande_materiel'].browse(demande_id)
+            if not demande.exists():
+                return {"error": "Demande not found"}, 404
+
+            return {
+                "id": demande.id,
+                "name": demande.name,
+                "state": demande.state,
+                "ligne_ids": [{
+                    "id": ligne.id,
+                    "product_id": ligne.product_id.id,
+                    "quantity": ligne.quantity
+                } for ligne in demande.ligne_ids]
+            }
+        except Exception as e:
+            return {"error": str(e)}, 500
+
+    @http.route("/api/patrimoine/demande_materiel/<int:demande_id>", auth="user", type="http", methods=["GET"])
+    def get_demande_details_http(self, demande_id):
         try:
             domain = []
             if kw.get("type"):
@@ -51,12 +156,35 @@ class PatrimoineAssetController(http.Controller):
         type="http",
         methods=["GET"],
     )
+    @handle_api_errors
     def list_subcategories(self, category_id, **kw):
-        try:
-            subcategories = request.env["asset.subcategory"].search(
-                [("category_id", "=", category_id)]
+        domain = []
+        # Gère le cas où l'on veut toutes les sous-catégories
+        if category_id != 0:
+            # Vérifier que la catégorie parente existe
+            category = request.env["asset.category"].browse(category_id)
+            if not category.exists():
+                return Response(
+                    json.dumps({
+                        "status": "error",
+                        "code": 404,
+                        "message": "Category not found"
+                    }),
+                    status=404,
+                    headers=CORS_HEADERS
+                )
+            domain.append(("category_id", "=", category_id))
+
+        subcategories = request.env["asset.subcategory"].search(domain)
+
+        subcategory_data = []
+        for sub in subcategories:
+            # Construit une URL valide vers l'image si elle existe
+            image_url = (
+                f"/web/image/asset.subcategory/{sub.id}/image" if sub.image else None
             )
-            subcategory_data = [
+
+            subcategory_data.append(
                 {
                     "id": sub.id,
                     "name": sub.name,
@@ -64,6 +192,7 @@ class PatrimoineAssetController(http.Controller):
                     "category_id": sub.category_id.id,
                     "category_name": sub.category_id.name,
                     "category_type": sub.category_id.type,
+                    "image_url": image_url,
                     "fields": [
                         {
                             "id": field.id,
@@ -82,15 +211,15 @@ class PatrimoineAssetController(http.Controller):
                     ],
                     "item_count": len(sub.item_ids),
                 }
-                for sub in subcategories
-            ]
-            return Response(
-                json.dumps(subcategory_data),
-                headers={"Content-Type": "application/json"},
             )
-        except Exception as e:
-            _logger.error("Error listing subcategories: %s", str(e))
-            return Response(status=500)
+
+        return Response(
+            json.dumps({
+                "status": "success",
+                "data": subcategory_data
+            }, default=str),
+            headers=CORS_HEADERS
+        )
 
     @http.route(
         "/api/patrimoine/items/<int:subcategory_id>",
@@ -98,59 +227,60 @@ class PatrimoineAssetController(http.Controller):
         type="http",
         methods=["GET"],
     )
+    @handle_api_errors
     def list_items(self, subcategory_id, **kw):
-        try:
-            items = request.env["patrimoine.asset"].search(
-                [("subcategory_id", "=", subcategory_id)]
+        items = request.env["patrimoine.asset"].search(
+            [("subcategory_id", "=", subcategory_id)]
+        )
+        item_data = []
+        for item in items:
+            item_data.append(
+                {
+                    "id": item.id,
+                    "name": item.name,
+                    "code": item.code,
+                    "subcategory_id": item.subcategory_id.id,
+                    "subcategory_name": item.subcategory_id.name,
+                    "category_id": item.category_id.id,
+                    "category_name": item.category_id.name,
+                    "image": (
+                        f"/web/image/patrimoine.asset/{item.id}/image"
+                        if item.image
+                        else None
+                    ),
+                    "custom_values": item.custom_values,
+                    "status": item.etat,
+                    "assigned_to": (
+                        item.employee_id.name if item.employee_id else None
+                    ),
+                    "assigned_to_id": (
+                        item.employee_id.id if item.employee_id else None
+                    ),
+                    "department": (
+                        item.department_id.name if item.department_id else None
+                    ),
+                    "department_id": (
+                        item.department_id.id if item.department_id else None
+                    ),
+                    "location": item.location_id.name if item.location_id else None,
+                    "location_id": (
+                        item.location_id.id if item.location_id else None
+                    ),
+                    "acquisition_date": (
+                        item.date_acquisition.strftime("%Y-%m-%d")
+                        if item.date_acquisition
+                        else None
+                    ),
+                    "acquisition_value": item.valeur_acquisition,
+                }
             )
-            item_data = []
-            for item in items:
-                item_data.append(
-                    {
-                        "id": item.id,
-                        "name": item.name,
-                        "code": item.code,
-                        "subcategory_id": item.subcategory_id.id,
-                        "subcategory_name": item.subcategory_id.name,
-                        "category_id": item.category_id.id,
-                        "category_name": item.category_id.name,
-                        "image": (
-                            f"/web/image/patrimoine.asset/{item.id}/image"
-                            if item.image
-                            else None
-                        ),
-                        "custom_values": item.custom_values,
-                        "status": item.etat,
-                        "assigned_to": (
-                            item.employee_id.name if item.employee_id else None
-                        ),
-                        "assigned_to_id": (
-                            item.employee_id.id if item.employee_id else None
-                        ),
-                        "department": (
-                            item.department_id.name if item.department_id else None
-                        ),
-                        "department_id": (
-                            item.department_id.id if item.department_id else None
-                        ),
-                        "location": item.location_id.name if item.location_id else None,
-                        "location_id": (
-                            item.location_id.id if item.location_id else None
-                        ),
-                        "acquisition_date": (
-                            item.date_acquisition.strftime("%Y-%m-%d")
-                            if item.date_acquisition
-                            else None
-                        ),
-                        "acquisition_value": item.valeur_acquisition,
-                    }
-                )
-            return Response(
-                json.dumps(item_data), headers={"Content-Type": "application/json"}
-            )
-        except Exception as e:
-            _logger.error("Error listing items: %s", str(e))
-            return Response(status=500)
+        return Response(
+            json.dumps({
+                "status": "success",
+                "data": item_data
+            }, default=str),
+            headers=CORS_HEADERS
+        )
 
     @http.route(
         "/api/patrimoine/items", auth="user", type="json", methods=["POST"], csrf=False
@@ -489,6 +619,85 @@ class PatrimoineAssetController(http.Controller):
                 headers={"Content-Type": "application/json"},
             )
 
+    @http.route('/api/patrimoine/assets/filter', auth='user', type='http', methods=['GET'])
+    def get_filtered_assets(self, **kw):
+        """
+        Route générique pour filtrer les matériels en fonction de divers critères
+        passés en paramètres de requête (ex: ?status=service&type=informatique).
+        """
+        try:
+            domain = []
+            _logger.info(f"Filtres reçus: {kw}")
+
+            if kw.get('status'):
+                domain.append(('etat', '=', kw['status']))
+            if kw.get('type'):
+                domain.append(('type', '=', kw['type']))
+            if kw.get('departmentId'):
+                domain.append(('department_id', '=', int(kw['departmentId'])))
+            if kw.get('subcategoryCode'):
+                subcat = request.env['asset.subcategory'].search([('code', '=', kw['subcategoryCode'])], limit=1)
+                if subcat:
+                    domain.append(('subcategory_id', '=', subcat.id))
+
+            _logger.info(f"Domaine de recherche final: {domain}")
+            assets = request.env['patrimoine.asset'].search(domain)
+            
+            details = {}
+            asset_data = []
+            for asset in assets:
+                image_url = f'/web/image/patrimoine.asset/{asset.id}/image' if asset.image else None
+
+                asset_data.append(
+                    {
+                        "id": asset.id,
+                        "name": asset.name,
+                        "code": asset.code,
+                        "image": image_url,
+                        "status": asset.etat,
+                        "type": asset.type,
+                        "category_general_name": (
+                            asset.subcategory_id.category_id.name
+                            if asset.subcategory_id and asset.subcategory_id.category_id
+                            else None
+                        ),
+                        "category_detailed_name": (
+                            asset.subcategory_id.name if asset.subcategory_id else None
+                        ),
+                        "location": (
+                            asset.location_id.name if asset.location_id else None
+                        ),
+                        "acquisitionDate": (
+                            asset.date_acquisition.strftime("%Y-%m-%d")
+                            if asset.date_acquisition
+                            else None
+                        ),
+                        "value": asset.valeur_acquisition,
+                        "assignedTo": (
+                            asset.employee_id.name if asset.employee_id else None
+                        ),
+                        "assigned_to_id": (
+                            asset.employee_id.id if asset.employee_id else None
+                        ),
+                        "details": details,
+                        "customValues": (
+                            json.loads(asset.custom_values)
+                            if asset.custom_values
+                            else {}
+                        ),
+                    }
+                )
+
+            return Response(json.dumps(asset_data), headers={'Content-Type': 'application/json'})
+
+        except Exception as e:
+            _logger.error(f"Erreur lors de la récupération des matériels filtrés: {e}")
+            return Response(
+                json.dumps({'status': 'error', 'message': str(e)}), 
+                status=500,
+                headers={'Content-Type': 'application/json'}
+            )
+
     # --- NOUVELLE API : Lister les assets par Département ---
     @http.route("/api/patrimoine/assets/department/<int:department_id>", auth="user", type="http", methods=["GET"])
     def list_assets_by_department(self, department_id, **kw):
@@ -522,131 +731,140 @@ class PatrimoineAssetController(http.Controller):
             _logger.error("Error listing assets by department: %s", str(e))
             return Response(json.dumps({'status': 'error', 'message': str(e)}), status=500, headers={"Content-Type": "application/json"})
 
-    # méthode pour la création d'un asset
-    @http.route(
-        "/api/patrimoine/assets", auth="user", type="http", methods=["POST"], csrf=False
-    )
+    @http.route('/api/patrimoine/assets', auth="user", type="http", methods=["POST"], csrf=False)
     def create_asset(self, **post):
-        _logger.info("Début de la création d'un asset")
+        _logger.info("Début de la création d'un asset via la route HTTP")
         try:
-            _logger.info("Données reçues: %s", str(request.httprequest.form))
-            _logger.info("Fichiers reçus: %s", str(request.httprequest.files))
+            # 1. Valider la sous-catégorie et déduire le type
+            subcategory_id = post.get("subcategory_id")
+            if not subcategory_id:
+                raise BadRequest("Le champ 'subcategory_id' est requis.")
 
+            subcategory = request.env["asset.subcategory"].browse(int(subcategory_id))
+            if not subcategory.exists():
+                raise BadRequest("Sous-catégorie non trouvée.")
+
+            # Le type ('informatique', 'mobilier', etc.) est déduit de la catégorie parente de la sous-catégorie. C'est plus robuste.
+            asset_type = subcategory.category_id.type
+
+            # 2. Préparer les valeurs pour le modèle principal 'patrimoine.asset'
             asset_vals = {
                 "name": post.get("name"),
-                "type": post.get("type"),  # 'informatique', 'vehicule', 'mobilier'
+                "subcategory_id": subcategory.id,
+                "type": asset_type,
                 "date_acquisition": post.get("date_acquisition"),
-                "valeur_acquisition": (
-                    float(post.get("valeur_acquisition"))
-                    if post.get("valeur_acquisition")
-                    else 0.0
-                ),
-                "etat": post.get("etat"),
-                "department_id": (
-                    int(post.get("department_id"))
-                    if post.get("department_id")
-                    else False
-                ),
-                "employee_id": (
-                    int(post.get("employee_id")) if post.get("employee_id") else False
-                ),
-                "location_id": (
-                    int(post.get("location_id")) if post.get("location_id") else False
-                ),
-                "fournisseur": (
-                    int(post.get("fournisseur")) if post.get("fournisseur") else False
-                ),
+                "valeur_acquisition": float(post.get("valeur_acquisition")) if post.get("valeur_acquisition") else 0.0,
+                "etat": post.get("etat", "stock"),
+                "department_id": int(post.get("department_id")) if post.get("department_id") else False,
+                "employee_id": int(post.get("employee_id")) if post.get("employee_id") else False,
+                "location_id": int(post.get("location_id")) if post.get("location_id") else False,
+                "fournisseur": int(post.get("fournisseur")) if post.get("fournisseur") else False,
             }
 
-            # Gérer l'upload de l'image
-            if (
-                "image" in request.httprequest.files
-                and request.httprequest.files["image"]
-            ):
+            # Gérer l'upload de l'image principale
+            if "image" in request.httprequest.files and request.httprequest.files["image"]:
                 image_file = request.httprequest.files["image"]
-                asset_vals["image"] = base64.b64encode(
-                    image_file.read()
-                )  # Lire le contenu et l'encoder en base64
+                asset_vals["image"] = base64.b64encode(image_file.read())
 
             # Gérer l'upload des fichiers (facture, bon_livraison)
-            if (
-                "facture" in request.httprequest.files
-                and request.httprequest.files["facture"]
-            ):
+            if "facture" in request.httprequest.files and request.httprequest.files["facture"]:
                 facture_file = request.httprequest.files["facture"]
                 asset_vals["facture_file"] = base64.b64encode(facture_file.read())
                 asset_vals["facture_filename"] = facture_file.filename
 
-            if (
-                "bon_livraison" in request.httprequest.files
-                and request.httprequest.files["bon_livraison"]
-            ):
+            if "bon_livraison" in request.httprequest.files and request.httprequest.files["bon_livraison"]:
                 bl_file = request.httprequest.files["bon_livraison"]
                 asset_vals["bon_livraison_file"] = base64.b64encode(bl_file.read())
                 asset_vals["bon_livraison_filename"] = bl_file.filename
 
-            # Création de l'asset principal
-            asset = request.env["patrimoine.asset"].create(asset_vals)
+            # 3. Créer l'enregistrement principal 'patrimoine.asset'
+            new_asset = request.env["patrimoine.asset"].create(asset_vals)
 
-            # Gérer les détails spécifiques (informatique, véhicule, mobilier)
-            # Les données spécifiques sont envoyées comme 'specific_data[champ_specifique]'
+            # 4. Gérer les données spécifiques héritées (informatique, mobilier, etc.)
             specific_data = {}
             for key, value in post.items():
-                if key.startswith("specific_data["):
-                    field_name = key[len("specific_data[") : -1]
+                # Le frontend envoie les champs sous la forme 'specific_inherited_data[nom_du_champ]'
+                if key.startswith("specific_inherited_data["):
+                    field_name = key[len("specific_inherited_data["):-1]
                     specific_data[field_name] = value
 
-            if asset.type == "informatique":
-                request.env["patrimoine.asset.informatique"].create(
-                    {
-                        "asset_id": asset.id,
-                        "categorie_materiel": specific_data.get("categorie_materiel"),
-                        "marque": specific_data.get("marque"),
-                        "modele": specific_data.get("modele"),
-                        "numero_serie": specific_data.get("numero_serie"),
-                        "date_garantie_fin": specific_data.get("date_garantie_fin"),
-                    }
-                )
-            elif asset.type == "vehicule":
-                request.env["patrimoine.asset.vehicule"].create(
-                    {
-                        "asset_id": asset.id,
-                        "immatriculation": specific_data.get("immatriculation"),
-                        "marque": specific_data.get("marque"),
-                        "modele": specific_data.get("modele"),
-                        "kilometrage": (
-                            float(specific_data.get("kilometrage"))
-                            if specific_data.get("kilometrage")
-                            else 0.0
-                        ),
-                        # Note: date_achat, date_premiere_circulation, date_assurance, date_controle_technique
-                        # Ne sont pas dans votre formulaire React actuel pour les véhicules,
-                        # mais il faudrait les ajouter ici si vous les mettez dans le formulaire.
-                    }
-                )
-            elif asset.type == "mobilier":
-                request.env["patrimoine.asset.mobilier"].create(
-                    {
-                        "asset_id": asset.id,
-                        "categorie_mobilier": specific_data.get("categorie_mobilier"),
-                        "etat_conservation": specific_data.get("etat_conservation"),
-                    }
-                )
+            # En fonction du type déduit, créer l'enregistrement dans le modèle hérité correspondant
+            if asset_type == "informatique":
+                specific_data['asset_id'] = new_asset.id
+                request.env["patrimoine.asset.informatique"].create(specific_data)
+            elif asset_type == "mobilier":
+                specific_data['asset_id'] = new_asset.id
+                request.env["patrimoine.asset.mobilier"].create(specific_data)
+            elif asset_type == "vehicule":
+                specific_data['asset_id'] = new_asset.id
+                if 'kilometrage' in specific_data: # Assurer que le kilométrage est un nombre
+                    specific_data['kilometrage'] = float(specific_data['kilometrage'])
+                request.env["patrimoine.asset.vehicule"].create(specific_data)
 
-            # Retourner une réponse de succès
+            # 5. Créer une entrée dans la fiche de vie
+            request.env["patrimoine.fiche.vie"].create({
+                "asset_id": new_asset.id,
+                "action": "creation",
+                "description": f"Création de l'asset {new_asset.name}",
+                "utilisateur_id": request.env.uid,
+            })
+
+            # 6. Retourner une réponse de succès
             return Response(
-                json.dumps({"status": "success", "asset_id": asset.id}),
+                json.dumps({"status": "success", "asset_id": new_asset.id, "asset_code": new_asset.code}),
                 headers={"Content-Type": "application/json"},
             )
 
         except Exception as e:
-            _logger.error("Error creating asset: %s", str(e))
-            # Retourner une erreur 500 avec un message pour le frontend
+            _logger.error("Erreur lors de la création de l'asset: %s", str(e))
             return Response(
                 json.dumps({"status": "error", "message": str(e)}),
                 status=500,
                 headers={"Content-Type": "application/json"},
             )
+
+    @http.route('/api/patrimoine/assets/<int:asset_id>', auth="user", type="http", methods=["PUT"], csrf=False)
+    def update_asset(self, asset_id, **post):
+        _logger.info(f"Début de la mise à jour de l'asset ID {asset_id}")
+        try:
+            asset = request.env["patrimoine.asset"].browse(asset_id)
+            if not asset.exists():
+                return Response("Asset non trouvé", status=404)
+
+            update_vals = {}
+            # Mettre à jour les champs simples
+            for field in ["name", "date_acquisition", "valeur_acquisition", "etat", "department_id", "employee_id", "location_id", "fournisseur"]:
+                if field in post:
+                    update_vals[field] = post[field]
+
+            # Mettre à jour l'image si une nouvelle est fournie
+            if 'image' in request.httprequest.files:
+                image_file = request.httprequest.files['image']
+                update_vals['image'] = base64.b64encode(image_file.read())
+
+            # Appliquer les mises à jour sur l'enregistrement principal
+            if update_vals:
+                asset.write(update_vals)
+
+            # Mettre à jour les données spécifiques héritées
+            specific_data = {}
+            for key, value in post.items():
+                if key.startswith("specific_inherited_data["):
+                    field_name = key[len("specific_inherited_data["):-1]
+                    specific_data[field_name] = value
+
+            if specific_data:
+                # Chercher l'enregistrement hérité lié et le mettre à jour
+                specific_model_name = f"patrimoine.asset.{asset.type}"
+                specific_record = request.env[specific_model_name].search([('asset_id', '=', asset.id)], limit=1)
+                if specific_record:
+                    specific_record.write(specific_data)
+
+            return Response(json.dumps({"status": "success", "asset_id": asset.id}), content_type="application/json")
+
+        except Exception as e:
+            _logger.error(f"Erreur lors de la mise à jour de l'asset {asset_id}: {str(e)}")
+            return Response(json.dumps({"status": "error", "message": str(e)}), status=500, content_type="application/json")       
 
     @http.route(
         "/api/patrimoine/assets/<int:asset_id>",
@@ -654,109 +872,178 @@ class PatrimoineAssetController(http.Controller):
         type="http",
         methods=["GET"],
     )
+    @handle_api_errors
     def get_asset(self, asset_id, **kw):
-        try:
-            asset = request.env["patrimoine.asset"].browse(asset_id)
-            if not asset.exists():
-                return Response(status=404)
-
-            # 3. Conversion de la date d'acquisition de l'asset principal (pour get_asset)
-            date_acquisition_str = (
-                asset.date_acquisition.strftime("%Y-%m-%d")
-                if asset.date_acquisition
-                else None
+        asset = request.env["patrimoine.asset"].browse(asset_id)
+        if not asset.exists():
+            return Response(
+                json.dumps({
+                    "status": "error",
+                    "code": 404,
+                    "message": "Asset not found"
+                }),
+                status=404,
+                headers=CORS_HEADERS
             )
 
-            details = {}
-            if asset.type == "informatique":
-                details_record = request.env["patrimoine.asset.informatique"].search(
-                    [("asset_id", "=", asset.id)], limit=1
-                )
-                if details_record:
-                    details_data = details_record.read(
-                        [
-                            "marque",
-                            "modele",
-                            "numero_serie",
-                            "date_garantie_fin",
-                            "fournisseur",
-                        ]
-                    )[0]
-                    if (
-                        "date_garantie_fin" in details_data
-                        and details_data["date_garantie_fin"]
-                    ):
-                        details_data["date_garantie_fin"] = details_data[
-                            "date_garantie_fin"
-                        ].strftime("%Y-%m-%d")
-                    details = details_data
-            elif asset.type == "vehicule":
-                details_record = request.env["patrimoine.asset.vehicule"].search(
-                    [("asset_id", "=", asset.id)], limit=1
-                )
-                if details_record:
-                    details_data = details_record.read(
-                        [
-                            "immatriculation",
-                            "marque",
-                            "modele",
-                            "kilometrage",
-                            "date_achat",
-                            "date_premiere_circulation",
-                            "date_assurance",
-                            "date_controle_technique",
-                            "kilometrage_precedent",
-                        ]
-                    )[0]
-                    # 4. Conversion de toutes les dates spécifiques aux véhicules (pour get_asset)
-                    for date_field in [
-                        "date_achat",
-                        "date_premiere_circulation",
-                        "date_assurance",
-                        "date_controle_technique",
-                    ]:
-                        if date_field in details_data and details_data[date_field]:
-                            details_data[date_field] = details_data[
-                                date_field
-                            ].strftime("%Y-%m-%d")
-                    details = details_data
-            elif asset.type == "mobilier":
-                details_record = request.env["patrimoine.asset.mobilier"].search(
-                    [("asset_id", "=", asset.id)], limit=1
-                )
-                if details_record:
-                    details_data = details_record.read(
-                        ["categorie_mobilier", "etat_conservation"]
-                    )[0]
-                    details = details_data
-            image_url = False
-            if asset.image:
-                image_url = f"/web/image/patrimoine.asset/{asset.id}/image"
+        # Conversion de la date d'acquisition
+        date_acquisition_str = (
+            asset.date_acquisition.strftime("%Y-%m-%d")
+            if asset.date_acquisition
+            else None
+        )
 
-            asset_data = {
-                "id": asset.id,
-                "name": asset.name,
-                "image": image_url,  # <-- Ajoutez l'URL de l'image ici
-                "code": asset.code,
-                "type": asset.type,
-                "location": asset.location_id.name if asset.location_id else None,
-                "category": (
-                    asset.subcategory_id.category_id.name
-                    if asset.subcategory_id and asset.subcategory_id.category_id
-                    else None
-                ),
-                "acquisitionDate": date_acquisition_str,  # <-- CORRECTION MAJEURE : UTILISER LA CHAÎNE DE CARACTÈRES
-                "value": asset.valeur_acquisition,
-                "status": asset.etat,
-                "assignedTo": asset.employee_id.name if asset.employee_id else None,
-                "details": details,  # Ce dictionnaire 'details' doit maintenant contenir toutes les dates converties
+        # Récupération des détails spécifiques selon le type
+        details = {}
+        if asset.type == "informatique":
+            details_record = request.env["patrimoine.asset.informatique"].search(
+                [("asset_id", "=", asset.id)], limit=1
+            )
+            if details_record:
+                details_data = details_record.read([
+                    "marque", "modele", "numero_serie",
+                    "date_garantie_fin", "fournisseur"
+                ])[0]
+                if details_data.get("date_garantie_fin"):
+                    details_data["date_garantie_fin"] = details_data["date_garantie_fin"].strftime("%Y-%m-%d")
+                details = details_data
+        elif asset.type == "vehicule":
+            details_record = request.env["patrimoine.asset.vehicule"].search(
+                [("asset_id", "=", asset.id)], limit=1
+            )
+            if details_record:
+                details_data = details_record.read([
+                    "immatriculation", "marque", "modele", "kilometrage",
+                    "date_achat", "date_premiere_circulation",
+                    "date_assurance", "date_controle_technique",
+                    "kilometrage_precedent"
+                ])[0]
+                for date_field in ["date_achat", "date_premiere_circulation",
+                                  "date_assurance", "date_controle_technique"]:
+                    if details_data.get(date_field):
+                        details_data[date_field] = details_data[date_field].strftime("%Y-%m-%d")
+                details = details_data
+        elif asset.type == "mobilier":
+            details_record = request.env["patrimoine.asset.mobilier"].search(
+                [("asset_id", "=", asset.id)], limit=1
+            )
+            if details_record:
+                details = details_record.read(["categorie_mobilier", "etat_conservation"])[0]
+
+        image_url = f"/web/image/patrimoine.asset/{asset.id}/image" if asset.image else None
+
+        asset_data = {
+            "id": asset.id,
+            "name": asset.name,
+            "image": image_url,
+            "code": asset.code,
+            "type": asset.type,
+            "category": asset.subcategory_id.category_id.name if asset.subcategory_id and asset.subcategory_id.category_id else None,
+            "subcategory_id": asset.subcategory_id.id if asset.subcategory_id else None,
+            "location": asset.location_id.name if asset.location_id else None,
+            "location_id": asset.location_id.id if asset.location_id else None,
+            "department": asset.department_id.name if asset.department_id else None,
+            "department_id": asset.department_id.id if asset.department_id else None,
+            "acquisitionDate": date_acquisition_str,
+            "value": asset.valeur_acquisition,
+            "status": asset.etat,
+            "assignedTo": asset.employee_id.name if asset.employee_id else None,
+            "assignedTo_id": asset.employee_id.id if asset.employee_id else None,
+            "fournisseur_id": asset.fournisseur.id if asset.fournisseur else None,
+            "details": details,
+            "customValues": json.loads(asset.custom_values) if asset.custom_values else {}
+        }
+
+        return Response(
+            json.dumps({
+                "status": "success",
+                "data": asset_data
+            }, default=str),
+            headers=CORS_HEADERS
+        )
+
+    # NOUVELLE ROUTE 1 : Pour l'âge du parc matériel
+    @http.route(
+        "/api/patrimoine/stats/by_age", auth="user", type="http", methods=["GET"]
+    )
+    def get_stats_by_age(self, **kw):
+        try:
+            assets = request.env["patrimoine.asset"].search(
+                [("date_acquisition", "!=", False)]
+            )
+            today = Date.today()
+
+            age_brackets = {
+                "Moins de 1 an": 0,
+                "1 à 2 ans": 0,
+                "2 à 3 ans": 0,
+                "3 à 5 ans": 0,
+                "Plus de 5 ans": 0,
             }
+
+            for asset in assets:
+                age = relativedelta(today, asset.date_acquisition).years
+                if age < 1:
+                    age_brackets["Moins de 1 an"] += 1
+                elif age < 2:
+                    age_brackets["1 à 2 ans"] += 1
+                elif age < 3:
+                    age_brackets["2 à 3 ans"] += 1
+                elif age < 5:
+                    age_brackets["3 à 5 ans"] += 1
+                else:
+                    age_brackets["Plus de 5 ans"] += 1
+
+            # Formater pour le graphique
+            data = [
+                {"name": key, "count": value} for key, value in age_brackets.items()
+            ]
+
             return Response(
-                json.dumps(asset_data), headers={"Content-Type": "application/json"}
+                json.dumps(data), headers={"Content-Type": "application/json"}
             )
         except Exception as e:
-            _logger.error("Error getting asset details: %s", str(e))
-            return Response(status=500)
+            _logger.error(f"Error getting stats by age: {e}")
+            return Response(json.dumps({"error": str(e)}), status=500)
+
+    # NOUVELLE ROUTE 2 : Pour la valeur du parc par département
+    @http.route(
+        "/api/patrimoine/stats/by_department_value",
+        auth="user",
+        type="http",
+        methods=["GET"],
+    )
+    def get_stats_by_department_value(self, **kw):
+        try:
+            # On groupe par département et on somme la valeur d'acquisition
+            stats_raw = request.env["patrimoine.asset"].read_group(
+                domain=[("department_id", "!=", False)],
+                fields=["department_id", "valeur_acquisition"],
+                groupby=["department_id"],
+                lazy=False,
+            )
+
+            value_stats = []
+            for stat in stats_raw:
+                dept_name = (
+                    stat.get("department_id")[1]
+                    if stat.get("department_id")
+                    else "Non défini"
+                )
+                total_value = stat.get("valeur_acquisition", 0)
+                value_stats.append(
+                    {
+                        "name": dept_name,
+                        "value": total_value,
+                    }
+                )
+
+            return Response(
+                json.dumps(value_stats), headers={"Content-Type": "application/json"}
+            )
+        except Exception as e:
+            _logger.error(f"Error getting stats by department value: {e}")
+            return Response(json.dumps({"error": str(e)}), status=500)
 
     # Récupération des données de d'autres modules
     @http.route("/api/patrimoine/locations", auth="user", type="http", methods=["GET"])
@@ -920,79 +1207,87 @@ class PatrimoineAssetController(http.Controller):
 
     # --- create_mouvement (mise à jour des champs) ---
     @http.route(
-        "/api/patrimoine/mouvements",
-        auth="user",
-        type="json",
-        methods=["POST"],
-        csrf=False,
+        "/api/patrimoine/mouvements", auth="user", type="http", methods=["POST"], csrf=False
     )
-    def create_mouvement(
-        self,
-        asset_id,
-        type_mouvement,
-        date,
-        quantite,  # <-- AJOUTÉ ICI pour la cohérence
-        motif,  # <-- AJOUTÉ ICI (votre champ motif)
-        demande_location_id=False,  # <-- NOUVEAU PARAMÈTRE
-        demande_employee_id=False,  # <-- NOUVEAU PARAMÈTRE
-        demande_department_id=False,  # <-- NOUVEAU PARAMÈTRE
-        **kw,  # Garde **kw si d'autres params non listés
-    ):
-        # <-- NOUVEAUX LOGS ICI (au début de la fonction)
-        _logger.info(
-            f"create_mouvement: Arguments reçus: asset_id={asset_id}, type_mouvement={type_mouvement}, date={date}, to_employee_id={to_employee_id}, to_location_id={to_location_id}, motif={motif}, to_department_id={to_department_id}"
-        )
-        _logger.info(
-            f"create_mouvement: Type de to_employee_id: {type(to_employee_id)}"
-        )
-
+    def create_mouvement(self, **kw):
         try:
-            # Vérifier que le demandeur est un directeur ou a les droits de créer des demandes
-            if not request.env.user.has_group(
-                "gestion_patrimoine.group_patrimoine_director"
-            ):
+            # 1. Lire les données JSON manuellement depuis le corps de la requête
+            # Comme le type est 'http', Odoo ne le fait pas automatiquement
+            data = json.loads(request.httprequest.data)
+            _logger.info(f"create_mouvement (http): Données reçues: {data}")
+
+            # 2. Vérifier les permissions
+            if not request.env.user.has_group("gestion_patrimoine.group_patrimoine_admin"):
                 raise AccessError(
-                    "Accès refusé. Seul un directeur peut créer des demandes."
+                    "Accès refusé. Seul un administrateur peut créer des mouvements."
                 )
 
-            mouvement_vals = {
-                "asset_id": int(asset_id) if asset_id else False,
-                "type_mouvement": type_mouvement,
-                "date": date,
-                "quantite": int(quantite),  # <-- AJOUTÉ
-                "motif": motif,  # <-- AJOUTÉ
-                "from_location_id": False,  # Si non pertinent ou déduit autrement
-                "from_employee_id": False,  # Si non pertinent ou déduit autrement
-                "to_department_id": (
-                    int(demande_department_id) if demande_department_id else False
-                ),  # Récupère le nouveau champ
-                "to_employee_id": (
-                    int(demande_employee_id) if demande_employee_id else False
-                ),  # Récupère le nouveau champ
-                "to_location_id": (
-                    int(demande_location_id) if demande_location_id else False
-                ),  # Récupère le nouveau champ
-            }
-            new_mouvement = request.env["patrimoine.mouvement"].create(mouvement_vals)
-            # Pas de action_valider ici pour le mouvement, car le gestionnaire va le valider lui-même
-            # C'est une demande qui génère un mouvement, pas le mouvement lui-même.
-            # La redirection vers AdminMouvement se fera après l'acceptation de la demande.
+            # 3. Préparer les valeurs pour la création du mouvement en utilisant le dictionnaire 'data'
+            asset_id = data.get("asset_id")
+            if not asset_id:
+                raise ValidationError("Le bien concerné (asset_id) est obligatoire.")
 
-            return {
+            mouvement_vals = {
+                "asset_id": int(asset_id),
+                "type_mouvement": data.get("type_mouvement"),
+                "date": data.get("date"),
+                "motif": data.get("motif"),
+                "from_location_id": (
+                    int(data.get("from_location_id"))
+                    if data.get("from_location_id")
+                    else False
+                ),
+                "from_employee_id": (
+                    int(data.get("from_employee_id"))
+                    if data.get("from_employee_id")
+                    else False
+                ),
+                "to_department_id": (
+                    int(data.get("to_department_id"))
+                    if data.get("to_department_id")
+                    else False
+                ),
+                "to_employee_id": (
+                    int(data.get("to_employee_id")) if data.get("to_employee_id") else False
+                ),
+                "to_location_id": (
+                    int(data.get("to_location_id")) if data.get("to_location_id") else False
+                ),
+            }
+
+            # 4. Créer et valider le mouvement
+            new_mouvement = request.env["patrimoine.mouvement"].create(mouvement_vals)
+            new_mouvement.action_valider()
+
+            # 5. Retourner une http.Response valide
+            response_data = {
                 "status": "success",
                 "mouvement_id": new_mouvement.id,
                 "mouvement_name": new_mouvement.name,
             }
+            return Response(
+                json.dumps(response_data), content_type="application/json", status=200
+            )
 
-        except AccessError as e:
-            _logger.error("Access denied creating mouvement: %s", str(e))
-            return {"status": "error", "message": f"Accès refusé: {e.name}"}
-        except ValidationError as e:
-            _logger.error("Validation error creating mouvement: %s", str(e))
-            return {"status": "error", "message": f"Erreur de validation: {e.name}"}
+        except (ValidationError, AccessError) as e:
+            _logger.error(
+                "Validation ou Erreur d'accès lors de la création du mouvement: %s", str(e)
+            )
+            return Response(
+                json.dumps({"status": "error", "message": str(e)}),
+                content_type="application/json",
+                status=400,
+            )
         except Exception as e:
-            _logger.error("Error creating mouvement: %s", str(e))
-            return {"status": "error", "message": str(e)}
+            _logger.error("Erreur interne lors de la création du mouvement: %s", str(e))
+            request.env.cr.rollback()
+            return Response(
+                json.dumps(
+                    {"status": "error", "message": "Une erreur interne est survenue."}
+                ),
+                content_type="application/json",
+                status=500,
+            )
 
     # Route pour valider un mouvement (gardez 'http' ou 'json' selon le besoin)
     @http.route(
@@ -1125,70 +1420,134 @@ class PatrimoineAssetController(http.Controller):
         type="http",
         methods=["GET"],
     )
+    @handle_api_errors
     def get_item(self, item_id, **kw):
-        try:
-            item = request.env["patrimoine.asset"].browse(item_id)
-            if not item.exists():
-                return Response(status=404)
+        """Endpoint détaillé pour usage interne"""
+        item = request.env["patrimoine.asset"].browse(item_id)
+        if not item.exists():
+            return Response(
+                json.dumps({
+                    "status": "error",
+                    "code": 404,
+                    "message": "Item not found"
+                }),
+                status=404,
+                headers=CORS_HEADERS
+            )
 
-            # Conversion des dates
-            date_acquisition_str = (
+        # Conversion des dates
+        date_acquisition_str = (
+            item.date_acquisition.strftime("%Y-%m-%d")
+            if item.date_acquisition
+            else None
+        )
+
+        details = {}
+        if item.type == "informatique":
+            details_record = request.env["patrimoine.asset.informatique"].search(
+                [("asset_id", "=", item.id)], limit=1
+            )
+            if details_record:
+                details_data = details_record.read(
+                    ["marque", "modele", "numero_serie", "date_garantie_fin"]
+                )[0]
+                if details_data.get("date_garantie_fin"):
+                    details_data["date_garantie_fin"] = details_data[
+                        "date_garantie_fin"
+                    ].strftime("%Y-%m-%d")
+                details = details_data
+        elif item.type == "vehicule":
+            details_record = request.env["patrimoine.asset.vehicule"].search(
+                [("asset_id", "=", item.id)], limit=1
+            )
+            if details_record:
+                details_data = details_record.read(
+                    ["immatriculation", "marque", "modele", "kilometrage"]
+                )[0]
+                details = details_data
+
+        image_url = (
+            f"/web/image/patrimoine.asset/{item.id}/image" if item.image else None
+        )
+
+        item_data = {
+            "id": item.id,
+            "name": item.name,
+            "image": image_url,
+            "code": item.code,
+            "type": item.type,
+            "location": item.location_id.name if item.location_id else None,
+            "department": item.department_id.name if item.department_id else None,
+            "assignedTo": item.employee_id.name if item.employee_id else None,
+            "acquisitionDate": date_acquisition_str,
+            "value": item.valeur_acquisition,
+            "status": item.etat,
+            "details": details,
+            "customValues": (
+                json.loads(item.custom_values) if item.custom_values else {}
+            ),
+        }
+
+        return Response(
+            json.dumps({
+                "status": "success",
+                "data": item_data
+            }, default=str),
+            headers=CORS_HEADERS
+        )
+
+    @http.route(
+        "/api/patrimoine/assets/<int:item_id>",
+        auth="user",
+        type="http",
+        methods=["GET"],
+        csrf=False,
+        cors="*"
+    )
+    @handle_api_errors
+    def get_asset_simple(self, item_id, **kw):
+        """Endpoint simplifié pour le frontend"""
+        item = request.env["patrimoine.asset"].browse(item_id)
+        if not item.exists():
+            return Response(
+                json.dumps({
+                    "error": "Asset not found"
+                }),
+                status=404,
+                headers=CORS_HEADERS
+            )
+
+        # Format minimal pour le frontend
+        item_data = {
+            "id": item.id,
+            "name": item.name,
+            "code": item.code,
+            "status": item.etat,
+            "category_id": item.category_id.id,
+            "subcategory_id": item.subcategory_id.id,
+            "location_id": item.location_id.id,
+            "employee_id": item.employee_id.id,
+            "department_id": item.department_id.id,
+            "acquisition_date": (
                 item.date_acquisition.strftime("%Y-%m-%d")
                 if item.date_acquisition
                 else None
+            ),
+            "acquisition_value": item.valeur_acquisition,
+            "serial_number": item.numero_serie,
+            "model": item.modele,
+            "manufacturer": item.marque,
+            "custom_fields": (
+                json.loads(item.custom_values) if item.custom_values else {}
             )
+        }
 
-            details = {}
-            if item.type == "informatique":
-                details_record = request.env["patrimoine.asset.informatique"].search(
-                    [("asset_id", "=", item.id)], limit=1
-                )
-                if details_record:
-                    details_data = details_record.read(
-                        ["marque", "modele", "numero_serie", "date_garantie_fin"]
-                    )[0]
-                    if details_data.get("date_garantie_fin"):
-                        details_data["date_garantie_fin"] = details_data[
-                            "date_garantie_fin"
-                        ].strftime("%Y-%m-%d")
-                    details = details_data
-            elif item.type == "vehicule":
-                details_record = request.env["patrimoine.asset.vehicule"].search(
-                    [("asset_id", "=", item.id)], limit=1
-                )
-                if details_record:
-                    details_data = details_record.read(
-                        ["immatriculation", "marque", "modele", "kilometrage"]
-                    )[0]
-                    details = details_data
-
-            image_url = (
-                f"/web/image/patrimoine.asset/{item.id}/image" if item.image else None
-            )
-
-            item_data = {
-                "id": item.id,
-                "name": item.name,
-                "image": image_url,
-                "code": item.code,
-                "type": item.type,
-                "location": item.location_id.name if item.location_id else None,
-                "department": item.department_id.name if item.department_id else None,
-                "assignedTo": item.employee_id.name if item.employee_id else None,
-                "acquisitionDate": date_acquisition_str,
-                "value": item.valeur_acquisition,
-                "status": item.etat,
-                "details": details,
-                "customValues": (
-                    json.loads(item.custom_values) if item.custom_values else {}
-                ),
-            }
-            return Response(
-                json.dumps(item_data), headers={"Content-Type": "application/json"}
-            )
-        except Exception as e:
-            _logger.error("Error getting item: %s", str(e))
-            return Response(status=500)
+        return Response(
+            json.dumps(item_data, default=str),
+            status=200,
+            mimetype="application/json",
+            headers=CORS_HEADERS
+        )
 
     @http.route(
         "/api/patrimoine/items/<int:item_id>",
@@ -1356,78 +1715,31 @@ class PatrimoineAssetController(http.Controller):
     def print_fiche_vie_pdf(self, asset_id, **kw):
         _logger.info(f"print_fiche_vie_pdf: Requête reçue pour asset ID: {asset_id}")
         try:
+            # CORRECTION DÉFINITIVE : On utilise la méthode la plus standard d'Odoo pour générer un rapport.
+            # Cette méthode est plus robuste et évite les erreurs d'arguments.
+
+            report_action = request.env['ir.actions.report']
+            report_name = 'gestion_patrimoine.action_report_asset_fiche_vie' # L'ID de l'action de rapport
+
+            # On génère le PDF en appelant la méthode sur le modèle 'ir.actions.report' lui-même
+            pdf_content, content_type = report_action._render_qweb_pdf(report_name, [asset_id])
+
+            # Création de la réponse HTTP avec les bons en-têtes
             asset = request.env["patrimoine.asset"].browse(asset_id)
-            if not asset.exists():
-                _logger.warning(f"print_fiche_vie_pdf: Asset {asset_id} non trouvé.")
-                return request.not_found()
-
-            _logger.info(
-                f"print_fiche_vie_pdf: Asset trouvé: {asset.name} ({asset.id})"
-            )
-
-            report_xml_id = "gestion_patrimoine.action_report_asset_fiche_vie"
-            _logger.info(
-                f"print_fiche_vie_pdf: Tentative de récupération du rapport avec ID externe: {report_xml_id}"
-            )
-
-            # --- Logs supplémentaires pour diagnostiquer request.env.ref ---
-            try:
-                report_sudo = request.env.ref(report_xml_id).sudo()
-                _logger.info(
-                    f"print_fiche_vie_pdf: RAPPORT TROUVÉ. Nom du rapport: {report_sudo.name} (ID: {report_sudo.id})"
-                )
-            except ValueError as ve:
-                _logger.error(
-                    f"print_fiche_vie_pdf: ÉCHEC DE RÉCUPÉRATION DU RAPPORT (ValueError): {ve}"
-                )
-                # Tenter de chercher dans ir.model.data pour voir si l'ID existe mais n'est pas un rapport
-                ir_model_data_rec = (
-                    request.env["ir.model.data"]
-                    .sudo()
-                    .search(
-                        [
-                            ("module", "=", "gestion_patrimoine"),
-                            ("name", "=", "action_report_asset_fiche_vie"),
-                        ],
-                        limit=1,
-                    )
-                )
-                if ir_model_data_rec:
-                    _logger.error(
-                        f"print_fiche_vie_pdf: L'ID externe existe dans ir.model.data, mais n'est pas un ir.actions.report valide. Modèle associé: {ir_model_data_rec.model}, Res ID: {ir_model_data_rec.res_id}"
-                    )
-                else:
-                    _logger.error(
-                        "print_fiche_vie_pdf: L'ID externe n'existe même pas dans ir.model.data."
-                    )
-                raise  # Relance l'erreur pour qu'elle soit attrapée par le bloc outer except
-            # --- Fin des logs supplémentaires ---
-
-            # Générer le PDF
-            pdf_content, content_type = report_sudo._render_qweb_pdf(asset.id)
-            _logger.info(
-                f"print_fiche_vie_pdf: PDF généré avec succès pour asset {asset.id}. Taille: {len(pdf_content)} bytes."
-            )
+            report_filename = f"{asset.name or 'materiel'}_fiche_vie.pdf".replace(" ", "_")
 
             pdf_http_headers = [
                 ("Content-Type", "application/pdf"),
                 ("Content-Length", len(pdf_content)),
-                (
-                    "Content-Disposition",
-                    'inline; filename="%s_fiche_vie.pdf"'
-                    % (asset.name.replace(" ", "_")),
-                ),
+                ("Content-Disposition", f'inline; filename="{report_filename}"'),
             ]
-            return request.make_response(pdf_content, pdf_http_headers)
+
+            return request.make_response(pdf_content, headers=pdf_http_headers)
 
         except Exception as e:
-            _logger.error(
-                "print_fiche_vie_pdf: Erreur finale lors de la génération PDF pour asset %s: %s",
-                asset_id,
-                str(e),
-            )
+            _logger.error(f"Erreur finale lors de la génération PDF pour asset {asset_id}: {str(e)}")
             return Response(
-                json.dumps({"status": "error", "message": str(e)}),
+                json.dumps({"status": "error", "message": "Une erreur interne est survenue lors de la génération du PDF."}),
                 status=500,
                 headers={"Content-Type": "application/json"},
             )
@@ -1733,6 +2045,33 @@ class PatrimoineAssetController(http.Controller):
                 headers={"Content-Type": "application/json"},
             )
 
+    # NOUVELLE ROUTE pour obtenir les stats d'UN SEUL département
+    @http.route('/api/patrimoine/stats/department/<int:department_id>', auth="user", type="http", methods=["GET"])
+    def get_stats_for_single_department(self, department_id, **kw):
+        try:
+            domain = [('department_id', '=', department_id)]
+
+            # Logique de calcul détaillée (similaire à get_patrimoine_stats)
+            stats_raw = request.env["patrimoine.asset"].read_group(
+                domain, fields=["etat"], groupby=["etat"], lazy=False
+            )
+
+            stats = {'total': 0, 'inService': 0, 'inStock': 0, 'outOfService': 0}
+            for group in stats_raw:
+                count = group["__count"]
+                stats['total'] += count
+                if group['etat'] == 'service':
+                    stats['inService'] = count
+                elif group['etat'] == 'stock':
+                    stats['inStock'] = count
+                elif group['etat'] in ('hs', 'reforme'):
+                    stats['outOfService'] += count
+
+            return Response(json.dumps(stats), headers={"Content-Type": "application/json"})
+        except Exception as e:
+            _logger.error(f"Error getting stats for department {department_id}: {e}")
+            return Response(json.dumps({'error': str(e)}), status=500)
+
     # --- NOUVELLE API : Statistiques par Type Général (informatique, mobilier, vehicule) ---
     @http.route(
         "/api/patrimoine/stats/by_type", auth="user", type="http", methods=["GET"]
@@ -1745,8 +2084,8 @@ class PatrimoineAssetController(http.Controller):
             )
 
             type_stats = []
-            # CORRECTION MAJEURE ICI : Appeler la méthode .selection() pour obtenir la liste des tuples
-            type_selection_map = dict(request.env['patrimoine.asset']._fields['type'].selection()) 
+            # CORRECTION : Utiliser la méthode correcte pour accéder aux valeurs de sélection
+            type_selection_map = dict(request.env['patrimoine.asset']._fields['type'].get_description(request.env)['selection'])
 
             for stat in stats_raw:
                 type_code = stat["type"]
@@ -1805,73 +2144,150 @@ class PatrimoineAssetController(http.Controller):
                 headers={"Content-Type": "application/json"},
             )
 
-    # --- API pour créer une demande (utilisée par le directeur) ---
-    @http.route(
-        "/api/patrimoine/demandes",
-        auth="user",
-        type="json",
-        methods=["POST"],
-        csrf=False,
-    )
-    def create_demande(
-        self,
-        demande_subcategory_id=False,
-        demande_location_id=False,
-        demande_employee_id=False,
-        demande_department_id=False,
-        **kw,
-    ):
+    # NOUVELLE ROUTE pour lister les matériels de l'utilisateur connecté
+    @http.route('/api/patrimoine/assets/user', auth='user', type='http', methods=['GET'])
+    def list_assets_for_user(self, **kw):
         try:
-            # Vérifier que le demandeur est un directeur ou a les droits de créer des demandes
-            if not request.env.user.has_group(
-                "gestion_patrimoine.group_patrimoine_director"
-            ):
-                raise AccessError(
-                    "Accès refusé. Seul un directeur peut créer des demandes."
-                )
+            # On cherche l'employé correspondant à l'utilisateur connecté
+            employee = request.env['hr.employee'].search([('user_id', '=', request.env.user.id)], limit=1)
+            if not employee:
+                # Si aucun employé n'est lié à cet utilisateur, on renvoie une liste vide
+                return Response(json.dumps([]), headers={"Content-Type": "application/json"})
 
-            # 1. Créer la demande "header"
+            # On cherche tous les matériels affectés à cet employé
+            domain = [('employee_id', '=', employee.id)]
+            assets = request.env['patrimoine.asset'].search(domain)
+
+            asset_data = []
+            for asset in assets:
+                image_url = (
+                    f"/web/image/patrimoine.asset/{asset.id}/image"
+                    if asset.image
+                    else None
+                )
+                asset_data.append({
+                    'id': asset.id,
+                    'name': asset.name,
+                    'code': asset.code,
+                    'status': asset.etat,
+                    'category': asset.subcategory_id.category_id.name if asset.subcategory_id else None,
+                    'image': image_url,
+                    # Ajoutez d'autres champs si nécessaire
+                })
+
+            return Response(json.dumps(asset_data), headers={'Content-Type': 'application/json'})
+
+        except Exception as e:
+            _logger.error(f"Error listing assets for user {request.env.user.id}: {e}")
+            return Response(json.dumps({'error': str(e)}), status=500, headers={'Content-Type': 'application/json'})
+
+    # NOUVELLE ROUTE pour les stats de l'utilisateur connecté
+    @http.route('/api/patrimoine/stats/user', auth="user", type="http", methods=["GET"])
+    def get_stats_for_user(self, **kw):
+        try:
+            # On cherche l'employé correspondant à l'utilisateur connecté
+            employee = request.env['hr.employee'].search([('user_id', '=', request.env.user.id)], limit=1)
+            if not employee:
+                # Si aucun employé n'est lié, on renvoie des stats vides
+                return Response(json.dumps({'total': 0, 'inService': 0, 'inStock': 0, 'outOfService': 0}), headers={"Content-Type": "application/json"})
+
+            # On filtre les matériels par l'ID de cet employé
+            domain = [('employee_id', '=', employee.id)]
+
+            stats_raw = request.env["patrimoine.asset"].read_group(
+                domain, fields=["etat"], groupby=["etat"], lazy=False
+            )
+
+            stats = {'total': 0, 'inService': 0, 'inStock': 0, 'outOfService': 0}
+            for group in stats_raw:
+                count = group['__count']
+                stats['total'] += count
+                if group['etat'] == 'service':
+                    stats['inService'] = count
+                elif group['etat'] == 'stock':
+                    stats['inStock'] = count
+                elif group['etat'] in ('hs', 'reforme'):
+                    stats['outOfService'] += count
+
+            return Response(json.dumps(stats), headers={"Content-Type": "application/json"})
+        except Exception as e:
+            _logger.error(f"Error getting stats for user {request.env.user.id}: {e}")
+            return Response(json.dumps({'error': str(e)}), status=500)
+
+    # --- API pour créer une demande (utilisée par le directeur) ---
+    @http.route('/api/patrimoine/demandes', auth='user', type='json', methods=['POST'], csrf=False)
+    def create_demande(self, motif_demande, lignes, **kw):
+        try:
+            if not request.env.user.has_group("gestion_patrimoine.group_patrimoine_director"):
+                raise AccessError("Accès refusé.")
+
+            # 1. Créer la demande "header" avec le motif
             demande_vals = {
                 'demandeur_id': request.env.user.id,
                 'motif_demande': motif_demande,
             }
             new_demande = request.env['patrimoine.demande.materiel'].create(demande_vals)
 
-            # 2. Parcourir les lignes reçues et les créer
-            lignes_a_creer = []
+            # 2. Parcourir et créer chaque ligne reçue
             for ligne in lignes:
-                lignes_a_creer.append({
-                    'demande_id': new_demande.id, # Lien vers la demande principale
+                request.env['patrimoine.demande.materiel.ligne'].create({
+                    'demande_id': new_demande.id,
                     'demande_subcategory_id': int(ligne.get('demande_subcategory_id')),
                     'quantite': int(ligne.get('quantite')),
+                    'destinataire_department_id': int(ligne.get('destinataire_department_id')) if ligne.get('destinataire_department_id') else False,
                     'destinataire_location_id': int(ligne.get('destinataire_location_id')) if ligne.get('destinataire_location_id') else False,
                     'destinataire_employee_id': int(ligne.get('destinataire_employee_id')) if ligne.get('destinataire_employee_id') else False,
-                    'description': ligne.get('description', '')
                 })
-            
-            request.env['patrimoine.demande.materiel.ligne'].create(lignes_a_creer)
 
-            return {
-                "status": "success",
-                "demande_id": new_demande.id,
-                "demande_name": new_demande.name,
-            }
+            return {"status": "success", "demande_id": new_demande.id}
         except Exception as e:
-            _logger.error("Error creating demande: %s", str(e))
-            # Important: si une erreur survient, annuler la transaction
             request.env.cr.rollback()
+            _logger.error("Erreur lors de la création de la demande multi-lignes: %s", str(e))
             return {"status": "error", "message": str(e)}
+
+    # Endpoints standardisés pour les demandes de matériel
+    @http.route('/api/patrimoine/demandes/<int:demande_id>/approve', type='json', auth='user', methods=['POST'])
+    def approve_demande(self, demande_id, **kw):
+        try:
+            if not request.env.user.has_group('gestion_patrimoine.group_patrimoine_admin'):
+                return {'status': 'error', 'message': 'Accès refusé'}, 403
+
+            demande = request.env['patrimoine.demande.materiel'].browse(demande_id)
+            if not demande.exists():
+                return {'status': 'error', 'message': 'Demande non trouvée'}, 404
+
+            demande.action_approve()
+            return {'status': 'success', 'new_state': demande.state}
+        except Exception as e:
+            _logger.error(f"Error approving demande {demande_id}: {str(e)}")
+            return {'status': 'error', 'message': str(e)}, 500
+
+    @http.route('/api/patrimoine/demandes/<int:demande_id>/reject', type='json', auth='user', methods=['POST'])
+    def reject_demande(self, demande_id, **kw):
+        try:
+            if not request.env.user.has_group('gestion_patrimoine.group_patrimoine_admin'):
+                return {'status': 'error', 'message': 'Accès refusé'}, 403
+
+            demande = request.env['patrimoine.demande.materiel'].browse(demande_id)
+            if not demande.exists():
+                return {'status': 'error', 'message': 'Demande non trouvée'}, 404
+
+            demande.action_reject()
+            return {'status': 'success', 'new_state': demande.state}
+        except Exception as e:
+            _logger.error(f"Error rejecting demande {demande_id}: {str(e)}")
+            return {'status': 'error', 'message': str(e)}, 500
 
     # --- API pour lister les demandes de matériel (à jour avec les nouveaux champs) ---
     @http.route("/api/patrimoine/demandes", auth="user", type="http", methods=["GET"])
     def list_demandes(self, **kw):
         try:
             current_user = request.env.user
-            domain = []
-
-            # Si l'utilisateur n'est pas admin, il ne voit que ses propres demandes ou celles de son département
-            # Cette logique est mieux gérée par ir.rule pour la sécurité Odoo native
-            # mais on peut ajouter un pré-filtrage ici si nécessaire pour la performance de l'API.
+            # Par défaut, ne montrer que les demandes en attente
+            domain = [("state", "=", "pending")]
+            # Les admins voient toutes les demandes
+            if current_user.has_group("gestion_patrimoine.group_patrimoine_admin"):
+                domain = []
 
             demandes = request.env["patrimoine.demande.materiel"].search(
                 domain, order="create_date desc"
@@ -1879,29 +2295,17 @@ class PatrimoineAssetController(http.Controller):
 
             demande_data = []
             for demande in demandes:
+                # On récupère le nom du département de l'employé qui a fait la demande
+                demandeur_employee = request.env['hr.employee'].search([('user_id', '=', demande.demandeur_id.id)], limit=1)
+                departement_name = demandeur_employee.department_id.name if demandeur_employee and demandeur_employee.department_id else "N/A"
+
                 demande_data.append(
                     {
                         "id": demande.id,
                         "name": demande.name,
                         "demandeur_id": demande.demandeur_id.id,
                         "demandeur_name": demande.demandeur_id.name,
-                        "demandeur_department": (
-                            demande.demandeur_department_id.name
-                            if demande.demandeur_department_id
-                            else None
-                        ),
-                        "demande_type_general": demande.demande_type_general,
-                        "demande_subcategory_id": (
-                            demande.demande_subcategory_id.id
-                            if demande.demande_subcategory_id
-                            else None
-                        ),
-                        "demande_subcategory_name": (
-                            demande.demande_subcategory_id.name
-                            if demande.demande_subcategory_id
-                            else None
-                        ),
-                        "quantite": demande.quantite,
+                        "departement_demandeur": departement_name,
                         "motif_demande": demande.motif_demande,
                         "state": demande.state,
                         "date_demande": (
@@ -1914,40 +2318,51 @@ class PatrimoineAssetController(http.Controller):
                             if demande.date_traitement
                             else None
                         ),
-                        "demande_location_id": (
-                            demande.demande_location_id.id
-                            if demande.demande_location_id
-                            else None
-                        ),  # NOUVEAU
-                        "demande_location_name": (
-                            demande.demande_location_id.name
-                            if demande.demande_location_id
-                            else None
-                        ),  # NOUVEAU
-                        "demande_employee_id": (
-                            demande.demande_employee_id.id
-                            if demande.demande_employee_id
-                            else None
-                        ),  # NOUVEAU
-                        "demande_employee_name": (
-                            demande.demande_employee_id.name
-                            if demande.demande_employee_id
-                            else None
-                        ),  # NOUVEAU
-                        "demande_department_id": (
-                            demande.demande_department_id.id
-                            if demande.demande_department_id
-                            else None
-                        ),  # NOUVEAU
-                        "demande_department_name": (
-                            demande.demande_department_id.name
-                            if demande.demande_department_id
-                            else None
-                        ),  # NOUVEAU
+                        "lignes": [
+                            {
+                                "id": ligne.id,
+                                "demande_subcategory_id": ligne.demande_subcategory_id.id,
+                                "demande_subcategory_name": ligne.demande_subcategory_id.name,
+                                "quantite": ligne.quantite,
+                                "destinataire_department_id": (
+                                    ligne.destinataire_department_id.id
+                                    if ligne.destinataire_department_id
+                                    else None
+                                ),
+                                "destinataire_department_name": (
+                                    ligne.destinataire_department_id.name
+                                    if ligne.destinataire_department_id
+                                    else None
+                                ),
+                                "destinataire_location_id": (
+                                    ligne.destinataire_location_id.id
+                                    if ligne.destinataire_location_id
+                                    else None
+                                ),
+                                "destinataire_location_name": (
+                                    ligne.destinataire_location_id.name
+                                    if ligne.destinataire_location_id
+                                    else None
+                                ),
+                                "destinataire_employee_id": (
+                                    ligne.destinataire_employee_id.id
+                                    if ligne.destinataire_employee_id
+                                    else None
+                                ),
+                                "destinataire_employee_name": (
+                                    ligne.destinataire_employee_id.name
+                                    if ligne.destinataire_employee_id
+                                    else None
+                                ),
+                                "description": ligne.description,
+                            }
+                            for ligne in demande.ligne_ids
+                        ],
                     }
                 )
             return Response(
-                json.dumps(demande_data), headers={"Content-Type": "application/json"}
+                json.dumps(demande_data), 
+                headers={"Content-Type": "application/json"}
             )
         except Exception as e:
             _logger.error("Error listing demandes: %s", str(e))
@@ -1957,7 +2372,7 @@ class PatrimoineAssetController(http.Controller):
                 headers={"Content-Type": "application/json"},
             )
 
-        # --- API pour créer une déclaration de perte (par Employé/Directeur) ---
+    # --- API pour créer une déclaration de perte (par Employé/Directeur) ---
 
     @http.route(
         "/api/patrimoine/pertes", auth="user", type="json", methods=["POST"], csrf=False
@@ -2012,7 +2427,9 @@ class PatrimoineAssetController(http.Controller):
             current_user = request.env.user
             domain = []
 
-            pertes = request.env["patrimoine.perte"].search(domain, order="date desc")
+            pertes = request.env["patrimoine.perte"].search(
+                domain, order="date_perte desc"
+            )
 
             perte_data = []
             for perte in pertes:
@@ -2023,15 +2440,20 @@ class PatrimoineAssetController(http.Controller):
                         "asset_id": perte.asset_id.id,
                         "asset_name": perte.asset_id.name,
                         "asset_code": perte.asset_id.code,
-                        "date": (
-                            perte.date.strftime("%Y-%m-%d %H:%M:%S")
-                            if perte.date
+                        "date_perte": (
+                            perte.date_perte.strftime("%Y-%m-%d %H:%M:%S")
+                            if perte.date_perte
                             else None
                         ),
                         "motif": perte.motif,
                         "declarer_par_id": perte.declarer_par_id.id,
                         "declarer_par_name": perte.declarer_par_id.name,
                         "state": perte.state,
+                        # On peut aussi ajouter les autres champs ici pour la modal "Voir"
+                        "lieu_perte": perte.lieu_perte,
+                        "circonstances": perte.circonstances,
+                        "actions_entreprises": perte.actions_entreprises,
+                        "rapport_police": perte.rapport_police,
                     }
                 )
             return Response(
@@ -2044,6 +2466,95 @@ class PatrimoineAssetController(http.Controller):
                 status=500,
                 headers={"Content-Type": "application/json"},
             )
+
+    # NOUVELLE ROUTE pour que les managers voient les déclarations de leur équipe
+
+    @http.route("/api/patrimoine/pertes/manager", auth="user", type="http", methods=["GET"])
+    def list_pertes_for_manager(self, **kw):
+        try:
+            current_employee = request.env["hr.employee"].search(
+                [("user_id", "=", request.env.user.id)], limit=1
+            )
+            if not current_employee:
+                return Response(
+                    json.dumps([]), headers={"Content-Type": "application/json"}
+                )
+
+            # On cherche les employés qui ont ce manager (current_employee) comme supérieur
+            team_employee_ids = (
+                request.env["hr.employee"]
+                .search([("parent_id", "=", current_employee.id)])
+                .ids
+            )
+
+            # On cherche les déclarations faites par ces employés et qui sont en attente de validation
+            domain = [
+                ("declarer_par_id.employee_ids", "in", team_employee_ids),
+                ("state", "=", "to_approve"),
+            ]
+
+            pertes = request.env["patrimoine.perte"].search(domain)
+
+            # La logique pour formater les données est la même que pour list_pertes
+            perte_data = []
+            for perte in pertes:
+                perte_data.append(
+                    {
+                        "id": perte.id,
+                        "name": perte.name,
+                        "asset_name": perte.asset_id.name,
+                        "declarer_par_name": perte.declarer_par_id.name,
+                        "date_perte": (
+                            perte.date_perte.strftime("%Y-%m-%d")
+                            if perte.date_perte
+                            else None
+                        ),
+                        "state": perte.state,
+                    }
+                )
+
+            return Response(
+                json.dumps(perte_data), headers={"Content-Type": "application/json"}
+            )
+
+        except Exception as e:
+            _logger.error(f"Error listing pertes for manager {request.env.user.name}: {e}")
+            return Response(json.dumps({"error": str(e)}), status=500)
+
+    # NOUVELLE ROUTE pour que le manager traite une déclaration
+    @http.route(
+        "/api/patrimoine/pertes/manager_process/<int:perte_id>",
+        auth="user",
+        type="json",
+        methods=["POST"],
+    )
+    def manager_process_perte(self, perte_id, action, **kw):
+        try:
+            perte = request.env["patrimoine.perte"].browse(perte_id)
+            if not perte.exists():
+                return {"status": "error", "message": "Déclaration non trouvée"}
+
+            # On vérifie que l'utilisateur est bien le manager de l'employé déclarant
+            current_employee = request.env["hr.employee"].search(
+                [("user_id", "=", request.env.user.id)], limit=1
+            )
+            if (
+                perte.declarer_par_id.employee_ids
+                and perte.declarer_par_id.employee_ids[0].parent_id != current_employee
+            ):
+                return {"status": "error", "message": "Action non autorisée."}
+
+            if action == "approve":
+                perte.action_manager_approve()
+            elif action == "reject":
+                perte.action_reject()
+            else:
+                return {"status": "error", "message": "Action invalide"}
+
+            return {"status": "success", "new_state": perte.state}
+        except Exception as e:
+            _logger.error(f"Error processing perte {perte_id} by manager: {e}")
+            return {"status": "error", "message": str(e)}
 
     # --- API pour confirmer ou rejeter une déclaration de perte ---
     @http.route(

@@ -55,10 +55,6 @@ export default function AdminAjouterMateriel() {
     // CORRECTION : On utilise useLocation() pour récupérer l'ID passé par le bouton "Modifier".
     const location = useLocation()
     const navigate = useNavigate()
-    console.log(
-        "État de la navigation reçu sur la page formulaire :",
-        location.state
-    )
     const materialIdToEdit = location.state?.materialId || null
     const isEditMode = Boolean(materialIdToEdit)
 
@@ -95,9 +91,7 @@ export default function AdminAjouterMateriel() {
     const [specificData, setSpecificData] = useState({})
 
     useEffect(() => {
-        console.log("--- LE COMPOSANT SE CHARGE ---")
-        console.log("Mode édition détecté ?", isEditMode)
-        console.log("ID à modifier :", materialIdToEdit)
+        // Initialisation du formulaire selon le mode (création ou édition)
         const loadDependencies = async () => {
             setIsLoading(true)
             try {
@@ -118,27 +112,18 @@ export default function AdminAjouterMateriel() {
                 setFournisseurs(fours)
                 setAllSubcategories(subcats)
 
-                console.log("Listes pour les menus déroulants chargées.")
                 // Si on est en mode édition, on charge les données du matériel
                 if (isEditMode) {
-                    console.log("--- DÉBUT DU PRÉ-REMPLISSAGE ---")
                     const materialToEdit =
                         await materialService.fetchMaterialDetails(
                             materialIdToEdit
                         )
-
-                    // LE LOG LE PLUS IMPORTANT : AFFICHE LES DONNÉES BRUTES DE L'API
-                    console.log(
-                        "Données brutes reçues de l'API pour le matériel :",
-                        materialToEdit
-                    )
 
                     const generalType = types.find(
                         t =>
                             t.code === materialToEdit.type ||
                             t.name === materialToEdit.category
                     )
-                    console.log("Type général trouvé :", generalType)
 
                     setAssetData({
                         name: materialToEdit.name ?? "",
@@ -167,7 +152,7 @@ export default function AdminAjouterMateriel() {
                             `http://localhost:8069${materialToEdit.image}`
                         )
                     }
-                } else { console.log("Mode création détecté (pas d'ID)."); }
+                }
                 setIsLoading(false)
             } catch (error) {
                 console.error("Erreur chargement des données:", error)

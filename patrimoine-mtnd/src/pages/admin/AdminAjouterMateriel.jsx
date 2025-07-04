@@ -138,18 +138,18 @@ export default function AdminAjouterMateriel() {
                     console.log("Type général trouvé :", generalType)
 
                     setAssetData({
-                        name: materialToEdit.name || "",
+                        name: materialToEdit.name ?? "",
                         date_acquisition: materialToEdit.acquisitionDate
                             ? new Date(materialToEdit.acquisitionDate)
                                   .toISOString()
                                   .split("T")[0]
                             : "",
-                        valeur_acquisition: materialToEdit.value || "",
-                        etat: materialToEdit.status || "stock",
-                        department_id: materialToEdit.department_id || "",
-                        employee_id: materialToEdit.assignedTo_id || "",
-                        location_id: materialToEdit.location_id || "",
-                        fournisseur: materialToEdit.fournisseur_id || "",
+                        valeur_acquisition: materialToEdit.value ?? "",
+                        etat: materialToEdit.status ?? "stock",
+                        department_id: materialToEdit.department_id ?? "",
+                        employee_id: materialToEdit.assignedTo_id ?? "",
+                        location_id: materialToEdit.location_id ?? "",
+                        fournisseur: materialToEdit.fournisseur_id ?? "",
                     })
 
                     // On pré-sélectionne les catégories

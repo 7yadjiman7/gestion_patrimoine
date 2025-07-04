@@ -73,22 +73,6 @@ function AppContent() {
               />
 
               <Route
-                  path="/admin/:type"
-                  element={
-                      <ProtectedRoute roles={[ROLES.ADMIN]}>
-                          <SubCategoriesPage />
-                      </ProtectedRoute>
-                  }
-              />
-              <Route
-                  path="/admin/:type/:category"
-                  element={
-                      <ProtectedRoute roles={[ROLES.ADMIN]}>
-                          <CategoryItemsPage />
-                      </ProtectedRoute>
-                  }
-              />
-              <Route
                   path="/admin/ajouter"
                   element={
                       <ProtectedRoute roles={[ROLES.ADMIN]}>
@@ -125,6 +109,22 @@ function AppContent() {
                   element={
                       <ProtectedRoute roles={[ROLES.ADMIN]}>
                           <AdminDeclarationsPerte />
+                      </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/admin/:type/:category"
+                  element={
+                      <ProtectedRoute roles={[ROLES.ADMIN]}>
+                          <CategoryItemsPage />
+                      </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/admin/:type"
+                  element={
+                      <ProtectedRoute roles={[ROLES.ADMIN]}>
+                          <SubCategoriesPage />
                       </ProtectedRoute>
                   }
               />

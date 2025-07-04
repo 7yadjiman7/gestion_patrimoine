@@ -20,12 +20,12 @@ const fetchFilteredMaterials = filters => {
 }
 const fetchTypesGeneraux = () =>
     api.get("/api/patrimoine/categories").then(res => res.data)
-const fetchSubcategories = filters => {
-    const queryParams = new URLSearchParams(filters).toString()
-    return api
-        .get(`/api/patrimoine/subcategories?${queryParams}`)
+// Récupère les sous-catégories pour un type général donné
+// Si aucun identifiant n'est fourni (0), toutes les sous-catégories sont renvoyées
+const fetchSubcategories = (categoryId = 0) =>
+    api
+        .get(`/api/patrimoine/subcategories/${categoryId}`)
         .then(res => res.data.data || [])
-}
 const fetchLocations = () =>
     api.get("/api/patrimoine/locations").then(res => res.data)
 const fetchEmployees = () =>

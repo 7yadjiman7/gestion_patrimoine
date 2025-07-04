@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom"
 import materialService from "@/services/materialService"
 import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { toast } from "react-hot-toast"
 
 export default function SubCategoriesPage() {
     const { type } = useParams()
@@ -32,7 +33,7 @@ export default function SubCategoriesPage() {
                 } else throw new Error(`Type "${type}" introuvable.`)
             } catch (error) {
                 console.error("Erreur:", error)
-                alert(`Erreur: ${error.message}`)
+                toast.error(`Erreur: ${error.message}`)
                 navigate("/admin")
             } finally {
                 setIsLoading(false)

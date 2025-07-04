@@ -133,7 +133,7 @@ export default function AdminAjouterMateriel() {
                     )
 
                     const generalType = types.find(
-                        t => t.name === materialToEdit.category
+                        t => t.code === materialToEdit.type
                     )
                     console.log("Type général trouvé :", generalType)
 

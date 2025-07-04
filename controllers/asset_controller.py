@@ -948,7 +948,7 @@ class PatrimoineAssetController(http.Controller):
             "value": asset.valeur_acquisition,
             "status": asset.etat,
             "assignedTo": asset.employee_id.name if asset.employee_id else None,
-            "assignedTo_id": asset.employee_id.id if asset.employee_id else None,
+            "assigned_to_id": asset.employee_id.id if asset.employee_id else None,
             "fournisseur_id": asset.fournisseur.id if asset.fournisseur else None,
             "details": details,
             "customValues": json.loads(asset.custom_values) if asset.custom_values else {}

@@ -60,7 +60,7 @@ export default function MaterialDetailPage() {
         // Prépare les données à transmettre
         const navigationState = {
             sourceLocationId: material.location_id,
-            sourceEmployeeId: material.assignedTo_id,
+            sourceEmployeeId: material.assigned_to_id,
         }
 
         navigate(

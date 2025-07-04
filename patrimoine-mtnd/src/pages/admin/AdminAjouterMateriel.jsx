@@ -147,7 +147,7 @@ export default function AdminAjouterMateriel() {
                         valeur_acquisition: materialToEdit.value ?? "",
                         etat: materialToEdit.status ?? "stock",
                         department_id: materialToEdit.department_id ?? "",
-                        employee_id: materialToEdit.assignedTo_id ?? "",
+                        employee_id: materialToEdit.assigned_to_id ?? "",
                         location_id: materialToEdit.location_id ?? "",
                         fournisseur: materialToEdit.fournisseur_id ?? "",
                     })

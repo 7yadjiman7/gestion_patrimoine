@@ -12,10 +12,12 @@ export default function SubCategoriesPage() {
     const [subCategories, setSubCategories] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [generalTypeName, setGeneralTypeName] = useState("")
+    const [error, setError] = useState(null)
 
     useEffect(() => {
         const fetchPageData = async () => {
             setIsLoading(true)
+            setError(null)
             try {
                 const types = await materialService.fetchTypesGeneraux()
                 const generalCategory = types.find(
@@ -34,19 +36,30 @@ export default function SubCategoriesPage() {
             } catch (error) {
                 console.error("Erreur:", error)
                 toast.error(`Erreur: ${error.message}`)
-                navigate("/admin")
+                setError(error.message || "Erreur lors du chargement")
             } finally {
                 setIsLoading(false)
             }
         }
 
         fetchPageData()
-    }, [type, navigate])
+    }, [type])
 
     if (isLoading) {
         return (
             <div className="flex justify-center items-center h-screen bg-gray-900">
                 <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-orange-400"></div>
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
+                <p className="text-red-500 mb-4">{error}</p>
+                <Button variant="outline" onClick={() => navigate(-1)}>
+                    Retour
+                </Button>
             </div>
         )
     }

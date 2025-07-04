@@ -112,6 +112,15 @@ function AppContent() {
                       </ProtectedRoute>
                   }
               />
+              {/* Alias pour éviter l'erreur 404 lorsque l'on utilise l'ancien chemin */}
+              <Route
+                  path="/subCategoriesPage/:type"
+                  element={
+                      <ProtectedRoute roles={[ROLES.ADMIN]}>
+                          <SubCategoriesPage />
+                      </ProtectedRoute>
+                  }
+              />
               <Route
                   path="/admin/:type/:category"
                   element={

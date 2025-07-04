@@ -26,8 +26,9 @@ export default function SubCategoriesPage() {
 
                 if (generalCategory) {
                     setGeneralTypeName(generalCategory.name)
-                    const data = await materialService.fetchSubcategories(
-                        generalCategory.id
+                    const allSubcats = await materialService.fetchSubcategories(0) // 0 => all
+                    const data = allSubcats.filter(
+                        sc => sc.category_id === generalCategory.id
                     )
                     if (!data || data.error)
                         throw new Error(data?.error || "Erreur chargement")

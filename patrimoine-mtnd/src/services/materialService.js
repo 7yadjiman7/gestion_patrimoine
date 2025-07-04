@@ -6,8 +6,10 @@ const fetchMaterials = () =>
     api.get("/api/patrimoine/assets").then(res => res.data)
 const fetchMaterialsByUser = () =>
     api.get("/api/patrimoine/assets/user").then(res => res.data)
+// Récupère les détails d'un matériel
+// L'API renvoie un objet { status, data }, on extrait donc la clé data
 const fetchMaterialDetails = id =>
-    api.get(`/api/patrimoine/assets/${id}`).then(res => res.data)
+    api.get(`/api/patrimoine/assets/${id}`).then(res => res.data.data)
 const getMaterialsByDepartment = departmentId =>
     api
         .get(`/api/patrimoine/assets/department/${departmentId}`)

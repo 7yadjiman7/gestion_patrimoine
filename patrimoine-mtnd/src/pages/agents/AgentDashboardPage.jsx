@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge"
 import materialService from "@/services/materialService"
 import { useAuth } from "@/context/AuthContext"
 import { StatCard } from "@/components/ui/stat-card"
+import { API_BASE_URL } from "@/config/api"
 import { Input } from "@/components/ui/input"
 import {
     Search,
@@ -182,7 +183,7 @@ export default function AgentDashboardPage() {
                                 <img
                                     src={
                                         material.image
-                                            ? `http://localhost:8069${material.image}`
+                                            ? `${API_BASE_URL}${material.image}`
                                             : "/images/default-material.jpg"
                                     }
                                     alt={material.name}

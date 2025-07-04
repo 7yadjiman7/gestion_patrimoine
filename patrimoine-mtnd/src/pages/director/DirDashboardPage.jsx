@@ -7,6 +7,7 @@ import { StatCard } from "@/components/ui/stat-card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { API_BASE_URL } from "@/config/api"
 import {
     Search,
     PlusCircle,
@@ -188,7 +189,7 @@ export default function DirDashboardPage() {
                                 <img
                                     src={
                                         material.image
-                                            ? `http://localhost:8069${material.image}`
+                                            ? `${API_BASE_URL}${material.image}`
                                             : "/images/default-material.jpg"
                                     }
                                     alt={material.name}

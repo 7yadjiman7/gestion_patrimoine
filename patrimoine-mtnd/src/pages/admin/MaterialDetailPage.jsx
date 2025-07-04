@@ -22,6 +22,7 @@ import {
     RefreshCw,
     AlertTriangle,
     Trash2,
+    Wrench,
 } from "lucide-react"
 
 export default function MaterialDetailPage() {
@@ -500,15 +501,8 @@ export default function MaterialDetailPage() {
                                             <Edit size={16} />
                                             Modifier
                                         </button>
-                                        <button
-                                            onClick={handleVoirFicheVie}
-                                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-sm hover:bg-blue-700 transition-colors"
-                                        >
-                                            <FileText size={16} />
-                                            Fiche de vie
-                                        </button>
 
-                                        {/* --- MISE À JOUR DES BOUTONS DE MOUVEMENT --- */}
+                                        {/* Actions selon le statut du matériel */}
                                         {material.status === "stock" && (
                                             <button
                                                 onClick={() =>
@@ -522,30 +516,59 @@ export default function MaterialDetailPage() {
                                                 Affecter
                                             </button>
                                         )}
+
                                         {material.status === "service" && (
-                                            <button
-                                                onClick={() =>
-                                                    handleNavigateToMouvement(
-                                                        "transfert"
-                                                    )
-                                                }
-                                                className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white font-semibold rounded-lg shadow-sm hover:bg-cyan-700 transition-colors"
-                                            >
-                                                <RefreshCw size={16} />
-                                                Transférer
-                                            </button>
+                                            <>
+                                                <button
+                                                    onClick={() =>
+                                                        handleNavigateToMouvement(
+                                                            "transfert"
+                                                        )
+                                                    }
+                                                    className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white font-semibold rounded-lg shadow-sm hover:bg-cyan-700 transition-colors"
+                                                >
+                                                    <RefreshCw size={16} />
+                                                    Transférer
+                                                </button>
+                                                <button
+                                                    onClick={() =>
+                                                        handleNavigateToMouvement(
+                                                            "reparation"
+                                                        )
+                                                    }
+                                                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg shadow-sm hover:bg-purple-700 transition-colors"
+                                                >
+                                                    <Wrench size={16} />
+                                                    Réparation
+                                                </button>
+                                                <button
+                                                    onClick={() =>
+                                                        handleNavigateToMouvement(
+                                                            "sortie"
+                                                        )
+                                                    }
+                                                    className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white font-semibold rounded-lg shadow-sm hover:bg-red-700 transition-colors"
+                                                >
+                                                    <AlertTriangle size={16} />
+                                                    Mettre HS
+                                                </button>
+                                                <button
+                                                    onClick={handleVoirFicheVie}
+                                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-sm hover:bg-blue-700 transition-colors"
+                                                >
+                                                    <FileText size={16} />
+                                                    Fiche de vie
+                                                </button>
+                                            </>
                                         )}
-                                        {material.status === "service" && (
+
+                                        {material.status === "hs" && (
                                             <button
-                                                onClick={() =>
-                                                    handleNavigateToMouvement(
-                                                        "sortie"
-                                                    )
-                                                }
-                                                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white font-semibold rounded-lg shadow-sm hover:bg-red-700 transition-colors"
+                                                onClick={handleVoirFicheVie}
+                                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-sm hover:bg-blue-700 transition-colors"
                                             >
-                                                <AlertTriangle size={16} />
-                                                Mettre HS / Sortir
+                                                <FileText size={16} />
+                                                Fiche de vie
                                             </button>
                                         )}
 

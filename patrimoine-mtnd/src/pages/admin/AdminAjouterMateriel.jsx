@@ -203,6 +203,20 @@ export default function AdminAjouterMateriel() {
         }
     }
 
+    const handleFactureChange = e => {
+        const file = e.target.files[0]
+        if (file) {
+            setFactureFile(file)
+        }
+    }
+
+    const handleBonLivraisonChange = e => {
+        const file = e.target.files[0]
+        if (file) {
+            setBonLivraisonFile(file)
+        }
+    }
+
     const handleSubmit = async e => {
         e.preventDefault()
         setIsLoading(true)
@@ -803,8 +817,16 @@ export default function AdminAjouterMateriel() {
                                         type="file"
                                         name="image"
                                         accept="image/*"
+                                        onChange={handleImageChange}
                                         className="w-full border-2 border-green-400 rounded-lg px-4 py-3 focus:border-green-500 focus:outline-none transition-colors bg-green-50 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-green-500 file:text-white hover:file:bg-green-600"
                                     />
+                                    {imagePreview && (
+                                        <img
+                                            src={imagePreview}
+                                            alt="Prévisualisation"
+                                            className="mt-2 h-24 object-contain"
+                                        />
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -814,8 +836,14 @@ export default function AdminAjouterMateriel() {
                                         type="file"
                                         name="facture"
                                         accept=".pdf,.jpg,.jpeg,.png"
+                                        onChange={handleFactureChange}
                                         className="w-full border-2 border-green-400 rounded-lg px-4 py-3 focus:border-green-500 focus:outline-none transition-colors bg-green-50 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-green-500 file:text-white hover:file:bg-green-600"
                                     />
+                                    {factureFile && (
+                                        <p className="mt-2 text-sm text-gray-700">
+                                            {factureFile.name}
+                                        </p>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -825,8 +853,14 @@ export default function AdminAjouterMateriel() {
                                         type="file"
                                         name="bon_livraison"
                                         accept=".pdf,.jpg,.jpeg,.png"
+                                        onChange={handleBonLivraisonChange}
                                         className="w-full border-2 border-green-400 rounded-lg px-4 py-3 focus:border-green-500 focus:outline-none transition-colors bg-green-50 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-green-500 file:text-white hover:file:bg-green-600"
                                     />
+                                    {bonLivraisonFile && (
+                                        <p className="mt-2 text-sm text-gray-700">
+                                            {bonLivraisonFile.name}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </div>

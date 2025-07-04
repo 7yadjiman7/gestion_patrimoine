@@ -108,7 +108,7 @@ export default function AdminAjouterMateriel() {
                         materialService.fetchEmployees(),
                         materialService.fetchDepartments(),
                         materialService.fetchFournisseurs(),
-                        materialService.fetchSubcategories(0), // 0 pour toutes les récupérer
+                        materialService.fetchSubcategories({ type_code: "" }), // filtre vide pour toutes les récupérer
                     ])
                 setGeneralAssetTypes(types)
                 setLocations(locs)

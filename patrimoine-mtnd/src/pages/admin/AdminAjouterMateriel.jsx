@@ -99,6 +99,7 @@ export default function AdminAjouterMateriel() {
         console.log("Mode édition détecté ?", isEditMode)
         console.log("ID à modifier :", materialIdToEdit)
         const loadDependencies = async () => {
+            setIsLoading(true)
             try {
                 // On charge toutes les listes nécessaires pour les menus déroulants
                 const [types, locs, emps, depts, fours, subcats] =
@@ -133,7 +134,9 @@ export default function AdminAjouterMateriel() {
                     )
 
                     const generalType = types.find(
-                        t => t.code === materialToEdit.type
+                        t =>
+                            t.code === materialToEdit.type ||
+                            t.name === materialToEdit.category
                     )
                     console.log("Type général trouvé :", generalType)
 
@@ -165,10 +168,10 @@ export default function AdminAjouterMateriel() {
                         )
                     }
                 } else { console.log("Mode création détecté (pas d'ID)."); }
+                setIsLoading(false)
             } catch (error) {
                 console.error("Erreur chargement des données:", error)
                 toast.error("Impossible de charger les données nécessaires.")
-            } finally {
                 setIsLoading(false)
             }
         }

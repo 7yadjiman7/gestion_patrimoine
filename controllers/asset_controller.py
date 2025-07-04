@@ -2044,21 +2044,20 @@ class PatrimoineAssetController(http.Controller):
                 status=500,
                 headers={"Content-Type": "application/json"},
             )
-
-    # NOUVELLE ROUTE pour obtenir les stats d'UN SEUL département
+# Route pour obtenir les stats détaillées d'UN SEUL département
     @http.route('/api/patrimoine/stats/department/<int:department_id>', auth="user", type="http", methods=["GET"])
     def get_stats_for_single_department(self, department_id, **kw):
         try:
             domain = [('department_id', '=', department_id)]
 
-            # Logique de calcul détaillée (similaire à get_patrimoine_stats)
             stats_raw = request.env["patrimoine.asset"].read_group(
                 domain, fields=["etat"], groupby=["etat"], lazy=False
             )
 
             stats = {'total': 0, 'inService': 0, 'inStock': 0, 'outOfService': 0}
             for group in stats_raw:
-                count = group["__count"]
+                # La clé pour le compte est '__count'
+                count = group['__count'] 
                 stats['total'] += count
                 if group['etat'] == 'service':
                     stats['inService'] = count
@@ -2066,12 +2065,11 @@ class PatrimoineAssetController(http.Controller):
                     stats['inStock'] = count
                 elif group['etat'] in ('hs', 'reforme'):
                     stats['outOfService'] += count
-
+            
             return Response(json.dumps(stats), headers={"Content-Type": "application/json"})
         except Exception as e:
             _logger.error(f"Error getting stats for department {department_id}: {e}")
             return Response(json.dumps({'error': str(e)}), status=500)
-
     # --- NOUVELLE API : Statistiques par Type Général (informatique, mobilier, vehicule) ---
     @http.route(
         "/api/patrimoine/stats/by_type", auth="user", type="http", methods=["GET"]

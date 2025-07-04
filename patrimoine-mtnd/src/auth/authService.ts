@@ -7,6 +7,8 @@ interface UserInfoResponse {
   name: string;
   username: string;
   roles: string[]; // <-- Le champ clé !
+  department_id: number | null;
+  department_name: string | null;
 }
 
 // Interface pour la réponse attendue de l'authentification Odoo
@@ -28,7 +30,19 @@ interface LoginResponse {
   };
 }
 
-export const login = async (email: string, password: string): Promise<any> => {
+// Données utilisateur finalement stockées dans localStorage
+export interface FinalUserData extends LoginResponse['result'] {
+  name: string;
+  roles: string[];
+  department_id: number | null;
+  department_name: string | null;
+  role: string;
+}
+
+export const login = async (
+  email: string,
+  password: string
+): Promise<FinalUserData> => {
   const requestUrl = `/web/session/authenticate`;
 
   try {
@@ -75,7 +89,7 @@ export const login = async (email: string, password: string): Promise<any> => {
     const userInfo: UserInfoResponse = await userInfoResponse.json();
 
     // --- Étape C : Stockage final des données utilisateur complètes ---
-    const finalUserData = {
+    const finalUserData: FinalUserData = {
       ...authData.result, // Contient session_id, uid, etc.
       ...userInfo,     // Contient name, username, et surtout les RÔLES
       // On choisit un rôle principal pour la logique de redirection
@@ -100,17 +114,17 @@ export const login = async (email: string, password: string): Promise<any> => {
 
 // Hook useAuth pour gérer l'état d'authentification global de l'application
 export const useAuth = () => {
-  const [user, setUser] = useState<LoginResponse['result'] | null>(() => {
+  const [user, setUser] = useState<FinalUserData | null>(() => {
     // Tente de récupérer l'utilisateur depuis localStorage au démarrage
     const storedUser = localStorage.getItem('odoo_user');
-    return storedUser ? JSON.parse(storedUser) : null;
+    return storedUser ? (JSON.parse(storedUser) as FinalUserData) : null;
   });
 
   useEffect(() => {
     // Écoute les changements dans localStorage (par d'autres onglets/fenêtres)
     const handleStorageChange = () => {
       const storedUser = localStorage.getItem('odoo_user');
-      setUser(storedUser ? JSON.parse(storedUser) : null);
+      setUser(storedUser ? (JSON.parse(storedUser) as FinalUserData) : null);
     };
 
     window.addEventListener('storage', handleStorageChange);

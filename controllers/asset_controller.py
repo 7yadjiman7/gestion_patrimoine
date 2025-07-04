@@ -64,7 +64,7 @@ def handle_api_errors(f):
 
 
 class PatrimoineAssetController(http.Controller):
-    @http.route("/api/patrimoine/categories", auth="user", type="http", methods=["GET"])
+    @http.route("/api/patrimoine/categories", auth="public", type="http", methods=["GET"], csrf=False)
     def list_categories(self, **kw):
         try:
             domain = []
@@ -152,9 +152,10 @@ class PatrimoineAssetController(http.Controller):
 
     @http.route(
         "/api/patrimoine/subcategories/<int:category_id>",
-        auth="user",
+        auth="public",
         type="http",
         methods=["GET"],
+        csrf=False,
     )
     @handle_api_errors
     def list_subcategories(self, category_id, **kw):

@@ -1,10 +1,9 @@
 import axios from 'axios'
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8069'
+import { API_BASE_URL } from '@/config/api'
 
 export const fetchDepartments = async () => {
   try {
-    const response = await axios.get(`${API_URL}/api/hr/departments`)
+    const response = await axios.get(`${API_BASE_URL}/api/hr/departments`)
     return response.data
   } catch (error) {
     console.error('Error fetching departments:', error)
@@ -14,7 +13,7 @@ export const fetchDepartments = async () => {
 
 export const fetchLocations = async () => {
   try {
-    const response = await axios.get(`${API_URL}/api/patrimoine/locations`)
+    const response = await axios.get(`${API_BASE_URL}/api/patrimoine/locations`)
     return response.data
   } catch (error) {
     console.error('Error fetching locations:', error)
@@ -24,7 +23,7 @@ export const fetchLocations = async () => {
 
 export const fetchEmployees = async () => {
   try {
-    const response = await axios.get(`${API_URL}/api/hr/employees`)
+    const response = await axios.get(`${API_BASE_URL}/api/hr/employees`)
     return response.data
   } catch (error) {
     console.error('Error fetching employees:', error)
@@ -34,7 +33,7 @@ export const fetchEmployees = async () => {
 
 export const fetchDemandes = async () => {
   try {
-    const response = await axios.get(`${API_URL}/api/patrimoine/demandes`)
+    const response = await axios.get(`${API_BASE_URL}/api/patrimoine/demandes`)
     return response.data
   } catch (error) {
     console.error('Error fetching demandes:', error)
@@ -44,7 +43,7 @@ export const fetchDemandes = async () => {
 
 export const createDemande = async (data) => {
   try {
-    const response = await axios.post(`${API_URL}/api/patrimoine/demandes`, data)
+    const response = await axios.post(`${API_BASE_URL}/api/patrimoine/demandes`, data)
     return response.data
   } catch (error) {
     console.error('Error creating demande:', error)
@@ -55,7 +54,7 @@ export const createDemande = async (data) => {
 export const declareEntretien = async (demandeId, data) => {
   try {
     const response = await axios.post(
-      `${API_URL}/api/patrimoine/demandes/${demandeId}/entretien`, 
+      `${API_BASE_URL}/api/patrimoine/demandes/${demandeId}/entretien`,
       data
     )
     return response.data

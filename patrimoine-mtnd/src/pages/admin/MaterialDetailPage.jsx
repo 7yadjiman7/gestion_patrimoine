@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import materialService from "@/services/materialService"
 import AppSidebar from "@/components/app-sidebar"
+import { API_BASE_URL } from "@/config/api"
 import {
     Edit,
     FileText,
@@ -279,7 +280,7 @@ export default function MaterialDetailPage() {
                                         {material.image && (
                                             <div className="w-full md:w-1/3 flex justify-center">
                                                 <img
-                                                    src={`http://localhost:8069${material.image}`}
+                                                    src={`${API_BASE_URL}${material.image}`}
                                                     alt={material.name}
                                                     className="rounded-lg border shadow-sm max-h-96 w-full object-contain"
                                                 />

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom" // CORRECTION: On utilise useLocation
 import materialService from "@/services/materialService"
+import { API_BASE_URL } from "@/config/api"
 import { toast } from "react-hot-toast"
 import Select from "react-select"
 import makeAnimated from "react-select/animated"
@@ -164,7 +165,7 @@ export default function AdminAjouterMateriel() {
                     setSpecificData(materialToEdit.details || {})
                     if (materialToEdit.image) {
                         setImagePreview(
-                            `http://localhost:8069${materialToEdit.image}`
+                            `${API_BASE_URL}${materialToEdit.image}`
                         )
                     }
                 } else { console.log("Mode création détecté (pas d'ID)."); }

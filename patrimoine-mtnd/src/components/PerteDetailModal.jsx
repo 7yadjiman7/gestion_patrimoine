@@ -4,6 +4,7 @@ import React from "react"
 import { X } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { API_BASE_URL } from "@/config/api"
 
 export default function PerteDetailModal({ perte, onClose }) {
     if (!perte) return null
@@ -92,7 +93,7 @@ export default function PerteDetailModal({ perte, onClose }) {
                             {perte.rapport_police ? "Oui" : "Non"}
                             {perte.document_url && (
                                 <a
-                                    href={`http://localhost:8069${perte.document_url}`}
+                                    href={`${API_BASE_URL}${perte.document_url}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="ml-4 text-blue-600 hover:underline"

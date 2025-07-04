@@ -58,8 +58,8 @@ export default function DirDemandeMateriel() {
             try {
                 const [allSubcats, deptsData, locsData, empsData] =
                     await Promise.all([
-                        // filtre vide pour récupérer toutes les sous-catégories
-                        materialService.fetchSubcategories({ type_code: "" }),
+                        // 0 pour récupérer toutes les sous-catégories
+                        materialService.fetchSubcategories(0),
                         materialService.fetchDepartments(),
                         materialService.fetchLocations(),
                         materialService.fetchEmployees(),

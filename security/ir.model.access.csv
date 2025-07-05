@@ -36,3 +36,9 @@ access_asset_agent,access.asset.agent,model_patrimoine_asset,gestion_patrimoine.
 access_mouvement_agent,access.mouvement.agent,model_patrimoine_mouvement,gestion_patrimoine.group_patrimoine_agent,1,0,0,0
 access_entretien_agent,access.entretien.agent,model_patrimoine_entretien,gestion_patrimoine.group_patrimoine_agent,1,0,0,0
 access_perte_agent,access.perte.agent,model_patrimoine_perte,gestion_patrimoine.group_patrimoine_agent,1,1,0,0
+access_chat_conversation_admin,access.chat.conversation.admin,model_chat_conversation,gestion_patrimoine.group_patrimoine_admin,1,1,1,1
+access_chat_conversation_director,access.chat.conversation.director,model_chat_conversation,gestion_patrimoine.group_patrimoine_director,1,1,1,1
+access_chat_conversation_agent,access.chat.conversation.agent,model_chat_conversation,gestion_patrimoine.group_patrimoine_agent,1,1,1,0
+access_chat_message_admin,access.chat.message.admin,model_chat_message,gestion_patrimoine.group_patrimoine_admin,1,1,1,1
+access_chat_message_director,access.chat.message.director,model_chat_message,gestion_patrimoine.group_patrimoine_director,1,1,1,1
+access_chat_message_agent,access.chat.message.agent,model_chat_message,gestion_patrimoine.group_patrimoine_agent,1,1,1,0

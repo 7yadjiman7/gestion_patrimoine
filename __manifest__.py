@@ -30,6 +30,7 @@
     'controllers': [
         'controllers/userApi_controller.py',
         'controllers/asset_controller.py',
+        'controllers/chat_controller.py',
     ],
     'installable': True,
     'application': True,

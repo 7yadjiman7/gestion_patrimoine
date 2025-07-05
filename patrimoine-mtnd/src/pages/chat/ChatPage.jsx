@@ -38,7 +38,7 @@ export default function ChatPage() {
   useOdooBus(handleNewMessage)
 
   const startConversation = async emp => {
-    const conv = await chatService.startConversation(emp.id)
+    const conv = await chatService.createConversation([emp.id])
     setConversations(prev => {
       if (prev.find(c => c.id === conv.id)) return prev
       return [...prev, conv]

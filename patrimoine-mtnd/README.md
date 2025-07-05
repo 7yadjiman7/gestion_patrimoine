@@ -1,12 +1,24 @@
-# React + Vite
+# Frontend Intranet MTND
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Ce projet React utilise Vite et Tailwind CSS pour l'interface de l'intranet. Il communique avec le backend Odoo via les routes `/api/*`.
 
-Currently, two official plugins are available:
+## Installation
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```bash
+npm install
+```
 
-## Expanding the ESLint configuration
+## Lancement en développement
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+npm run dev
+```
+
+## Construction pour la production
+
+```bash
+npm run build
+```
+
+Assurez-vous qu'un serveur Odoo configuré avec le module **intranet_MTND** tourne sur le même hôte afin que les requêtes API soient résolues correctement.
+

@@ -8,6 +8,8 @@ import {
     Menu,
     Move,
     PlusSquare,
+    MessageCircle,
+    FileText,
 } from "lucide-react"
 import React from "react"
 import { useLocation, useNavigate } from "react-router-dom"
@@ -24,8 +26,6 @@ export default function AppSidebar({ onCollapseChange }: AppSidebarProps) {
     const [collapsed, setCollapsed] = React.useState(false)
 
     const { currentUser, logout } = useAuth()
-    console.log('Current user data:', JSON.stringify(currentUser, null, 2)) // Debug complet
-    console.log('User role:', currentUser?.role) // Debug spécifique rôle
 
     if (!currentUser) {
         console.error('No current user - redirecting to login')
@@ -47,7 +47,6 @@ export default function AppSidebar({ onCollapseChange }: AppSidebarProps) {
         const userRole = currentUser.role?.toLowerCase()
         const checkRole = role.toLowerCase()
         
-        console.log(`Role check: ${checkRole} vs ${userRole} (is_admin: ${currentUser.is_admin})`)
         
         // Special case for admin roles
         if (checkRole === 'admin') {
@@ -61,6 +60,21 @@ export default function AppSidebar({ onCollapseChange }: AppSidebarProps) {
     
     // Filtrer les sections selon le rôle
     const menuItems = [
+        {
+            section: "Intranet",
+            items: [
+                {
+                    icon: <MessageCircle className="h-5 w-5" />,
+                    label: "Chat",
+                    path: "/chat",
+                },
+                {
+                    icon: <FileText className="h-5 w-5" />,
+                    label: "Posts",
+                    path: "/posts",
+                },
+            ],
+        },
         ...(hasRole('admin') ? [{
             section: "Admin",
             items: [

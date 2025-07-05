@@ -1,5 +1,5 @@
 {
-    'name': 'gestion du patrimoine',
+    'name': 'intranet_MTND',
     'version': '1.0',
     'category': 'Gestion/Patrimoine',
     'summary': 'Module de gestion des biens matériels (véhicules, informatique, mobilier)',

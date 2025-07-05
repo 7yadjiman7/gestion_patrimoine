@@ -18,23 +18,18 @@ export default function SubCategoriesPage() {
     const fetchPageData = async () => {
       setIsLoading(true);
       setError(null);
-      console.log(`[SubCategoriesPage] Fetching data for type: ${type}`);
       try {
-        console.log("[SubCategoriesPage] Fetching general categories");
         const types = await materialService.fetchTypesGeneraux();
-        console.log("[SubCategoriesPage] Received categories:", types);
         const generalCategory = types.find(
           (t) => t.code.toLowerCase() === type.toLowerCase(),
         );
 
         if (generalCategory) {
           setGeneralTypeName(generalCategory.name);
-          console.log(
             "[SubCategoriesPage] Fetching subcategories for category id",
             generalCategory.id,
           );
           const allSubcats = await materialService.fetchSubcategories(0); // 0 => all
-          console.log(
             "[SubCategoriesPage] Received subcategories:",
             allSubcats,
           );

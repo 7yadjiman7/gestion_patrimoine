@@ -1,5 +1,4 @@
 import materialService from '../../services/materialService';
-import { currentUser } from '../../../intranet_mtnd/intranet-frontend/src/contexts/AuthContext';
 
 describe('Mouvement Integration Tests', () => {
   beforeEach(() => {
@@ -27,7 +26,7 @@ describe('Mouvement Integration Tests', () => {
 
     const result = await materialService.saveMouvement(mouvementData);
 
-    expect(materialService.saveMouvement).toHaveBeenCalledWith(movementData);
+    expect(materialService.saveMouvement).toHaveBeenCalledWith(mouvementData);
     expect(result).toEqual(mockResponse);
   });
 

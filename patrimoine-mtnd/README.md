@@ -22,3 +22,12 @@ npm run build
 
 Assurez-vous qu'un serveur Odoo configuré avec le module **intranet_MTND** tourne sur le même hôte afin que les requêtes API soient résolues correctement.
 
+
+## Exécution des tests
+
+Les tests Jest sont situés dans `src/tests`. Après installation des dépendances, lancez :
+
+```bash
+npm test
+```
+

@@ -8,3 +8,5 @@ from . import fiche_vie
 from . import demande_materiel
 from . import demande_materiel_ligne
 from . import pertes
+
+from . import chat

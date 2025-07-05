@@ -3,7 +3,7 @@ import { API_BASE_URL } from '@/config/api'
 
 export const fetchDepartments = async () => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/api/hr/departments`)
+    const response = await axios.get(`${API_BASE_URL}/api/patrimoine/departments`)
     return response.data
   } catch (error) {
     console.error('Error fetching departments:', error)
@@ -23,7 +23,7 @@ export const fetchLocations = async () => {
 
 export const fetchEmployees = async () => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/api/hr/employees`)
+    const response = await axios.get(`${API_BASE_URL}/api/patrimoine/employees`)
     return response.data
   } catch (error) {
     console.error('Error fetching employees:', error)

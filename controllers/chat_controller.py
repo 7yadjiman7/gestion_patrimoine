@@ -2,7 +2,7 @@ from odoo import http
 from odoo.http import request
 
 class ChatController(http.Controller):
-    @http.route('/api/chat/conversations', auth='user', type='json', methods=['GET'])
+    @http.route('/api/chat/conversations', auth='user', type='json', methods=['GET'], csrf=False)
     def list_conversations(self, **kwargs):
         user = request.env.user
         conversations = request.env['chat.conversation'].sudo().search([
@@ -19,7 +19,7 @@ class ChatController(http.Controller):
             })
         return result
 
-    @http.route('/api/chat/conversations/<int:conv_id>/messages', auth='user', type='json', methods=['GET'])
+    @http.route('/api/chat/conversations/<int:conv_id>/messages', auth='user', type='json', methods=['GET'], csrf=False)
     def get_messages(self, conv_id, **kwargs):
         conv = request.env['chat.conversation'].sudo().browse(conv_id)
         if not conv.exists() or request.env.user.id not in conv.participant_ids.ids:
@@ -49,4 +49,31 @@ class ChatController(http.Controller):
         return {
             'id': msg.id,
             'date': msg.date,
+        }
+
+    @http.route('/api/chat/conversations', auth='user', type='json', methods=['POST'], csrf=False)
+    def create_conversation(self, participants=None, name=None, **kwargs):
+        """Create a new chat conversation."""
+        user = request.env.user
+        participant_ids = [user.id]
+        if participants:
+            if isinstance(participants, (str, int)):
+                participant_ids.append(int(participants))
+            else:
+                try:
+                    participant_ids.extend([int(pid) for pid in participants])
+                except Exception:
+                    pass
+
+        conv = request.env['chat.conversation'].sudo().create({
+            'name': name,
+            'participant_ids': [(6, 0, list(set(participant_ids)))]
+        })
+
+        last_message = conv.message_ids and conv.message_ids[-1] or False
+        return {
+            'id': conv.id,
+            'name': conv.name or ', '.join(conv.participant_ids.mapped('name')),
+            'last_message': last_message.body if last_message else False,
+            'last_date': last_message.date if last_message else False,
         }

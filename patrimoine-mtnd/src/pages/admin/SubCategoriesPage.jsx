@@ -26,13 +26,7 @@ export default function SubCategoriesPage() {
 
         if (generalCategory) {
           setGeneralTypeName(generalCategory.name);
-            "[SubCategoriesPage] Fetching subcategories for category id",
-            generalCategory.id,
-          );
           const allSubcats = await materialService.fetchSubcategories(0); // 0 => all
-            "[SubCategoriesPage] Received subcategories:",
-            allSubcats,
-          );
           const data = allSubcats.filter(
             (sc) => sc.category_id === generalCategory.id,
           );

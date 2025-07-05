@@ -27,11 +27,7 @@
         "reports/report_patrimoine_templates.xml",
         "reports/report_patrimoine.xml",
     ],
-    'controllers': [
-        'controllers/userApi_controller.py',
-        'controllers/asset_controller.py',
-        'controllers/chat_controller.py',
-    ],
+    'assets': {},
     'installable': True,
     'application': True,
     'license': 'LGPL-3',

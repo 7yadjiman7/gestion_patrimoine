@@ -120,35 +120,32 @@ class PatrimoineAssetController(http.Controller):
     @http.route("/api/patrimoine/demande_materiel/<int:demande_id>", auth="user", type="http", methods=["GET"])
     def get_demande_details_http(self, demande_id):
         try:
-            domain = []
-            if kw.get("type"):
-                domain.append(("code", "=", kw["type"]))
-            categories = request.env["asset.category"].search(domain)
-            category_data = [
-                {
-                    "id": cat.id,
-                    "name": cat.name,
-                    "code": cat.code,
-                    "type": cat.type,
-                    "filter_type": cat.code,  # Pour le filtrage frontend
-                    "image": (
-                        f"/web/image/asset.category/{cat.id}/image"
-                        if cat.image
-                        else None
-                    ),
-                    "subcategories": [
-                        {"id": sub.id, "name": sub.name, "code": sub.code}
-                        for sub in cat.subcategory_ids
-                    ],
-                }
-                for cat in categories
-            ]
-            return Response(
-                json.dumps(category_data), headers={"Content-Type": "application/json"}
-            )
+            demande = request.env['patrimoine.demande_materiel'].browse(demande_id)
+            if not demande.exists():
+                return Response(
+                    json.dumps({"error": "Demande not found"}),
+                    status=404,
+                    headers=CORS_HEADERS,
+                )
+
+            data = {
+                "id": demande.id,
+                "name": demande.name,
+                "state": demande.state,
+                "ligne_ids": [
+                    {
+                        "id": ligne.id,
+                        "product_id": ligne.product_id.id,
+                        "quantity": ligne.quantity,
+                    }
+                    for ligne in demande.ligne_ids
+                ],
+            }
+
+            return Response(json.dumps(data), headers=CORS_HEADERS)
         except Exception as e:
-            _logger.error("Error listing categories: %s", str(e))
-            return Response(status=500)
+            _logger.error("Error getting demande details: %s", str(e))
+            return Response(status=500, headers=CORS_HEADERS)
 
     @http.route(
         "/api/patrimoine/subcategories/<int:category_id>",

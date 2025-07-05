@@ -2,7 +2,6 @@
 import api from './apiConfig'; // L'instance Axios configurée
 
 const handleRequest = async (method, endpoint, data = null) => {
-  console.log(`Starting ${method.toUpperCase()} request to ${endpoint}`);
   try {
     const config = {
       url: endpoint, // Endpoint relatif ou absolu
@@ -26,17 +25,16 @@ const handleRequest = async (method, endpoint, data = null) => {
 
 
     if (data) {
-      console.log('Request data:', data);
       config.data = data;
     }
-
-    console.log('Request config:', config);
     const response = await api(config); // L'instance 'api' (axios.create) est utilisée ici
-    
-    console.log(`Response from ${endpoint}:`, {
-      status: response.status,
-      data: response.data
-    });
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.debug(`Response from ${endpoint}:`, {
+        status: response.status,
+        data: response.data,
+      });
+    }
     
     return response.data; // Retourne directement les données de la réponse Axios
   } catch (error) {

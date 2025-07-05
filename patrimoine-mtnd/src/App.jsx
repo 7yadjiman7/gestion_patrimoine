@@ -20,6 +20,8 @@ import AdminStatsPage from './pages/admin/AdminStatsPage';
 import DeclarationPerte from './pages/DeclarationPerte';
 import DirDashboardPage from './pages/director/DirDashboardPage';
 import UnauthorizedPage from './pages/UnauthorizedPage'; // N'oubliez pas l'import
+import ChatPage from './pages/chat/ChatPage';
+import PostsPage from './pages/posts/PostsPage';
 
 // Définir les rôles pour une meilleure lisibilité
 const ROLES = {
@@ -197,6 +199,38 @@ function AppContent() {
                           ]}
                       >
                           <DeclarationPerte />
+                      </ProtectedRoute>
+                  }
+              />
+
+              {/* --- Routes intranet --- */}
+              <Route
+                  path="/chat"
+                  element={
+                      <ProtectedRoute
+                          roles={[
+                              ROLES.AGENT,
+                              ROLES.MANAGER,
+                              ROLES.DIRECTOR,
+                              ROLES.ADMIN,
+                          ]}
+                      >
+                          <ChatPage />
+                      </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/posts"
+                  element={
+                      <ProtectedRoute
+                          roles={[
+                              ROLES.AGENT,
+                              ROLES.MANAGER,
+                              ROLES.DIRECTOR,
+                              ROLES.ADMIN,
+                          ]}
+                      >
+                          <PostsPage />
                       </ProtectedRoute>
                   }
               />

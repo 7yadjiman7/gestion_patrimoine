@@ -1,12 +1,17 @@
-# Module de Gestion du Patrimoine pour Odoo 17
+# Module Intranet MTND pour Odoo 17
 
 ## Description
-Module complet pour la gestion du patrimoine matériel d'un ministère ou organisation, incluant :
+Application intranet complète intégrant la gestion du patrimoine matériel et deux nouvelles fonctionnalités :
+un espace de chat interne et un mur de posts pour partager les annonces du ministère. Le module permet la gestion du patrimoine matériel, incluant :
 - Véhicules (voitures de service, motos)
 - Matériel informatique (ordinateurs, imprimantes, serveurs)
 - Mobilier (bureaux, chaises, armoires)
 
 ## Fonctionnalités principales
+
+### Intranet
+- Messagerie interne temps réel (page **Chat**)
+- Mur d'annonces et de publications (page **Posts**)
 
 ### Gestion des biens
 - Enregistrement et catégorisation des biens (code, libellé, type, description, date d'acquisition, valeur)
@@ -51,7 +56,7 @@ Module complet pour la gestion du patrimoine matériel d'un ministère ou organi
 - Agent : consultation et déclaration limitée
 
 ## Installation
-1. Copier le dossier `gestion_patrimoine` dans custom-addons
+1. Copier le dossier `intranet_MTND` dans le répertoire `custom-addons`
 2. Redémarrer Odoo
 3. Installer le module via l'interface administrateur
 
@@ -65,3 +70,4 @@ Contact: [http://www.mtnd.gov.ci](http://www.mtnd.gov.ci)
 
 ## Licence
 LGPL-3
+

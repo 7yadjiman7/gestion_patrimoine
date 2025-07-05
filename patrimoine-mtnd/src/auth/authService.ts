@@ -140,7 +140,6 @@ export const logout = async (): Promise<void> => {
   // Ici, nous utilisons des chemins relatifs car le proxy Vite doit également gérer la déconnexion
   const requestUrl = `/web/session/destroy`; // Assurez-vous que Vite proxyfie '/web'
 
-  console.log("Tentative de déconnexion vers:", requestUrl);
 
   try {
     const response = await fetch(requestUrl, {

@@ -5,6 +5,14 @@ import json
 class ChatController(http.Controller):
     @http.route('/api/chat/conversations', auth='user', type='http', methods=['GET'], csrf=False)
     def list_conversations(self, **kwargs):
+        public_uid = request.env.ref('base.public_user').id
+        if not request.session.uid or request.session.uid == public_uid:
+            return Response(
+                json.dumps({'error': 'Authentication required'}),
+                status=401,
+                headers={'Content-Type': 'application/json'}
+            )
+
         user = request.env.user
         conversations = request.env['chat.conversation'].sudo().search([
             ('participant_ids', 'in', user.id)

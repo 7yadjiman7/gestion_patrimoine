@@ -72,3 +72,8 @@ Contact: [http://www.mtnd.gov.ci](http://www.mtnd.gov.ci)
 ## Licence
 LGPL-3
 
+## Migration
+Lors de la migration depuis une version antérieure, le groupe « Administrateur Patrimoine » peut déjà exister mais avec un identifiant XML différent.
+Le script d'initialisation recherche donc ce groupe et, s'il le trouve, associe
+l'identifiant `gestion_patrimoine.group_patrimoine_admin` au groupe existant au lieu d'en créer un nouveau.
+

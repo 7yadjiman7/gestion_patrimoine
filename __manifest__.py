@@ -6,6 +6,7 @@
     'author': 'Coulibaly Yadjiman',
     'website': 'http://www.example.com',
     'depends': ['base', 'hr', 'stock', 'account', 'fleet', 'bus', 'mail'],
+    'pre_init_hook': 'pre_init_hook',
     "data": [
         "data/sequence.xml",
         "data/cron.xml",

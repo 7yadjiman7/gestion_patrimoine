@@ -14,9 +14,7 @@ import {
     Tooltip,
     Legend,
     ResponsiveContainer,
-    CartesianGrid,
 } from "recharts"
-import { TrendingUp } from "lucide-react"
 
 const COLORS_PIE = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"]
 const COLORS_BAR = ["#8884d8", "#82ca9d", "#ffc658", "#ff80b3", "#a4de6c"]
@@ -29,10 +27,9 @@ const toEuro = value =>
 export default function AdminStatsPage() {
     const navigate = useNavigate()
 
+    const [globalStatusStats, setGlobalStatusStats] = useState(null)
     const [statsByDepartment, setStatsByDepartment] = useState([])
     const [statsByType, setStatsByType] = useState([])
-    const [statsByDetailedCategory, setStatsByDetailedCategory] = useState([])
-    const [globalStatusStats, setGlobalStatusStats] = useState(null)
     const [statsByAge, setStatsByAge] = useState([])
     const [statsByDepartmentValue, setStatsByDepartmentValue] = useState([])
     const [isLoading, setIsLoading] = useState(true)
@@ -40,37 +37,22 @@ export default function AdminStatsPage() {
 
     useEffect(() => {
         const loadAllStats = async () => {
+            setIsLoading(true)
             try {
-                setIsLoading(true)
-                setError(null)
-                const [
-                    deptStats,
-                    typeStatsRaw,
-                    detailedCategoryStatsRaw,
-                    globalStatsRaw,
-                    ageStats,
-                    deptValueStats,
-                ] = await Promise.all([
-                    materialService.fetchAllDepartmentStats(),
-                    materialService.fetchStatsByType(),
-                    materialService.fetchStatsByDetailedCategory(),
-                    materialService.fetchStats(),
-                    materialService.fetchStatsByAge(),
-                    materialService.fetchStatsByDepartmentValue(),
-                ])
+                const [globalData, deptData, typeData, ageData, deptValueData] =
+                    await Promise.all([
+                        materialService.fetchStats(),
+                        materialService.fetchAllDepartmentStats(),
+                        materialService.fetchStatsByType(),
+                        materialService.fetchStatsByAge(),
+                        materialService.fetchStatsByDepartmentValue(),
+                    ])
 
-                setStatsByDepartment(Array.isArray(deptStats) ? deptStats : [])
-                setStatsByType(Array.isArray(typeStatsRaw) ? typeStatsRaw : [])
-                setStatsByDetailedCategory(
-                    Array.isArray(detailedCategoryStatsRaw)
-                        ? detailedCategoryStatsRaw
-                        : []
-                )
-                setGlobalStatusStats(globalStatsRaw)
-                setStatsByAge(Array.isArray(ageStats) ? ageStats : [])
-                setStatsByDepartmentValue(
-                    Array.isArray(deptValueStats) ? deptValueStats : []
-                )
+                setGlobalStatusStats(globalData)
+                setStatsByDepartment(deptData)
+                setStatsByType(typeData)
+                setStatsByAge(ageData)
+                setStatsByDepartmentValue(deptValueData)
             } catch (err) {
                 console.error(
                     "Erreur lors du chargement des statistiques:",
@@ -118,14 +100,6 @@ export default function AdminStatsPage() {
         if (data?.activePayload?.[0]?.payload?.code) {
             navigate(
                 `/admin/materiels/filtres?type=${data.activePayload[0].payload.code}`
-            )
-        }
-    }
-
-    const handleSubcategoryClick = data => {
-        if (data?.activePayload?.[0]?.payload?.id) {
-            navigate(
-                `/admin/materiels/filtres?subcategoryId=${data.activePayload[0].payload.id}`
             )
         }
     }
@@ -192,7 +166,7 @@ export default function AdminStatsPage() {
                                 style={{ cursor: "pointer" }}
                             >
                                 <XAxis dataKey="name" />
-                                <YAxis />
+                                <YAxis allowDecimals={false} />
                                 <Tooltip
                                     formatter={value => `${value} matériel(s)`}
                                 />
@@ -218,7 +192,7 @@ export default function AdminStatsPage() {
                                 style={{ cursor: "pointer" }}
                             >
                                 <XAxis dataKey="name" />
-                                <YAxis />
+                                <YAxis allowDecimals={false} />
                                 <Tooltip
                                     formatter={value => `${value} matériel(s)`}
                                 />

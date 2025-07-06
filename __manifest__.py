@@ -1,8 +1,8 @@
 {
-    'name': 'intranet_MTND',
+    'name': 'gestion_patrimoine',
     'version': '1.0',
     'category': 'Gestion/Patrimoine',
-    'summary': 'Module de gestion des biens matériels (véhicules, informatique, mobilier)',
+    'summary': 'Module intranet intégrant la gestion des biens matériels (véhicules, informatique, mobilier)',
     'author': 'Coulibaly Yadjiman',
     'website': 'http://www.example.com',
     'depends': ['base', 'hr', 'stock', 'account', 'fleet', 'bus', 'mail'],

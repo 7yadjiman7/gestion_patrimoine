@@ -1,7 +1,6 @@
-# Dans votre fichier de contrôleur, ex: userApi_controller.py
-
 from odoo import http
 from odoo.http import request
+import json
 
 
 class UserApiController(http.Controller):
@@ -10,19 +9,19 @@ class UserApiController(http.Controller):
     def get_user_info(self, **kw):
         """
         Retourne les informations détaillées de l'utilisateur connecté,
-        y compris son rôle et son département.
+        y compris ses rôles et son département.
         """
         user = request.env.user
-        # Recherche de l'employé lié à l'utilisateur pour déterminer son département
+
+        # Recherche de l'employé lié à l'utilisateur
         employee = request.env["hr.employee"].search(
             [("user_id", "=", user.id)], limit=1
         )
 
-        # 1. Déterminer les rôles de l'utilisateur
+        # Détermination des rôles
         roles = []
         if user.has_group("gestion_patrimoine.group_patrimoine_admin"):
             roles.append("admin_patrimoine")
-        # On vérifie aussi le groupe admin système de base d'Odoo
         elif user.has_group("base.group_system"):
             roles.append("admin")
 
@@ -33,9 +32,9 @@ class UserApiController(http.Controller):
             roles.append("agent")
 
         if not roles:
-            roles.append("user")  # Rôle par défaut
+            roles.append("user")
 
-        # 2. Construire la réponse JSON finale
+        # Construction de la réponse finale
         user_data = {
             "uid": user.id,
             "name": user.name,
@@ -53,5 +52,5 @@ class UserApiController(http.Controller):
             ),
         }
 
-        # Pour une route de type "json", on retourne directement le dictionnaire. Odoo s'occupe du reste.
+        # Pour une route de type 'json', on retourne directement le dictionnaire
         return user_data

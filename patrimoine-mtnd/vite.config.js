@@ -30,6 +30,12 @@ export default defineConfig({
                 changeOrigin: true, // Essentiel
                 secure: false, // Important
             },
+            // --- RÈGLE AJOUTÉE POUR LE TEMPS RÉEL ---
+            "/longpolling": {
+                target: 'http://localhost:8069', // Cible le même serveur Odoo
+                changeOrigin: true,
+                secure: false,
+            },
             // La règle pour les websockets peut rester la même
             "/websocket": {
                 target: "ws://localhost:8072",

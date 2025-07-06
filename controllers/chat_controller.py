@@ -2,132 +2,143 @@ from odoo import http
 from odoo.http import request, Response
 import json
 
-# Headers CORS standard (alignés sur asset_controller)
-CORS_HEADERS = {
-    "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Origin, Content-Type, X-Auth-Token, X-Openerp-Session-Id",
-    "Access-Control-Allow-Credentials": "true",
-}
-
-# Réutilise le décorateur de gestion d'erreurs de l'asset controller
-from .asset_controller import handle_api_errors
 
 class ChatController(http.Controller):
-    @http.route('/api/chat/conversations', auth='user', type='http', methods=['GET'], csrf=False)
-    @handle_api_errors
-    def list_conversations(self, **kwargs):
-        public_uid = request.env.ref('base.public_user').id
-        if not request.session.uid or request.session.uid == public_uid:
-            return Response(
-                json.dumps({'status': 'error', 'code': 401, 'message': 'Authentication required'}),
-                status=401,
-                headers=CORS_HEADERS
-            )
 
+    @http.route(
+        "/api/chat/conversations", auth="user", type="http", methods=["GET"], csrf=False
+    )
+    def list_conversations(self, **kwargs):
         user = request.env.user
-        conversations = request.env['chat.conversation'].sudo().search([
-            ('participant_ids', 'in', user.id)
-        ])
+        conversations = (
+            request.env["chat.conversation"]
+            .sudo()
+            .search([("participant_ids", "in", user.id)])
+        )
+
         result = []
         for conv in conversations:
-            last_message = conv.message_ids and conv.message_ids[-1] or False
-            result.append({
-                'id': conv.id,
-                'name': conv.name or ', '.join(conv.participant_ids.mapped('name')),
-                'last_message': last_message.body if last_message else False,
-                'last_date': last_message.date if last_message else False,
-            })
-        return Response(json.dumps({'status': 'success', 'data': result}), headers=CORS_HEADERS)
+            last_message = conv.message_ids[-1] if conv.message_ids else False
+            result.append(
+                {
+                    "id": conv.id,
+                    "name": conv.name or ", ".join(conv.participant_ids.mapped("name")),
+                    "last_message": (
+                        last_message.body if last_message else "Aucun message"
+                    ),
+                    "last_date": (
+                        last_message.create_date if last_message else conv.create_date
+                    ),
+                }
+            )
 
-    @http.route('/api/chat/conversations/<int:conv_id>/messages', auth='user', type='http', methods=['GET'], csrf=False)
-    @handle_api_errors
+        return Response(
+            json.dumps(result, default=str), content_type="application/json"
+        )
+
+    @http.route(
+        "/api/chat/conversations/<int:conv_id>/messages",
+        auth="user",
+        type="http",
+        methods=["GET"],
+        csrf=False,
+    )
     def get_messages(self, conv_id, **kwargs):
-        conv = request.env['chat.conversation'].sudo().browse(conv_id)
-        if not conv.exists():
+        conv = request.env["chat.conversation"].sudo().browse(conv_id)
+        if not conv.exists() or request.env.user.id not in conv.participant_ids.ids:
             return Response(
-                json.dumps({'status': 'error', 'code': 404, 'message': 'Conversation not found'}),
+                json.dumps({"error": "Conversation not found or access denied"}),
                 status=404,
-                headers=CORS_HEADERS
+                content_type="application/json",
             )
-        if request.env.user.id not in conv.participant_ids.ids:
-            return Response(
-                json.dumps({'status': 'error', 'code': 403, 'message': 'Forbidden'}),
-                status=403,
-                headers=CORS_HEADERS
-            )
-        messages = conv.message_ids.sorted('date')
+
+        messages = conv.message_ids.sorted("create_date")
         result = [
             {
-                'id': m.id,
-                'author_name': m.sender_id.name,
-                'content': m.body,
-                'date': m.date,
+                "id": m.id,
+                "author_name": m.sender_id.name,
+                "content": m.body,
+                "date": m.create_date,
             }
             for m in messages
         ]
-        return Response(json.dumps({'status': 'success', 'data': result}), headers=CORS_HEADERS)
+        return Response(
+            json.dumps({"data": result}, default=str), content_type="application/json"
+        )
 
-    @http.route('/api/chat/conversations/<int:conv_id>/messages', auth='user', type='http', methods=['POST'], csrf=False)
-    @handle_api_errors
-    def post_message(self, conv_id, **kwargs):
-        data = request.jsonrequest or {}
-        content = data.get('content')
-        conv = request.env['chat.conversation'].sudo().browse(conv_id)
-        if not conv.exists():
-            return Response(
-                json.dumps({'status': 'error', 'code': 404, 'message': 'Conversation not found'}),
-                status=404,
-                headers=CORS_HEADERS
+    @http.route(
+        "/api/chat/conversations/<int:conv_id>/messages",
+        auth="user",
+        type="json",
+        methods=["POST"],
+        csrf=False,
+    )
+    def post_message(self, conv_id, content=None, **kwargs):
+        if not content:
+            return {"error": "Le contenu du message est vide."}
+
+        conv = request.env["chat.conversation"].sudo().browse(conv_id)
+        if not conv.exists() or request.env.user.id not in conv.participant_ids.ids:
+            return {"error": "Conversation non trouvée ou accès non autorisé"}
+
+        msg = (
+            request.env["chat.message"]
+            .sudo()
+            .create(
+                {
+                    "conversation_id": conv.id,
+                    "sender_id": request.env.user.id,
+                    "body": content,
+                }
             )
-        if request.env.user.id not in conv.participant_ids.ids:
-            return Response(
-                json.dumps({'status': 'error', 'code': 403, 'message': 'Forbidden'}),
-                status=403,
-                headers=CORS_HEADERS
-            )
-        msg = request.env['chat.message'].sudo().create({
-            'conversation_id': conv.id,
-            'sender_id': request.env.user.id,
-            'body': content,
-        })
-        result = {
-            'id': msg.id,
-            'author_name': msg.sender_id.name,
-            'content': msg.body,
-            'date': msg.date,
+        )
+
+        channel = f"chat_channel_{conv_id}"
+        message_data = {
+            "id": msg.id,
+            "sender_id": msg.sender_id.id,
+            "sender_name": msg.sender_id.name,
+            "body": msg.body,
+            "date": msg.create_date,
+            "conversation_id": conv.id,
         }
-        return Response(json.dumps({'status': 'success', 'data': result}), headers=CORS_HEADERS)
+        request.env["bus.bus"]._sendone(channel, "new_message", message_data)
 
-    @http.route('/api/chat/conversations', auth='user', type='http', methods=['POST'], csrf=False)
-    @handle_api_errors
-    def create_conversation(self, **kwargs):
-        data = request.jsonrequest or {}
-        participants = data.get('participants')
-        name = data.get('name')
-        """Create a new chat conversation."""
+        return {"status": "success", "message_id": msg.id}
+
+    @http.route(
+        "/api/chat/conversations",
+        auth="user",
+        type="json",
+        methods=["POST"],
+        csrf=False,
+    )
+    def create_conversation(self, participants=None, **kwargs):
         user = request.env.user
         participant_ids = [user.id]
         if participants:
-            if isinstance(participants, (str, int)):
-                participant_ids.append(int(participants))
-            else:
-                try:
-                    participant_ids.extend([int(pid) for pid in participants])
-                except Exception:
-                    pass
+            participant_ids.extend([int(pid) for pid in participants])
 
-        conv = request.env['chat.conversation'].sudo().create({
-            'name': name,
-            'participant_ids': [(6, 0, list(set(participant_ids)))]
-        })
+        # Vérifier si une conversation avec exactement ces participants existe déjà
+        existing_conv = (
+            request.env["chat.conversation"]
+            .sudo()
+            .search([("participant_ids", "=", list(set(participant_ids)))], limit=1)
+        )
 
-        last_message = conv.message_ids and conv.message_ids[-1] or False
+        if existing_conv:
+            conv = existing_conv
+        else:
+            conv = (
+                request.env["chat.conversation"]
+                .sudo()
+                .create({"participant_ids": [(6, 0, list(set(participant_ids)))]})
+            )
+
         result = {
-            'id': conv.id,
-            'name': conv.name or ', '.join(conv.participant_ids.mapped('name')),
-            'last_message': last_message.body if last_message else False,
-            'last_date': last_message.date if last_message else False,
+            "id": conv.id,
+            "name": conv.name or ", ".join(conv.participant_ids.mapped("name")),
+            "last_message": False,
+            "last_date": False,
         }
-        return Response(json.dumps({'status': 'success', 'data': result}), headers=CORS_HEADERS)
+        return {"status": "success", "data": result}

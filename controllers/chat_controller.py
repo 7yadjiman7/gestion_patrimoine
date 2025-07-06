@@ -1,8 +1,9 @@
 from odoo import http
-from odoo.http import request
+from odoo.http import request, Response
+import json
 
 class ChatController(http.Controller):
-    @http.route('/api/chat/conversations', auth='user', type='json', methods=['GET'], csrf=False)
+    @http.route('/api/chat/conversations', auth='user', type='http', methods=['GET'], csrf=False)
     def list_conversations(self, **kwargs):
         user = request.env.user
         conversations = request.env['chat.conversation'].sudo().search([
@@ -17,15 +18,15 @@ class ChatController(http.Controller):
                 'last_message': last_message.body if last_message else False,
                 'last_date': last_message.date if last_message else False,
             })
-        return result
+        return Response(json.dumps(result), headers={'Content-Type': 'application/json'})
 
-    @http.route('/api/chat/conversations/<int:conv_id>/messages', auth='user', type='json', methods=['GET'], csrf=False)
+    @http.route('/api/chat/conversations/<int:conv_id>/messages', auth='user', type='http', methods=['GET'], csrf=False)
     def get_messages(self, conv_id, **kwargs):
         conv = request.env['chat.conversation'].sudo().browse(conv_id)
         if not conv.exists() or request.env.user.id not in conv.participant_ids.ids:
-            return []
+            return Response(json.dumps([]), headers={'Content-Type': 'application/json'})
         messages = conv.message_ids.sorted('date')
-        return [
+        result = [
             {
                 'id': m.id,
                 'sender_id': m.sender_id.id,
@@ -35,24 +36,31 @@ class ChatController(http.Controller):
             }
             for m in messages
         ]
+        return Response(json.dumps(result), headers={'Content-Type': 'application/json'})
 
-    @http.route('/api/chat/conversations/<int:conv_id>/messages', auth='user', type='json', methods=['POST'], csrf=False)
-    def post_message(self, conv_id, content, **kwargs):
+    @http.route('/api/chat/conversations/<int:conv_id>/messages', auth='user', type='http', methods=['POST'], csrf=False)
+    def post_message(self, conv_id, **kwargs):
+        data = request.jsonrequest or {}
+        content = data.get('content')
         conv = request.env['chat.conversation'].sudo().browse(conv_id)
         if not conv.exists() or request.env.user.id not in conv.participant_ids.ids:
-            return {'error': 'Conversation not found'}
+            return Response(json.dumps({'error': 'Conversation not found'}), headers={'Content-Type': 'application/json'})
         msg = request.env['chat.message'].sudo().create({
             'conversation_id': conv.id,
             'sender_id': request.env.user.id,
             'body': content,
         })
-        return {
+        result = {
             'id': msg.id,
             'date': msg.date,
         }
+        return Response(json.dumps(result), headers={'Content-Type': 'application/json'})
 
-    @http.route('/api/chat/conversations', auth='user', type='json', methods=['POST'], csrf=False)
-    def create_conversation(self, participants=None, name=None, **kwargs):
+    @http.route('/api/chat/conversations', auth='user', type='http', methods=['POST'], csrf=False)
+    def create_conversation(self, **kwargs):
+        data = request.jsonrequest or {}
+        participants = data.get('participants')
+        name = data.get('name')
         """Create a new chat conversation."""
         user = request.env.user
         participant_ids = [user.id]
@@ -71,9 +79,10 @@ class ChatController(http.Controller):
         })
 
         last_message = conv.message_ids and conv.message_ids[-1] or False
-        return {
+        result = {
             'id': conv.id,
             'name': conv.name or ', '.join(conv.participant_ids.mapped('name')),
             'last_message': last_message.body if last_message else False,
             'last_date': last_message.date if last_message else False,
         }
+        return Response(json.dumps(result), headers={'Content-Type': 'application/json'})

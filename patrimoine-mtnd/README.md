@@ -14,6 +14,8 @@ npm install
 npm run dev
 ```
 
+Le serveur de développement utilise un proxy afin de communiquer avec Odoo. Les routes `/api`, `/web`, `/websocket` ainsi que `/longpolling` sont redirigées vers les ports locaux d'Odoo. Pour `/longpolling`, la cible est `http://localhost:8072` et les options `changeOrigin` et `secure` correspondent aux autres règles.
+
 ## Construction pour la production
 
 ```bash

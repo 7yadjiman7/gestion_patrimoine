@@ -41,17 +41,24 @@ describe('Chat Service with updated API', () => {
     expect(msg).toEqual({ id: 8, content: 'Hi', conversation_id: 10 })
   })
 
-  test('fetchMessages rejects when conversation is missing', async () => {
-    const error = { response: { status: 404, data: { error: 'Conversation not found' } } }
-    api.get.mockRejectedValue(error)
+test('fetchConversations propagates unauthorized errors', async () => {
+    const error = { response: { status: 401 } };
+    api.get.mockRejectedValue(error);
 
-    await expect(chatService.fetchMessages(99)).rejects.toEqual(error)
-  })
+    await expect(chatService.fetchConversations()).rejects.toBe(error);
+  });
+
+  test('fetchMessages rejects when conversation is missing', async () => {
+    const error = { response: { status: 404, data: { error: 'Conversation not found' } } };
+    api.get.mockRejectedValue(error);
+
+    await expect(chatService.fetchMessages(99)).rejects.toEqual(error);
+  });
 
   test('sendMessage rejects when user not allowed', async () => {
-    const error = { response: { status: 403, data: { error: 'Forbidden' } } }
-    api.post.mockRejectedValue(error)
+    const error = { response: { status: 403, data: { error: 'Forbidden' } } };
+    api.post.mockRejectedValue(error);
 
-    await expect(chatService.sendMessage(99, 'Hi')).rejects.toEqual(error)
-  })
+    await expect(chatService.sendMessage(99, 'Hi')).rejects.toEqual(error);
+  });
 })

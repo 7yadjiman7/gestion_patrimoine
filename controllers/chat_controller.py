@@ -31,8 +31,18 @@ class ChatController(http.Controller):
     @http.route('/api/chat/conversations/<int:conv_id>/messages', auth='user', type='http', methods=['GET'], csrf=False)
     def get_messages(self, conv_id, **kwargs):
         conv = request.env['chat.conversation'].sudo().browse(conv_id)
-        if not conv.exists() or request.env.user.id not in conv.participant_ids.ids:
-            return Response(json.dumps([]), headers={'Content-Type': 'application/json'})
+        if not conv.exists():
+            return Response(
+                json.dumps({'error': 'Conversation not found'}),
+                status=404,
+                headers={'Content-Type': 'application/json'}
+            )
+        if request.env.user.id not in conv.participant_ids.ids:
+            return Response(
+                json.dumps({'error': 'Forbidden'}),
+                status=403,
+                headers={'Content-Type': 'application/json'}
+            )
         messages = conv.message_ids.sorted('date')
         result = [
             {
@@ -50,8 +60,18 @@ class ChatController(http.Controller):
         data = request.jsonrequest or {}
         content = data.get('content')
         conv = request.env['chat.conversation'].sudo().browse(conv_id)
-        if not conv.exists() or request.env.user.id not in conv.participant_ids.ids:
-            return Response(json.dumps({'error': 'Conversation not found'}), headers={'Content-Type': 'application/json'})
+        if not conv.exists():
+            return Response(
+                json.dumps({'error': 'Conversation not found'}),
+                status=404,
+                headers={'Content-Type': 'application/json'}
+            )
+        if request.env.user.id not in conv.participant_ids.ids:
+            return Response(
+                json.dumps({'error': 'Forbidden'}),
+                status=403,
+                headers={'Content-Type': 'application/json'}
+            )
         msg = request.env['chat.message'].sudo().create({
             'conversation_id': conv.id,
             'sender_id': request.env.user.id,

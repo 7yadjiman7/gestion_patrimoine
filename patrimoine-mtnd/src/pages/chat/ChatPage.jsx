@@ -68,7 +68,11 @@ export default function ChatPage() {
       </div>
       <div className="flex-1 flex flex-col">
         {current ? (
-          <ConversationView messages={messages} onSend={handleSend} />
+          <ConversationView
+            messages={messages}
+            onSend={handleSend}
+            conversationName={current.name}
+          />
         ) : (
           <div className="flex items-center justify-center h-full text-gray-400">
             Sélectionnez une conversation

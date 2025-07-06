@@ -2,15 +2,28 @@ from odoo import http
 from odoo.http import request, Response
 import json
 
+# Headers CORS standard (alignés sur asset_controller)
+CORS_HEADERS = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Origin, Content-Type, X-Auth-Token, X-Openerp-Session-Id",
+    "Access-Control-Allow-Credentials": "true",
+}
+
+# Réutilise le décorateur de gestion d'erreurs de l'asset controller
+from .asset_controller import handle_api_errors
+
 class ChatController(http.Controller):
     @http.route('/api/chat/conversations', auth='user', type='http', methods=['GET'], csrf=False)
+    @handle_api_errors
     def list_conversations(self, **kwargs):
         public_uid = request.env.ref('base.public_user').id
         if not request.session.uid or request.session.uid == public_uid:
             return Response(
-                json.dumps({'error': 'Authentication required'}),
+                json.dumps({'status': 'error', 'code': 401, 'message': 'Authentication required'}),
                 status=401,
-                headers={'Content-Type': 'application/json'}
+                headers=CORS_HEADERS
             )
 
         user = request.env.user
@@ -26,22 +39,23 @@ class ChatController(http.Controller):
                 'last_message': last_message.body if last_message else False,
                 'last_date': last_message.date if last_message else False,
             })
-        return Response(json.dumps(result), headers={'Content-Type': 'application/json'})
+        return Response(json.dumps({'status': 'success', 'data': result}), headers=CORS_HEADERS)
 
     @http.route('/api/chat/conversations/<int:conv_id>/messages', auth='user', type='http', methods=['GET'], csrf=False)
+    @handle_api_errors
     def get_messages(self, conv_id, **kwargs):
         conv = request.env['chat.conversation'].sudo().browse(conv_id)
         if not conv.exists():
             return Response(
-                json.dumps({'error': 'Conversation not found'}),
+                json.dumps({'status': 'error', 'code': 404, 'message': 'Conversation not found'}),
                 status=404,
-                headers={'Content-Type': 'application/json'}
+                headers=CORS_HEADERS
             )
         if request.env.user.id not in conv.participant_ids.ids:
             return Response(
-                json.dumps({'error': 'Forbidden'}),
+                json.dumps({'status': 'error', 'code': 403, 'message': 'Forbidden'}),
                 status=403,
-                headers={'Content-Type': 'application/json'}
+                headers=CORS_HEADERS
             )
         messages = conv.message_ids.sorted('date')
         result = [
@@ -53,24 +67,25 @@ class ChatController(http.Controller):
             }
             for m in messages
         ]
-        return Response(json.dumps(result), headers={'Content-Type': 'application/json'})
+        return Response(json.dumps({'status': 'success', 'data': result}), headers=CORS_HEADERS)
 
     @http.route('/api/chat/conversations/<int:conv_id>/messages', auth='user', type='http', methods=['POST'], csrf=False)
+    @handle_api_errors
     def post_message(self, conv_id, **kwargs):
         data = request.jsonrequest or {}
         content = data.get('content')
         conv = request.env['chat.conversation'].sudo().browse(conv_id)
         if not conv.exists():
             return Response(
-                json.dumps({'error': 'Conversation not found'}),
+                json.dumps({'status': 'error', 'code': 404, 'message': 'Conversation not found'}),
                 status=404,
-                headers={'Content-Type': 'application/json'}
+                headers=CORS_HEADERS
             )
         if request.env.user.id not in conv.participant_ids.ids:
             return Response(
-                json.dumps({'error': 'Forbidden'}),
+                json.dumps({'status': 'error', 'code': 403, 'message': 'Forbidden'}),
                 status=403,
-                headers={'Content-Type': 'application/json'}
+                headers=CORS_HEADERS
             )
         msg = request.env['chat.message'].sudo().create({
             'conversation_id': conv.id,
@@ -83,9 +98,10 @@ class ChatController(http.Controller):
             'content': msg.body,
             'date': msg.date,
         }
-        return Response(json.dumps(result), headers={'Content-Type': 'application/json'})
+        return Response(json.dumps({'status': 'success', 'data': result}), headers=CORS_HEADERS)
 
     @http.route('/api/chat/conversations', auth='user', type='http', methods=['POST'], csrf=False)
+    @handle_api_errors
     def create_conversation(self, **kwargs):
         data = request.jsonrequest or {}
         participants = data.get('participants')
@@ -114,4 +130,4 @@ class ChatController(http.Controller):
             'last_message': last_message.body if last_message else False,
             'last_date': last_message.date if last_message else False,
         }
-        return Response(json.dumps(result), headers={'Content-Type': 'application/json'})
+        return Response(json.dumps({'status': 'success', 'data': result}), headers=CORS_HEADERS)

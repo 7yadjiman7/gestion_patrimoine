@@ -37,6 +37,12 @@ export default defineConfig({
                 changeOrigin: true,
                 secure: false,
             },
+            // RÈGLE POUR /longpolling (bus Odoo)
+            "/longpolling": {
+                target: "http://localhost:8072",
+                changeOrigin: true,
+                secure: false,
+            },
         },
     },
     build: {

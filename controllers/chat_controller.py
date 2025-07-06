@@ -28,9 +28,8 @@ class ChatController(http.Controller):
         return [
             {
                 'id': m.id,
-                'sender_id': m.sender_id.id,
-                'sender_name': m.sender_id.name,
-                'body': m.body,
+                'author_name': m.sender_id.name,
+                'content': m.body,
                 'date': m.date,
             }
             for m in messages
@@ -48,6 +47,8 @@ class ChatController(http.Controller):
         })
         return {
             'id': msg.id,
+            'author_name': msg.sender_id.name,
+            'content': msg.body,
             'date': msg.date,
         }
 

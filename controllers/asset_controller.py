@@ -1111,32 +1111,6 @@ class PatrimoineAssetController(http.Controller):
             return Response(status=500)
 
     # Endpoints pour les champs personnalisés
-    @http.route(
-        "/api/patrimoine/fields/<int:subcategory_id>",
-        auth="user",
-        type="http",
-        methods=["GET"],
-    )
-    def list_fields(self, subcategory_id, **kw):
-        try:
-            fields = request.env["asset.custom.field"].search(
-                [("subcategory_id", "=", subcategory_id)]
-            )
-            field_data = [
-                {
-                    "id": field.id,
-                    "name": field.name,
-                    "type": field.field_type,
-                    "required": field.required,
-                }
-                for field in fields
-            ]
-            return Response(
-                json.dumps(field_data), headers={"Content-Type": "application/json"}
-            )
-        except Exception as e:
-            _logger.error("Error listing fields: %s", str(e))
-            return Response(status=500)
 
     @http.route(
         "/api/patrimoine/fields/<int:subcategory_id>",
@@ -1322,35 +1296,6 @@ class PatrimoineAssetController(http.Controller):
                 headers={"Content-Type": "application/json"},
             )
 
-    # Endpoints pour la gestion des champs personnalisés
-    @http.route(
-        "/api/patrimoine/subcategories/<int:subcategory_id>/fields",
-        auth="user",
-        type="http",
-        methods=["GET"],
-    )
-    def get_subcategory_fields(self, subcategory_id, **kw):
-        try:
-            subcategory = request.env["asset.subcategory"].browse(subcategory_id)
-            if not subcategory.exists():
-                return Response(status=404)
-
-            fields_data = [
-                {
-                    "id": field.id,
-                    "name": field.name,
-                    "type": field.field_type,
-                    "required": field.required,
-                }
-                for field in subcategory.custom_field_ids
-            ]
-
-            return Response(
-                json.dumps(fields_data), headers={"Content-Type": "application/json"}
-            )
-        except Exception as e:
-            _logger.error("Error getting subcategory fields: %s", str(e))
-            return Response(status=500)
 
     @http.route(
         "/api/patrimoine/items/<int:item_id>/field-values",

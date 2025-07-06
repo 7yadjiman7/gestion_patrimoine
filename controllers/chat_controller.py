@@ -29,9 +29,8 @@ class ChatController(http.Controller):
         result = [
             {
                 'id': m.id,
-                'sender_id': m.sender_id.id,
-                'sender_name': m.sender_id.name,
-                'body': m.body,
+                'author_name': m.sender_id.name,
+                'content': m.body,
                 'date': m.date,
             }
             for m in messages
@@ -52,6 +51,8 @@ class ChatController(http.Controller):
         })
         result = {
             'id': msg.id,
+            'author_name': msg.sender_id.name,
+            'content': msg.body,
             'date': msg.date,
         }
         return Response(json.dumps(result), headers={'Content-Type': 'application/json'})

@@ -64,6 +64,7 @@ un espace de chat interne et un mur de posts pour partager les annonces du minis
 ## Dépendances
 - Odoo 17
 - Modules requis : base, hr, stock, account, fleet
+- Le serveur longpolling doit être actif pour permettre la messagerie temps réel
 
 ## Auteur
 **Ministère des Transports et du Numérique**  

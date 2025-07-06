@@ -13,7 +13,7 @@ class UserApiController(http.Controller):
         y compris son rôle et son département.
         """
         user = request.env.user
-        # Recherche de l'employé lié à l'utilisateur pour trouver le département
+        # Recherche de l'employé lié à l'utilisateur pour déterminer son département
         employee = request.env["hr.employee"].search(
             [("user_id", "=", user.id)], limit=1
         )
@@ -35,12 +35,7 @@ class UserApiController(http.Controller):
         if not roles:
             roles.append("user")  # Rôle par défaut
 
-        # 2. Récupérer l'employé lié à l'utilisateur pour obtenir son département
-        employee = request.env["hr.employee"].search(
-            [("user_id", "=", user.id)], limit=1
-        )
-
-        # 3. Construire la réponse JSON finale
+        # 2. Construire la réponse JSON finale
         user_data = {
             "uid": user.id,
             "name": user.name,

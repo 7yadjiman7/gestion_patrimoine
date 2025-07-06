@@ -29,3 +29,27 @@ class ChatMessage(models.Model):
     )
     body = fields.Text(string="Contenu", required=True)
     date = fields.Datetime(string="Date", default=fields.Datetime.now)
+
+    def create(self, vals_list):
+        """Create messages and notify participants on the bus."""
+        messages = super().create(vals_list)
+
+        Bus = self.env['bus.bus']
+        notifications = []
+
+        for message in messages:
+            participants = message.conversation_id.participant_ids
+            payload = {
+                'id': message.id,
+                'author_name': message.sender_id.name,
+                'content': message.body,
+                'conversation_id': message.conversation_id.id,
+            }
+            for partner in participants.mapped('partner_id'):  # unique partners
+                channel = (self._cr.dbname, 'mail.channel', partner.id)
+                notifications.append((channel, payload))
+
+        if notifications:
+            Bus.sendmany(notifications)
+
+        return messages

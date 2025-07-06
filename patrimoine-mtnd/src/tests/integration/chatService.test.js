@@ -40,4 +40,11 @@ describe('Chat Service with updated API', () => {
     expect(api.post).toHaveBeenCalledWith('/api/chat/conversations/10/messages', { content: 'Hi' })
     expect(msg).toEqual({ id: 8, content: 'Hi', conversation_id: 10 })
   })
+
+  test('fetchConversations propagates unauthorized errors', async () => {
+    const error = { response: { status: 401 } }
+    api.get.mockRejectedValue(error)
+
+    await expect(chatService.fetchConversations()).rejects.toBe(error)
+  })
 })

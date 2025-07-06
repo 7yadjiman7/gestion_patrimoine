@@ -4,6 +4,7 @@ import ConversationList from '../../components/chat/ConversationList'
 import ConversationView from '../../components/chat/ConversationView'
 import EmployeeList from '../../components/chat/EmployeeList'
 import useOdooBus from '../../hooks/useOdooBus'
+import { toast } from 'react-hot-toast'
 
 export default function ChatPage() {
   const [conversations, setConversations] = useState([])
@@ -38,7 +39,11 @@ export default function ChatPage() {
   useOdooBus(handleNewMessage)
 
   const startConversation = async emp => {
-    const conv = await chatService.createConversation([emp.id])
+    if (!emp.user_id) {
+      toast.error("Cet employé n'a pas de compte utilisateur")
+      return
+    }
+    const conv = await chatService.createConversation([emp.user_id])
     setConversations(prev => {
       if (prev.find(c => c.id === conv.id)) return prev
       return [...prev, conv]

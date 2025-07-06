@@ -32,7 +32,12 @@ const fetchSubcategories = (categoryId = 0) => {
 const fetchLocations = () =>
     api.get("/api/patrimoine/locations").then(res => res.data)
 const fetchEmployees = () =>
-    api.get("/api/patrimoine/employees").then(res => res.data)
+    api
+        .get("/api/patrimoine/employees")
+        .then(res => res.data.map(emp => ({
+            ...emp,
+            user_id: emp.user_id ?? null,
+        })))
 const fetchDepartments = () =>
     api.get("/api/patrimoine/departments").then(res => res.data)
 const fetchFournisseurs = () =>

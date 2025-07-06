@@ -5,9 +5,10 @@
     'summary': 'Module de gestion des biens matériels (véhicules, informatique, mobilier)',
     'author': 'Coulibaly Yadjiman',
     'website': 'http://www.example.com',
-    'depends': ['base', 'hr', 'stock', 'account', 'fleet', 'bus'],
+    'depends': ['base', 'hr', 'stock', 'account', 'fleet', 'bus', 'mail'],
     "data": [
         "data/sequence.xml",
+        "data/cron.xml",
         "security/groups.xml",
         "security/ir.model.access.csv",
         "security/record_rules.xml",

@@ -17,6 +17,7 @@
         "views/asset_views.xml",
         "views/entretien_views.xml",
         "views/fiche_vie_views.xml",
+        "views/intranet_post_views.xml",
         "views/menu.xml",
         "views/mouvement_views.xml",
         "views/perte_views.xml",

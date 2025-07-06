@@ -25,7 +25,17 @@ Assurez-vous qu'un serveur Odoo configuré avec le module **intranet_MTND** tour
 
 ## Exécution des tests
 
-Les tests Jest sont situés dans `src/tests`. Après installation des dépendances, lancez :
+Les tests Jest sont situés dans `src/tests`.
+
+1. Installez les dépendances du projet avant d'exécuter les tests :
+
+```bash
+npm install
+```
+
+   Cette étape requiert un accès Internet ou un registre local déjà configuré afin de récupérer les dépendances de développement définies dans `package.json`, telles que **Jest**.
+
+2. Lancez ensuite les tests :
 
 ```bash
 npm test

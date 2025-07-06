@@ -59,6 +59,7 @@ un espace de chat interne et un mur de posts pour partager les annonces du minis
 1. Copier le dossier `intranet_MTND` dans le répertoire `custom-addons`
 2. Redémarrer Odoo
 3. Installer le module via l'interface administrateur
+4. Dans le menu **Gestion du Patrimoine**, ouvrez l'élément **Posts** pour gérer les annonces internes.
 
 ## Dépendances
 - Odoo 17

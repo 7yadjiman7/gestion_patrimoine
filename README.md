@@ -77,3 +77,29 @@ Lors de la migration depuis une version antérieure, le groupe « Administrateur
 Les hooks d'initialisation recherchent donc ce groupe et, s'il est trouvé, lui
 associent l'identifiant `gestion_patrimoine.group_patrimoine_admin` au lieu d'en créer un nouveau. Ce processus s'exécute aussi bien lors d'une nouvelle installation que lors d'une mise à jour du module.
 
+## Chat API
+
+Ces routes REST permettent d'accéder au module de messagerie. Elles nécessitent
+une session authentifiée ou le paramètre `db` désignant la base de données.
+
+### `/api/chat/conversations`
+* **GET** : liste les conversations du compte connecté.
+* **POST** : crée une nouvelle conversation.
+
+### `/api/chat/conversations/<id>/messages`
+`<id>` doit être un entier représentant l'identifiant de la conversation.
+* **GET** : renvoie tous les messages de la conversation.
+* **POST** : ajoute un message dans cette conversation.
+
+#### Exemples `curl`
+
+```bash
+# Liste des conversations
+curl -X GET -H "Cookie: session_id=<SESSION>" \
+  "http://localhost:8069/api/chat/conversations?db=<DB>"
+
+# Messages de la conversation 1
+curl -X GET -H "Cookie: session_id=<SESSION>" \
+  "http://localhost:8069/api/chat/conversations/1/messages?db=<DB>"
+```
+

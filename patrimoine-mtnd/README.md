@@ -20,7 +20,7 @@ npm run dev
 npm run build
 ```
 
-Assurez-vous qu'un serveur Odoo configuré avec le module **intranet_MTND** tourne sur le même hôte afin que les requêtes API soient résolues correctement.
+Assurez-vous qu'un serveur Odoo configuré avec le module **gestion_patrimoine** tourne sur le même hôte afin que les requêtes API soient résolues correctement.
 
 
 ## Exécution des tests

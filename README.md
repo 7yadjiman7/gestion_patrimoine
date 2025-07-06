@@ -74,6 +74,6 @@ LGPL-3
 
 ## Migration
 Lors de la migration depuis une version antérieure, le groupe « Administrateur Patrimoine » peut déjà exister mais avec un identifiant XML différent.
-Le script d'initialisation recherche donc ce groupe et, s'il le trouve, associe
-l'identifiant `gestion_patrimoine.group_patrimoine_admin` au groupe existant au lieu d'en créer un nouveau.
+Les hooks d'initialisation recherchent donc ce groupe et, s'il est trouvé, lui
+associent l'identifiant `gestion_patrimoine.group_patrimoine_admin` au lieu d'en créer un nouveau. Ce processus s'exécute aussi bien lors d'une nouvelle installation que lors d'une mise à jour du module.
 

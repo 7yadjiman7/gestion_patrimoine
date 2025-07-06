@@ -40,4 +40,18 @@ describe('Chat Service with updated API', () => {
     expect(api.post).toHaveBeenCalledWith('/api/chat/conversations/10/messages', { content: 'Hi' })
     expect(msg).toEqual({ id: 8, content: 'Hi', conversation_id: 10 })
   })
+
+  test('fetchMessages rejects when conversation is missing', async () => {
+    const error = { response: { status: 404, data: { error: 'Conversation not found' } } }
+    api.get.mockRejectedValue(error)
+
+    await expect(chatService.fetchMessages(99)).rejects.toEqual(error)
+  })
+
+  test('sendMessage rejects when user not allowed', async () => {
+    const error = { response: { status: 403, data: { error: 'Forbidden' } } }
+    api.post.mockRejectedValue(error)
+
+    await expect(chatService.sendMessage(99, 'Hi')).rejects.toEqual(error)
+  })
 })

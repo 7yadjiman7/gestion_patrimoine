@@ -16,8 +16,9 @@ export default function EmployeeList({ onSelect, onClose }) {
           {employees.map(emp => (
             <li
               key={emp.id}
-              onClick={() => onSelect(emp)}
-              className="p-2 cursor-pointer hover:bg-gray-800"
+              onClick={() => emp.user_id && onSelect(emp)}
+              className={`p-2 ${emp.user_id ? 'cursor-pointer hover:bg-gray-800' : 'text-gray-500 cursor-not-allowed'}`}
+              title={emp.user_id ? '' : "Aucun utilisateur associé"}
             >
               {emp.name}
             </li>

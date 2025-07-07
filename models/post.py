@@ -1,6 +1,5 @@
 from odoo import models, fields
 
-
 class IntranetPost(models.Model):
     _name = "intranet.post"
     _description = "Post Intranet"
@@ -14,14 +13,74 @@ class IntranetPost(models.Model):
         required=True,
         default=lambda self: self.env.user,
     )
-    department_id = fields.Many2one(
-        "hr.department", string="D\xC3\xA9partement"
-    )
-    # Conservé pour compatibilité ascendante
+    department_id = fields.Many2one("hr.department", string="Département")
     image = fields.Image(string="Image")
     attachment_ids = fields.Many2many(
         "ir.attachment",
+        "intranet_post_attachment_rel",
+        "post_id",
+        "attachment_id",
         string="Pièces jointes",
-        help="Images ou vidéos associées au post",
+    )
+    post_type = fields.Selection(
+        [
+            ("text", "Texte"),
+            ("image", "Image"),
+            ("video", "Vidéo"),
+            ("file", "Fichier"),
+        ],
+        string="Type",
+        default="text",
+    )
+    comment_ids = fields.One2many(
+        "intranet.post.comment", "post_id", string="Commentaires"
+    )
+    like_ids = fields.One2many(
+        "intranet.post.like", "post_id", string="Mentions j'aime"
+    )
+    share_ids = fields.One2many(
+        "intranet.post.share", "post_id", string="Partages"
     )
     active = fields.Boolean(string="Actif", default=True)
+
+
+class IntranetPostComment(models.Model):
+    _name = "intranet.post.comment"
+    _description = "Commentaire de post"
+
+    post_id = fields.Many2one(
+        "intranet.post", string="Post", required=True, ondelete="cascade"
+    )
+    user_id = fields.Many2one(
+        "res.users", string="Auteur", required=True, default=lambda self: self.env.user
+    )
+    content = fields.Text(string="Commentaire", required=True)
+
+
+class IntranetPostLike(models.Model):
+    _name = "intranet.post.like"
+    _description = "Like de post"
+
+    post_id = fields.Many2one(
+        "intranet.post", string="Post", required=True, ondelete="cascade"
+    )
+    user_id = fields.Many2one(
+        "res.users", string="Utilisateur", required=True, default=lambda self: self.env.user
+    )
+
+    _sql_constraints = [
+        ("unique_like", "unique(post_id, user_id)", "Like déjà existant"),
+    ]
+
+
+class IntranetPostShare(models.Model):
+    _name = "intranet.post.share"
+    _description = "Partage de post"
+
+    post_id = fields.Many2one(
+        "intranet.post", string="Post", required=True, ondelete="cascade"
+    )
+    user_id = fields.Many2one(
+        "res.users", string="Utilisateur", required=True, default=lambda self: self.env.user
+    )
+    date_shared = fields.Datetime(string="Date", default=fields.Datetime.now)

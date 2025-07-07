@@ -1068,7 +1068,14 @@ class PatrimoineAssetController(http.Controller):
         try:
             # Modèle hr.employee d'Odoo
             employees = request.env["hr.employee"].search([])
-            employee_data = [{"id": emp.id, "name": emp.name} for emp in employees]
+            employee_data = [
+                {
+                    "id": emp.id,
+                    "name": emp.name,
+                    "user_id": emp.user_id.id if emp.user_id else None,
+                }
+                for emp in employees
+            ]
             return Response(
                 json.dumps(employee_data), headers={"Content-Type": "application/json"}
             )
@@ -2543,9 +2550,3 @@ class PatrimoineAssetController(http.Controller):
             return {"status": "error", "message": str(e)}
 
 
-headers = {
-    "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
-    "Access-Control-Allow-Headers": "Origin, Content-Type, X-Openerp-Session-Id",
-}

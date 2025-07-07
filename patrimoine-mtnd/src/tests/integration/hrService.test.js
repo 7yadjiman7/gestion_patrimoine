@@ -14,7 +14,7 @@ describe('HR Service fetches', () => {
 
     const result = await fetchEmployees()
 
-    expect(axios.get).toHaveBeenCalledWith(expect.stringContaining('/api/hr/employees'))
+    expect(axios.get).toHaveBeenCalledWith(expect.stringContaining('/api/patrimoine/employees'))
     expect(result).toEqual(mockData)
   })
 
@@ -24,7 +24,7 @@ describe('HR Service fetches', () => {
 
     const result = await fetchDepartments()
 
-    expect(axios.get).toHaveBeenCalledWith(expect.stringContaining('/api/hr/departments'))
+    expect(axios.get).toHaveBeenCalledWith(expect.stringContaining('/api/patrimoine/departments'))
     expect(result).toEqual(mockData)
   })
 })

@@ -3,6 +3,7 @@ import base64
 import logging
 from odoo import http
 from odoo.http import request, Response
+from odoo.exceptions import ValidationError
 
 # Assurez-vous que handle_api_errors est bien importé depuis votre autre contrôleur
 from .asset_controller import handle_api_errors, CORS_HEADERS
@@ -43,8 +44,12 @@ class IntranetPostController(http.Controller):
     @handle_api_errors
     def create_post(self, **post):
         # On utilise `post` directement au lieu de `request.jsonrequest` car c'est un formulaire multipart/form-data
+        name = post.get('name')
+        if not name:
+            raise ValidationError("Le champ 'name' est obligatoire.")
+
         vals = {
-            'name': post.get('name'),
+            'name': name,
             'body': post.get('body'),
             'post_type': post.get('type', 'text'),
             'author_id': request.env.user.id,

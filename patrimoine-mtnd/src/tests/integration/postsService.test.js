@@ -42,7 +42,7 @@ describe('postsService', () => {
 
     const res = await postsService.likePost(3)
 
-    expect(api.post).toHaveBeenCalledWith('/api/intranet/posts/3/like')
+    expect(api.post).toHaveBeenCalledWith('/api/intranet/posts/3/likes')
     expect(res).toEqual({ likes: 5 })
   })
 })

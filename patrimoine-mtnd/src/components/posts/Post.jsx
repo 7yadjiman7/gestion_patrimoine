@@ -15,13 +15,6 @@ export default function Post({ post }) {
     }
   }
 
-  const handleShare = async () => {
-    try {
-      await postsService.sharePost(post.id)
-    } catch (e) {
-      console.error(e)
-    }
-  }
 
   const handleComment = async () => {
     if (!text.trim()) return
@@ -49,7 +42,6 @@ export default function Post({ post }) {
         <button onClick={handleLike} className="text-blue-400">
           J'aime ({likes})
         </button>
-        <button onClick={handleShare} className="text-blue-400">Partager</button>
       </div>
       <div className="space-y-2">
         {comments.map((c, idx) => (

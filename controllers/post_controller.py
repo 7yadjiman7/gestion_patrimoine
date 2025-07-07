@@ -22,7 +22,7 @@ class IntranetPostController(http.Controller):
                 'id': post.id,
                 'title': post.name,
                 'body': post.body,
-                'author': post.user_id.name,
+                'author': post.author_id.name,
                 'create_date': post.create_date,
                 'type': post.post_type,
                 'image': f"/web/image/intranet.post/{post.id}/image" if post.image else None,
@@ -47,7 +47,7 @@ class IntranetPostController(http.Controller):
             'name': post.get('name'),
             'body': post.get('body'),
             'post_type': post.get('type', 'text'),
-            'user_id': request.env.user.id,
+            'author_id': request.env.user.id,
             'department_id': int(post.get('department_id')) if post.get('department_id') else False,
         }
         

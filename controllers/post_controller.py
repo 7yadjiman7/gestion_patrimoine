@@ -111,4 +111,16 @@ class IntranetPostController(http.Controller):
             like_model.create({'post_id': post.id, 'user_id': request.env.user.id})
             liked = True
             
-        return Response(json.dumps({'status': 'success', 'data': {'liked': liked, 'like_count': len(post.like_ids)}}), default=str), headers=CORS_HEADERS)
+        return Response(
+            json.dumps(
+                {
+                    'status': 'success',
+                    'data': {
+                        'liked': liked,
+                        'like_count': len(post.like_ids),
+                    },
+                },
+                default=str,
+            ),
+            headers=CORS_HEADERS,
+        )

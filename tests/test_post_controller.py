@@ -41,6 +41,17 @@ class PostControllerTest(unittest.TestCase):
         like_model.create.assert_called_once()
         self.assertIn('application/json', res.headers.get('Content-Type'))
 
+    @patch('controllers.post_controller.request')
+    def test_create_post_missing_name_returns_400(self, mock_request):
+        env = MagicMock()
+        mock_request.env = env
+        mock_request.httprequest.files = {}
+
+        res = self.controller.create_post()
+
+        self.assertEqual(res.status_code, 400)
+        env['intranet.post'].sudo().create.assert_not_called()
+
 
 if __name__ == '__main__':
     unittest.main()

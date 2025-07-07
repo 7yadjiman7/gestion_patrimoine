@@ -43,6 +43,7 @@ describe('postsService', () => {
     const res = await postsService.likePost(3)
 
     expect(api.post).toHaveBeenCalledWith('/api/intranet/posts/3/likes')
+    // On garde la version la plus complète et robuste du test
     expect(res).toEqual({ status: 'success', data: { liked: true, like_count: 5 } })
   })
 })

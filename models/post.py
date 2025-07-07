@@ -17,5 +17,11 @@ class IntranetPost(models.Model):
     department_id = fields.Many2one(
         "hr.department", string="D\xC3\xA9partement"
     )
+    # Conservé pour compatibilité ascendante
     image = fields.Image(string="Image")
+    attachment_ids = fields.Many2many(
+        "ir.attachment",
+        string="Pièces jointes",
+        help="Images ou vidéos associées au post",
+    )
     active = fields.Boolean(string="Actif", default=True)

@@ -11,20 +11,16 @@ const createPost = formData =>
     .then(res => res.data)
 
 const likePost = id =>
-  api.post(`/api/intranet/posts/${id}/like`).then(res => res.data)
+  api.post(`/api/intranet/posts/${id}/likes`).then(res => res.data)
 
-const sharePost = id =>
-  api.post(`/api/intranet/posts/${id}/share`).then(res => res.data)
-
-const addComment = (id, comment) =>
+const addComment = (id, content) =>
   api
-    .post(`/api/intranet/posts/${id}/comments`, { comment })
+    .post(`/api/intranet/posts/${id}/comments`, { content })
     .then(res => res.data)
 
 export default {
   fetchPosts,
   createPost,
   likePost,
-  sharePost,
   addComment
 }

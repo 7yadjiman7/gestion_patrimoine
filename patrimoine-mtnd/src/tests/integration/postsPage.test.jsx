@@ -10,7 +10,6 @@ jest.mock('../../services/postsService', () => ({
     fetchPosts: jest.fn(),
     createPost: jest.fn(),
     likePost: jest.fn(),
-    sharePost: jest.fn(),
     addComment: jest.fn()
   }
 }))

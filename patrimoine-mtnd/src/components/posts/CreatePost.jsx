@@ -14,7 +14,7 @@ export default function CreatePost({ onCreated }) {
     const formData = new FormData()
     formData.append('body', text)
     formData.append('name', title)
-    if (file) formData.append('file', file)
+    if (file) formData.append('image', file)
 
     setLoading(true)
     try {

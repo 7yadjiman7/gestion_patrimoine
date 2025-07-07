@@ -1,7 +1,7 @@
 import api from './apiConfig'
 
 const fetchPosts = () =>
-  api.get('/api/intranet/posts').then(res => res.data)
+  api.get('/api/intranet/posts').then(res => res.data.data)
 
 const createPost = formData =>
   api

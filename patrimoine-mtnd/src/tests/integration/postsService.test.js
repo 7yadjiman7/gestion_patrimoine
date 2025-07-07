@@ -20,7 +20,7 @@ describe('postsService', () => {
     const posts = await postsService.fetchPosts()
 
     expect(api.get).toHaveBeenCalledWith('/api/intranet/posts')
-    expect(posts).toEqual({ status: 'success', data: [{ id: 1 }] })
+    expect(posts).toEqual([{ id: 1 }])
   })
 
   test('createPost sends form data', async () => {

@@ -10,7 +10,7 @@ import controllers.post_controller as post_controller
 
 class PostControllerTest(unittest.TestCase):
     def setUp(self):
-        self.controller = post_controller.PostController()
+        self.controller = post_controller.IntranetPostController()
 
     @patch('controllers.post_controller.request')
     def test_list_posts_order(self, mock_request):

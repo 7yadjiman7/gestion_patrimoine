@@ -5,9 +5,7 @@ const fetchPosts = () =>
 
 const createPost = formData =>
   api
-    .post('/api/intranet/posts', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
+    .post('/api/intranet/posts', formData)
     .then(res => res.data)
 
 const likePost = id =>

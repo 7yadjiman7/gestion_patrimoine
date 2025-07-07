@@ -46,6 +46,19 @@ class PostControllerTest(unittest.TestCase):
         env = MagicMock()
         mock_request.env = env
         mock_request.httprequest.files = {}
+        mock_request.jsonrequest = None
+
+        res = self.controller.create_post()
+
+        self.assertEqual(res.status_code, 400)
+        env['intranet.post'].sudo().create.assert_not_called()
+
+    @patch('controllers.post_controller.request')
+    def test_create_post_json_missing_name_returns_400(self, mock_request):
+        env = MagicMock()
+        mock_request.env = env
+        mock_request.httprequest.files = {}
+        mock_request.jsonrequest = {}
 
         res = self.controller.create_post()
 

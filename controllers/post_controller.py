@@ -43,17 +43,17 @@ class IntranetPostController(http.Controller):
     @http.route('/api/intranet/posts', auth='user', type='http', methods=['POST'], csrf=False)
     @handle_api_errors
     def create_post(self, **post):
-        # On utilise `post` directement au lieu de `request.jsonrequest` car c'est un formulaire multipart/form-data
-        name = post.get('name')
+        data = post or request.jsonrequest or {}
+        name = data.get('name')
         if not name:
             raise ValidationError("Le champ 'name' est obligatoire.")
 
         vals = {
             'name': name,
-            'body': post.get('body'),
-            'post_type': post.get('type', 'text'),
+            'body': data.get('body'),
+            'post_type': data.get('type', 'text'),
             'author_id': request.env.user.id,
-            'department_id': int(post.get('department_id')) if post.get('department_id') else False,
+            'department_id': int(data.get('department_id')) if data.get('department_id') else False,
         }
         
         # Gestion de l'image

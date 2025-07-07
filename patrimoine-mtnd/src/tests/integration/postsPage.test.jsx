@@ -30,7 +30,7 @@ describe('PostsPage behaviour', () => {
   })
 
   test('loads posts on mount', async () => {
-    postsService.fetchPosts.mockResolvedValue([{ id: 1, name: 't', body: 'b' }])
+    postsService.fetchPosts.mockResolvedValue([{ id: 1, title: 't', body: 'b' }])
 
     await act(async () => {
       ReactDOM.createRoot(container).render(<PostsPage />)
@@ -41,8 +41,8 @@ describe('PostsPage behaviour', () => {
   })
 
   test('new post appears first', async () => {
-    postsService.fetchPosts.mockResolvedValue([{ id: 1, name: 'old', body: 'old' }])
-    postsService.createPost.mockResolvedValue({ id: 2, name: 'new', body: 'new' })
+    postsService.fetchPosts.mockResolvedValue([{ id: 1, title: 'old', body: 'old' }])
+    postsService.createPost.mockResolvedValue({ id: 2, title: 'new', body: 'new' })
 
     await act(async () => {
       ReactDOM.createRoot(container).render(<PostsPage />)

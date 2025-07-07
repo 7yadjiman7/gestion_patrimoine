@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import postsService from '../../services/postsService'
 
 export default function Post({ post }) {
-  const [likes, setLikes] = useState(post.likes || 0)
+  const [likes, setLikes] = useState(post.like_count || 0)
   const [comments, setComments] = useState(post.comments || [])
   const [text, setText] = useState('')
 
@@ -20,7 +20,7 @@ export default function Post({ post }) {
     if (!text.trim()) return
     try {
       const c = await postsService.addComment(post.id, text)
-      setComments([...comments, c])
+      setComments([...comments, { ...c, comment: text }])
       setText('')
     } catch (e) {
       console.error(e)
@@ -29,7 +29,7 @@ export default function Post({ post }) {
 
   return (
     <div className="bg-gray-900 p-4 rounded mb-4">
-      <h3 className="font-semibold mb-2">{post.name}</h3>
+      <h3 className="font-semibold mb-2">{post.title}</h3>
       <p className="mb-2 whitespace-pre-wrap">{post.body}</p>
       {post.image && (
         <img

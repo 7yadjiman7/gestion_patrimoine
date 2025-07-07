@@ -1,6 +1,5 @@
 from odoo import models, fields
 
-
 class IntranetPost(models.Model):
     _name = "intranet.post"
     _description = "Post Intranet"
@@ -14,20 +13,20 @@ class IntranetPost(models.Model):
         required=True,
         default=lambda self: self.env.user,
     )
-    department_id = fields.Many2one("hr.department", string="D\xE9partement")
+    department_id = fields.Many2one("hr.department", string="Département")
     image = fields.Image(string="Image")
     attachment_ids = fields.Many2many(
         "ir.attachment",
         "intranet_post_attachment_rel",
         "post_id",
         "attachment_id",
-        string="Pi\xE8ces jointes",
+        string="Pièces jointes",
     )
     post_type = fields.Selection(
         [
             ("text", "Texte"),
             ("image", "Image"),
-            ("video", "Vid\xE9o"),
+            ("video", "Vidéo"),
             ("file", "Fichier"),
         ],
         string="Type",
@@ -70,7 +69,7 @@ class IntranetPostLike(models.Model):
     )
 
     _sql_constraints = [
-        ("unique_like", "unique(post_id, user_id)", "Like d\xE9j\xE0 existant"),
+        ("unique_like", "unique(post_id, user_id)", "Like déjà existant"),
     ]
 
 

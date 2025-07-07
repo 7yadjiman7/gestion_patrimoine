@@ -19,6 +19,38 @@
                 eval="1"/>
             <field name="perm_unlink"
                 eval="1"/>
+    </record>
+
+        <!-- Posts, commentaires et likes -->
+        <record id="rule_post_general" model="ir.rule">
+            <field name="name">Posts - Acc\u00e8s g\u00e9n\u00e9ral</field>
+            <field name="model_id" ref="model_intranet_post"/>
+            <field name="groups" eval="[(4, ref('gestion_patrimoine.group_patrimoine_director')), (4, ref('gestion_patrimoine.group_patrimoine_agent'))]"/>
+            <field name="domain_force">[(1,'=',1)]</field>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="1"/>
+            <field name="perm_create" eval="1"/>
+            <field name="perm_unlink" eval="0"/>
+        </record>
+        <record id="rule_post_comment" model="ir.rule">
+            <field name="name">Commentaires - Acc\u00e8s</field>
+            <field name="model_id" ref="model_intranet_post_comment"/>
+            <field name="groups" eval="[(4, ref('gestion_patrimoine.group_patrimoine_director')), (4, ref('gestion_patrimoine.group_patrimoine_agent'))]"/>
+            <field name="domain_force">[(1,'=',1)]</field>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="1"/>
+            <field name="perm_create" eval="1"/>
+            <field name="perm_unlink" eval="0"/>
+        </record>
+        <record id="rule_post_like" model="ir.rule">
+            <field name="name">Likes - Acc\u00e8s</field>
+            <field name="model_id" ref="model_intranet_post_like"/>
+            <field name="groups" eval="[(4, ref('gestion_patrimoine.group_patrimoine_director')), (4, ref('gestion_patrimoine.group_patrimoine_agent'))]"/>
+            <field name="domain_force">[(1,'=',1)]</field>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="1"/>
+            <field name="perm_create" eval="1"/>
+            <field name="perm_unlink" eval="0"/>
         </record>
 
         <!-- Directeur : peut voir les catégories/sous-catégories de son département -->

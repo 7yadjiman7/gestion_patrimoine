@@ -6,7 +6,7 @@
         <field name="arch" type="xml">
             <tree string="Publications">
                 <field name="name"/>
-                <field name="user_id"/>
+                <field name="author_id"/>
                 <field name="department_id" optional="show"/>
                 <field name="create_date"/>
             </tree>
@@ -21,7 +21,7 @@
                 <sheet>
                     <group>
                         <field name="name"/>
-                        <field name="user_id" readonly="1"/>
+                        <field name="author_id" readonly="1"/>
                         <field name="department_id"/>
                         <field name="post_type"/>
                         <field name="active"/>

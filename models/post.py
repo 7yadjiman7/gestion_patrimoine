@@ -13,6 +13,15 @@ class IntranetPost(models.Model):
         required=True,
         default=lambda self: self.env.user,
     )
+    author_id = fields.Many2one(
+        "res.users",
+        string="Auteur",
+        required=True,
+        default=lambda self: self.env.user,
+        related="user_id",
+        store=True,
+        readonly=False,
+    )
     department_id = fields.Many2one("hr.department", string="Département")
     image = fields.Image(string="Image")
     attachment_ids = fields.Many2many(

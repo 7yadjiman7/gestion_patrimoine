@@ -16,8 +16,8 @@ class PostControllerTest(unittest.TestCase):
     def test_list_posts_order(self, mock_request):
         env = MagicMock()
         posts = [
-            MagicMock(id=1, name='A', body='b', user_id=MagicMock(name='u'), create_date='2024-01-01', post_type='text', attachment_ids=[], like_ids=[], comment_ids=[]),
-            MagicMock(id=2, name='B', body='b', user_id=MagicMock(name='u'), create_date='2024-01-02', post_type='text', attachment_ids=[], like_ids=[], comment_ids=[]),
+            MagicMock(id=1, name='A', body='b', author_id=MagicMock(name='u'), create_date='2024-01-01', post_type='text', attachment_ids=[], like_ids=[], comment_ids=[]),
+            MagicMock(id=2, name='B', body='b', author_id=MagicMock(name='u'), create_date='2024-01-02', post_type='text', attachment_ids=[], like_ids=[], comment_ids=[]),
         ]
         env['intranet.post'].sudo().search.return_value = posts
         mock_request.env = env

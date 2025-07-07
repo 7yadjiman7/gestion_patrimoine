@@ -15,17 +15,17 @@ describe('postsService', () => {
   })
 
   test('fetchPosts returns list of posts', async () => {
-    api.get.mockResolvedValue({ data: [{ id: 1 }] })
+    api.get.mockResolvedValue({ data: { status: 'success', data: [{ id: 1 }] } })
 
     const posts = await postsService.fetchPosts()
 
     expect(api.get).toHaveBeenCalledWith('/api/intranet/posts')
-    expect(posts).toEqual([{ id: 1 }])
+    expect(posts).toEqual({ status: 'success', data: [{ id: 1 }] })
   })
 
   test('createPost sends form data', async () => {
     const fd = new FormData()
-    api.post.mockResolvedValue({ data: { id: 2 } })
+    api.post.mockResolvedValue({ data: { status: 'success', data: { id: 2 } } })
 
     const post = await postsService.createPost(fd)
 
@@ -34,15 +34,16 @@ describe('postsService', () => {
       fd,
       { headers: { 'Content-Type': 'multipart/form-data' } }
     )
-    expect(post).toEqual({ id: 2 })
+    expect(post).toEqual({ status: 'success', data: { id: 2 } })
   })
 
   test('likePost calls like endpoint', async () => {
-    api.post.mockResolvedValue({ data: { likes: 5 } })
+    api.post.mockResolvedValue({ data: { status: 'success', data: { liked: true, like_count: 5 } } })
 
     const res = await postsService.likePost(3)
 
     expect(api.post).toHaveBeenCalledWith('/api/intranet/posts/3/likes')
-    expect(res).toEqual({ likes: 5 })
+    // On garde la version la plus complète et robuste du test
+    expect(res).toEqual({ status: 'success', data: { liked: true, like_count: 5 } })
   })
 })

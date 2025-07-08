@@ -115,10 +115,10 @@ class IntranetPostController(http.Controller):
             headers=CORS_HEADERS,)
 
     # Garde la version de 'main' pour ajouter des commentaires
-    @http.route('/api/intranet/posts/<int:post_id>/comments', auth='user', type='http', methods=['POST'], csrf=False)
+    @http.route('/api/intranet/posts/<int:post_id>/comments', auth='user', type='json', methods=['POST'], csrf=False)
     @handle_api_errors
-    def add_comment(self, post_id, **kw):
-        data = request.jsonrequest or {}
+    def add_comment(self, post_id, content=None, **kw):
+        content = content or kw.get('content')
         post = request.env['intranet.post'].sudo().browse(post_id)
         if not post.exists():
             return Response(json.dumps({'status': 'error', 'message': 'Post not found'}), status=404, headers=CORS_HEADERS)
@@ -126,7 +126,7 @@ class IntranetPostController(http.Controller):
         comment = request.env['intranet.post.comment'].sudo().create({
             'post_id': post.id,
             'user_id': request.env.user.id,
-            'content': data.get('content'),
+            'content': content,
         })
 
         return Response(json.dumps({'status': 'success', 'data': {'id': comment.id}}, default=str), headers=CORS_HEADERS)

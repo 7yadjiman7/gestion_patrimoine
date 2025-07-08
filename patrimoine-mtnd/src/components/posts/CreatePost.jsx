@@ -66,7 +66,7 @@ export default function CreatePost({ onCreated }) {
             <form onSubmit={handleSubmit}>
                 {/* Champ pour le titre */}
                 <Input
-                    className="w-full p-2 bg-transparent text-lg border-none focus:ring-0 font-semibold"
+                    className="w-full p-2 text-lg font-semibold border rounded-md bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 focus-visible:ring-blue-500"
                     value={title}
                     onChange={e => setTitle(e.target.value)}
                     placeholder="Titre de votre publication..."
@@ -74,7 +74,7 @@ export default function CreatePost({ onCreated }) {
                 />
                 {/* Champ pour le contenu */}
                 <Textarea
-                    className="w-full p-2 bg-transparent text-base border-none focus:ring-0 resize-none mt-2"
+                    className="w-full p-2 mt-2 text-base resize-none border rounded-md bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 focus-visible:ring-blue-500"
                     value={text}
                     onChange={e => setText(e.target.value)}
                     placeholder="Partagez quelque chose avec l'équipe..."

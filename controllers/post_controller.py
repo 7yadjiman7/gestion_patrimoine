@@ -3,6 +3,7 @@ import base64
 import logging
 from odoo import http
 from odoo.http import request, Response
+from odoo.exceptions import ValidationError
 
 # Assurez-vous que handle_api_errors est bien importé depuis votre autre contrôleur
 from .asset_controller import handle_api_errors, CORS_HEADERS
@@ -37,7 +38,6 @@ class IntranetPostController(http.Controller):
             json.dumps({'status': 'success', 'data': result}, default=str),
             headers=CORS_HEADERS,
         )
-
 
     @http.route(
         "/api/intranet/posts", auth="user", type="http", methods=["POST"], csrf=False
@@ -87,11 +87,30 @@ class IntranetPostController(http.Controller):
 
         _logger.info(f"Post créé avec succès, ID : {record.id}")
 
+        post_data = {
+            'id': record.id,
+            'title': record.name,
+            'body': record.body,
+            'author': record.user_id.name,
+            'create_date': record.create_date,
+            'type': record.post_type,
+            'image': f"/web/image/intranet.post/{record.id}/image" if record.image else None,
+            'attachments': [
+                {
+                    'id': att.id,
+                    'name': att.name,
+                    'url': f"/web/content/{att.id}?download=1",
+                }
+                for att in record.attachment_ids
+            ],
+            'like_count': len(record.like_ids),
+            'comment_count': len(record.comment_ids),
+        }
+
         return Response(
             json.dumps({"status": "success", "data": {"id": record.id}}, default=str),
             content_type="application/json",
-        )
-        
+            headers=CORS_HEADERS,)
 
     # Garde la version de 'main' pour ajouter des commentaires
     @http.route('/api/intranet/posts/<int:post_id>/comments', auth='user', type='http', methods=['POST'], csrf=False)
@@ -126,8 +145,16 @@ class IntranetPostController(http.Controller):
         else:
             like_model.create({'post_id': post.id, 'user_id': request.env.user.id})
             liked = True
-
         return Response(
-            json.dumps({'status': 'success', 'data': {'liked': liked, 'like_count': len(post.like_ids)}}, default=str), 
-            headers=CORS_HEADERS
+            json.dumps(
+                {
+                    "status": "success",
+                    "data": {
+                        "liked": liked,
+                        "like_count": len(post.like_ids),
+                    },
+                },
+                default=str,
+            ),
+            headers=CORS_HEADERS,
         )

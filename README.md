@@ -104,3 +104,19 @@ curl -X GET -H "Cookie: session_id=<SESSION>" \
   "http://localhost:8069/api/chat/conversations/1/messages?db=<DB>"
 ```
 
+## Intranet Posts API
+
+### `/api/intranet/posts`
+* **GET** : liste les publications intranet.
+* **POST** : crée une publication. Le champ `name` est obligatoire. Les champs
+  `body`, `department_id`, `image` et d’autres sont facultatifs.
+
+#### Exemple `curl`
+
+```bash
+curl -X POST -H "Cookie: session_id=<SESSION>" \
+  -F "name=Nouvelle annonce" \
+  -F "body=Contenu optionnel" \
+  http://localhost:8069/api/intranet/posts?db=<DB>
+```
+

@@ -2,9 +2,24 @@ import unittest
 from unittest.mock import MagicMock, patch
 import os
 import sys
+import types
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-import models.chat as chat
+# Provide a minimal stub of the `odoo` framework for the model import
+odoo = types.ModuleType("odoo")
+odoo.models = types.SimpleNamespace(Model=object)
+odoo.fields = types.SimpleNamespace(Char=MagicMock(), Many2many=MagicMock(), One2many=MagicMock(), Many2one=MagicMock(), Text=MagicMock(), Datetime=MagicMock())
+odoo._ = lambda x: x
+sys.modules.setdefault('odoo', odoo)
+sys.modules.setdefault('odoo.models', odoo.models)
+sys.modules.setdefault('odoo.fields', odoo.fields)
+
+import importlib.util
+
+# Load the chat model without executing the full models package
+chat_path = os.path.join(os.path.dirname(__file__), '..', 'models', 'chat.py')
+spec = importlib.util.spec_from_file_location('models.chat', chat_path)
+chat = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(chat)
 
 class ChatMessageNotificationTest(unittest.TestCase):
     def test_create_triggers_bus_send(self):

@@ -8,7 +8,13 @@
             type="xml">
             <tree string="Posts">
                 <field name="name"/>
+<<<<<<< HEAD
                 <field name="user_id"/>
+=======
+                <!-- Use alias field 'author_id' to avoid view errors -->
+                <field name="author_id"/>
+                <field name="department_id" optional="show"/>
+>>>>>>> d47ddd0a7538422c0bbc90a349a841a340458d49
                 <field name="create_date"/>
                 <field name="department_id"/>
             </tree>
@@ -25,8 +31,13 @@
                 <sheet>
                     <group>
                         <field name="name"/>
+<<<<<<< HEAD
                         <field name="user_id"
                             readonly="1"/>
+=======
+                        <!-- Display author information via alias field -->
+                        <field name="author_id" readonly="1"/>
+>>>>>>> d47ddd0a7538422c0bbc90a349a841a340458d49
                         <field name="department_id"/>
                         <field name="post_type"/>
                     </group>

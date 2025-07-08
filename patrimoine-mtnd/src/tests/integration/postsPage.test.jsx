@@ -41,17 +41,23 @@ describe('PostsPage behaviour', () => {
 
   test('new post appears first', async () => {
     postsService.fetchPosts.mockResolvedValue([{ id: 1, title: 'old', body: 'old' }])
-    postsService.createPost.mockResolvedValue({ id: 2, title: 'new', body: 'new' })
+    postsService.createPost.mockResolvedValue({
+      status: 'success',
+      data: { id: 2, title: 'new', body: 'new' }
+    })
 
     await act(async () => {
       ReactDOM.createRoot(container).render(<PostsPage />)
     })
     await act(() => Promise.resolve())
 
+    const titleInput = container.querySelector('input[placeholder="Titre"]')
     const textarea = container.querySelector('textarea')
     const button = container.querySelector('button')
 
     await act(async () => {
+      titleInput.value = 'titre'
+      titleInput.dispatchEvent(new Event('input', { bubbles: true }))
       textarea.value = 'new'
       textarea.dispatchEvent(new Event('input', { bubbles: true }))
     })

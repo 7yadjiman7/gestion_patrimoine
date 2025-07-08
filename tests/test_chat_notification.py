@@ -6,12 +6,12 @@ import types
 
 # Provide a minimal stub of the `odoo` framework for the model import
 odoo = types.ModuleType("odoo")
-odoo.models = types.SimpleNamespace(Model=object)
+odoo.models = types.SimpleNamespace(Model=type('Model', (), {'create': MagicMock()}))
 odoo.fields = types.SimpleNamespace(Char=MagicMock(), Many2many=MagicMock(), One2many=MagicMock(), Many2one=MagicMock(), Text=MagicMock(), Datetime=MagicMock())
 odoo._ = lambda x: x
-sys.modules.setdefault('odoo', odoo)
-sys.modules.setdefault('odoo.models', odoo.models)
-sys.modules.setdefault('odoo.fields', odoo.fields)
+sys.modules['odoo'] = odoo
+sys.modules['odoo.models'] = odoo.models
+sys.modules['odoo.fields'] = odoo.fields
 
 import importlib.util
 
@@ -20,6 +20,11 @@ chat_path = os.path.join(os.path.dirname(__file__), '..', 'models', 'chat.py')
 spec = importlib.util.spec_from_file_location('models.chat', chat_path)
 chat = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(chat)
+models_pkg = types.ModuleType('models')
+models_pkg.__path__ = []
+models_pkg.chat = chat
+sys.modules.setdefault('models', models_pkg)
+sys.modules['models.chat'] = chat
 
 class ChatMessageNotificationTest(unittest.TestCase):
     def test_create_triggers_bus_send(self):
@@ -34,10 +39,10 @@ class ChatMessageNotificationTest(unittest.TestCase):
             MagicMock(partner_id=MagicMock(id=11)),
         ]
         fake_record.sender_id.name = 'Demo'
-        fake_self = MagicMock()
+        fake_self = chat.ChatMessage()
         fake_self.env = fake_env
-        fake_self._cr.dbname = 'test'
-        with patch('models.chat.models.Model.create', return_value=[fake_record]):
+        fake_self._cr = MagicMock(dbname='test')
+        with patch.object(odoo.models.Model, 'create', return_value=[fake_record]):
             chat.ChatMessage.create(fake_self, [{'conversation_id': 1, 'body': 'hi'}])
         fake_bus.sendmany.assert_called_once()
 

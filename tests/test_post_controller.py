@@ -13,6 +13,15 @@ odoo.http = types.SimpleNamespace(
     request=MagicMock(),
     Response=MagicMock(),
 )
+odoo.http.Response.return_value.headers = {'Content-Type': 'application/json'}
+def _response_side_effect(*args, **kwargs):
+    resp = MagicMock()
+    headers = {'Content-Type': 'application/json'}
+    headers.update(kwargs.get('headers', {}))
+    resp.headers = headers
+    resp.status_code = kwargs.get('status')
+    return resp
+odoo.http.Response.side_effect = _response_side_effect
 odoo.exceptions = types.SimpleNamespace(AccessError=Exception, ValidationError=Exception)
 odoo.fields = types.SimpleNamespace(
     Date=MagicMock(),
@@ -67,7 +76,12 @@ controllers_pkg.__path__ = []
 asset_controller = types.ModuleType('controllers.asset_controller')
 def handle_api_errors(func):
     def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            resp = MagicMock()
+            resp.status_code = 400
+            return resp
     return wrapper
 
 asset_controller.handle_api_errors = handle_api_errors
@@ -81,6 +95,8 @@ post_path = os.path.join(os.path.dirname(__file__), '..', 'controllers', 'post_c
 spec = importlib.util.spec_from_file_location('controllers.post_controller', post_path)
 post_controller = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(post_controller)
+sys.modules.setdefault('controllers.post_controller', post_controller)
+controllers_pkg.post_controller = post_controller
 
 
 class PostControllerTest(unittest.TestCase):
@@ -120,7 +136,7 @@ class PostControllerTest(unittest.TestCase):
     def test_create_post_missing_name_returns_400(self, mock_request):
         env = MagicMock()
         mock_request.env = env
-        mock_request.httprequest.files = {}
+        mock_request.httprequest.files = types.SimpleNamespace(getlist=lambda n: [])
         mock_request.jsonrequest = None
 
         res = self.controller.create_post()
@@ -132,13 +148,27 @@ class PostControllerTest(unittest.TestCase):
     def test_create_post_json_missing_name_returns_400(self, mock_request):
         env = MagicMock()
         mock_request.env = env
-        mock_request.httprequest.files = {}
+        mock_request.httprequest.files = types.SimpleNamespace(getlist=lambda n: [])
         mock_request.jsonrequest = {}
 
         res = self.controller.create_post()
 
         self.assertEqual(res.status_code, 400)
         env['intranet.post'].sudo().create.assert_not_called()
+
+    @patch('controllers.post_controller.request')
+    def test_add_comment_without_content_returns_400(self, mock_request):
+        env = MagicMock()
+        post = MagicMock()
+        post.exists.return_value = True
+        env['intranet.post'].sudo().browse.return_value = post
+        env['intranet.post.comment'].sudo.return_value = MagicMock()
+        mock_request.env = env
+
+        res = self.controller.add_comment(1)
+
+        self.assertEqual(res.status_code, 400)
+        env['intranet.post.comment'].sudo().create.assert_not_called()
 
 
 if __name__ == '__main__':

@@ -119,6 +119,8 @@ class IntranetPostController(http.Controller):
     @handle_api_errors
     def add_comment(self, post_id, content=None, **kw):
         content = content or kw.get('content')
+        if not content:
+            raise ValidationError('Comment content is required')
         post = request.env['intranet.post'].sudo().browse(post_id)
         if not post.exists():
             return Response(json.dumps({'status': 'error', 'message': 'Post not found'}), status=404, headers=CORS_HEADERS)

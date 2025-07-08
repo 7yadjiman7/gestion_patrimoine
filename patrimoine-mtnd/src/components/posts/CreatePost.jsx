@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import postsService from '../../services/postsService'
 
 export default function CreatePost({ onCreated }) {
-  const [title, setTitle] = useState('')
+  const [name, setName] = useState('')
   const [text, setText] = useState('')
   const [file, setFile] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -11,16 +11,21 @@ export default function CreatePost({ onCreated }) {
     e.preventDefault()
     if (!text.trim() && !file) return
 
+    if (!name.trim()) {
+      alert('Le titre est obligatoire')
+      return
+    }
+
     const formData = new FormData()
     formData.append('body', text)
-    formData.append('name', title)
+    formData.append('name', name)
     if (file) formData.append('image', file)
 
     setLoading(true)
     try {
       const post = await postsService.createPost(formData)
       onCreated && onCreated(post)
-      setTitle('')
+      setName('')
       setText('')
       setFile(null)
     } catch (err) {
@@ -34,8 +39,8 @@ export default function CreatePost({ onCreated }) {
     <form onSubmit={handleSubmit} className="mb-4 bg-gray-900 p-4 rounded">
       <input
         className="w-full p-2 bg-gray-800 text-white rounded mb-2"
-        value={title}
-        onChange={e => setTitle(e.target.value)}
+        value={name}
+        onChange={e => setName(e.target.value)}
         placeholder="Titre"
       />
       <textarea

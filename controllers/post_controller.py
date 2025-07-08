@@ -76,8 +76,28 @@ class IntranetPostController(http.Controller):
         if attachment_ids:
             record.write({'attachment_ids': [(6, 0, attachment_ids)]})
 
+        post_data = {
+            'id': record.id,
+            'title': record.name,
+            'body': record.body,
+            'author': record.author_id.name,
+            'create_date': record.create_date,
+            'type': record.post_type,
+            'image': f"/web/image/intranet.post/{record.id}/image" if record.image else None,
+            'attachments': [
+                {
+                    'id': att.id,
+                    'name': att.name,
+                    'url': f"/web/content/{att.id}?download=1",
+                }
+                for att in record.attachment_ids
+            ],
+            'like_count': len(record.like_ids),
+            'comment_count': len(record.comment_ids),
+        }
+
         return Response(
-            json.dumps({'status': 'success', 'data': {'id': record.id}}, default=str),
+            json.dumps({'status': 'success', 'data': post_data}, default=str),
             headers=CORS_HEADERS,
         )
 

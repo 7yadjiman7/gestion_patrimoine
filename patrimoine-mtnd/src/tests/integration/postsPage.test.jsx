@@ -51,7 +51,7 @@ describe('PostsPage behaviour', () => {
     })
     await act(() => Promise.resolve())
 
-    const titleInput = container.querySelector('input[placeholder="Titre"]')
+    const titleInput = container.querySelector('input[placeholder="Titre de votre publication..."]')
     const textarea = container.querySelector('textarea')
     const button = container.querySelector('button')
 

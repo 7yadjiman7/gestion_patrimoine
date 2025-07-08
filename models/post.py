@@ -65,7 +65,10 @@ class IntranetPostLike(models.Model):
         "intranet.post", string="Post", required=True, ondelete="cascade"
     )
     user_id = fields.Many2one(
-        "res.users", string="Utilisateur", required=True, default=lambda self: self.env.user
+        "res.users",
+        string="Utilisateur",
+        required=True,
+        default=lambda self: self.env.user,
     )
 
     _sql_constraints = [
@@ -81,6 +84,9 @@ class IntranetPostShare(models.Model):
         "intranet.post", string="Post", required=True, ondelete="cascade"
     )
     user_id = fields.Many2one(
-        "res.users", string="Utilisateur", required=True, default=lambda self: self.env.user
+        "res.users",
+        string="Utilisateur",
+        required=True,
+        default=lambda self: self.env.user,
     )
     date_shared = fields.Datetime(string="Date", default=fields.Datetime.now)

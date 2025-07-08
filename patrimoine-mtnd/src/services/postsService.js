@@ -3,10 +3,13 @@ import api from './apiConfig'
 const fetchPosts = () =>
   api.get('/api/intranet/posts').then(res => res.data.data)
 
-const createPost = formData =>
-  api
-    .post('/api/intranet/posts', formData)
-    .then(res => res.data)
+// CORRECTION FINALE : On ajoute l'option des headers ici
+const createPost = (formData) =>
+    api.post('/api/intranet/posts', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }).then(res => res.data);
 
 const likePost = id =>
   api.post(`/api/intranet/posts/${id}/likes`).then(res => res.data)

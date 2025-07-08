@@ -38,43 +38,60 @@ class IntranetPostController(http.Controller):
             headers=CORS_HEADERS,
         )
 
-    # Garde la version de 'main' pour la création, qui est plus robuste
-    @http.route('/api/intranet/posts', auth='user', type='http', methods=['POST'], csrf=False)
+
+    @http.route(
+        "/api/intranet/posts", auth="user", type="http", methods=["POST"], csrf=False
+    )
     @handle_api_errors
-    def create_post(self, **post):
-        # On utilise `post` directement au lieu de `request.jsonrequest` car c'est un formulaire multipart/form-data
+    def create_post(self, **kwargs):  # On utilise **kwargs pour être flexible
+        _logger.info("--- DÉBUT DE create_post ---")
+
+        # --- CORRECTION FINALE : On lit les données directement depuis la requête http ---
+        # Cette méthode est plus robuste pour les requêtes multipart/form-data
+        post_data = request.httprequest.form.to_dict()
+        files = request.httprequest.files
+
+        _logger.info(f"Données de formulaire reçues : {post_data}")
+        _logger.info(f"Fichiers reçus : {files.getlist('image')}")
+
+        title = post_data.get("name")
+        if not title:
+            _logger.error(
+                "ÉCHEC : Le titre ('name') est manquant dans les données reçues."
+            )
+            return Response(
+                json.dumps({"error": "Le titre du post est obligatoire."}),
+                status=400,
+                content_type="application/json",
+            )
+
+        _logger.info(f"SUCCÈS : Le titre a été trouvé : '{title}'")
+
         vals = {
-            'name': post.get('name'),
-            'body': post.get('body'),
-            'post_type': post.get('type', 'text'),
-            'user_id': request.env.user.id,
-            'department_id': int(post.get('department_id')) if post.get('department_id') else False,
+            "name": title,
+            "body": post_data.get("body"),
+            "post_type": "text",  # À rendre dynamique si nécessaire
+            "user_id": request.env.user.id,
         }
-        
+
         # Gestion de l'image
-        if 'image' in request.httprequest.files:
-            vals['image'] = base64.b64encode(request.httprequest.files['image'].read())
+        image_file = files.get("image")
+        if image_file:
+            _logger.info("Image détectée, traitement en cours...")
+            vals["image"] = base64.b64encode(image_file.read())
 
-        record = request.env['intranet.post'].sudo().create(vals)
+        _logger.info(
+            f"Création du post avec les valeurs pour les champs : {list(vals.keys())}"
+        )
+        record = request.env["intranet.post"].sudo().create(vals)
 
-        # Gestion des pièces jointes multiples
-        attachment_ids = []
-        if 'attachments' in request.httprequest.files:
-            for file_storage in request.httprequest.files.getlist('attachments'):
-                attachment = request.env['ir.attachment'].sudo().create({
-                    'name': file_storage.filename,
-                    'datas': base64.b64encode(file_storage.read()),
-                    'res_model': 'intranet.post',
-                    'res_id': record.id,
-                })
-                attachment_ids.append(attachment.id)
-        if attachment_ids:
-            record.write({'attachment_ids': [(6, 0, attachment_ids)]})
+        _logger.info(f"Post créé avec succès, ID : {record.id}")
 
         return Response(
-            json.dumps({'status': 'success', 'data': {'id': record.id}}, default=str),
-            headers=CORS_HEADERS,
+            json.dumps({"status": "success", "data": {"id": record.id}}, default=str),
+            content_type="application/json",
         )
+        
 
     # Garde la version de 'main' pour ajouter des commentaires
     @http.route('/api/intranet/posts/<int:post_id>/comments', auth='user', type='http', methods=['POST'], csrf=False)
@@ -84,16 +101,15 @@ class IntranetPostController(http.Controller):
         post = request.env['intranet.post'].sudo().browse(post_id)
         if not post.exists():
             return Response(json.dumps({'status': 'error', 'message': 'Post not found'}), status=404, headers=CORS_HEADERS)
-        
+
         comment = request.env['intranet.post.comment'].sudo().create({
             'post_id': post.id,
             'user_id': request.env.user.id,
             'content': data.get('content'),
         })
-        
+
         return Response(json.dumps({'status': 'success', 'data': {'id': comment.id}}, default=str), headers=CORS_HEADERS)
 
-    # Garde la version de 'main' pour gérer les "likes"
     @http.route('/api/intranet/posts/<int:post_id>/likes', auth='user', type='http', methods=['POST'], csrf=False)
     @handle_api_errors
     def toggle_like(self, post_id, **kw):
@@ -103,12 +119,15 @@ class IntranetPostController(http.Controller):
 
         like_model = request.env['intranet.post.like'].sudo()
         existing = like_model.search([('post_id', '=', post.id), ('user_id', '=', request.env.user.id)], limit=1)
-        
+
         liked = False
         if existing:
             existing.unlink()
         else:
             like_model.create({'post_id': post.id, 'user_id': request.env.user.id})
             liked = True
-            
-        return Response(json.dumps({'status': 'success', 'data': {'liked': liked, 'like_count': len(post.like_ids)}}), default=str), headers=CORS_HEADERS)
+
+        return Response(
+            json.dumps({'status': 'success', 'data': {'liked': liked, 'like_count': len(post.like_ids)}}, default=str), 
+            headers=CORS_HEADERS
+        )

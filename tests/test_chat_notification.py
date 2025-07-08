@@ -28,9 +28,9 @@ odoo.fields = types.SimpleNamespace(
     Json=MagicMock(),
 )
 odoo._ = lambda x: x
-sys.modules.setdefault('odoo', odoo)
-sys.modules.setdefault('odoo.models', odoo.models)
-sys.modules.setdefault('odoo.fields', odoo.fields)
+sys.modules['odoo'] = odoo
+sys.modules['odoo.models'] = odoo.models
+sys.modules['odoo.fields'] = odoo.fields
 
 import importlib.util
 

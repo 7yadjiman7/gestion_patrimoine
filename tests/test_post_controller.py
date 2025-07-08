@@ -7,11 +7,14 @@ import types
 
 # Create a minimal stub for the `odoo` package used by controllers
 odoo = types.ModuleType("odoo")
+def _response_side_effect(*args, **kwargs):
+    return MagicMock(headers={'Content-Type': 'application/json'}, status_code=kwargs.get('status'))
+
 odoo.http = types.SimpleNamespace(
     Controller=object,
     route=lambda *a, **k: (lambda f: f),
     request=MagicMock(),
-    Response=MagicMock(),
+    Response=MagicMock(side_effect=_response_side_effect),
 )
 odoo.http.Response.return_value.headers = {'Content-Type': 'application/json'}
 def _response_side_effect(*args, **kwargs):
@@ -44,13 +47,13 @@ odoo.api = types.SimpleNamespace(
 )
 odoo._ = lambda x: x
 
-sys.modules.setdefault('odoo', odoo)
-sys.modules.setdefault('odoo.http', odoo.http)
-sys.modules.setdefault('odoo.exceptions', odoo.exceptions)
-sys.modules.setdefault('odoo.fields', odoo.fields)
-sys.modules.setdefault('odoo.models', odoo.models)
-sys.modules.setdefault('odoo.osv', odoo.osv)
-sys.modules.setdefault('odoo.api', odoo.api)
+sys.modules['odoo'] = odoo
+sys.modules['odoo.http'] = odoo.http
+sys.modules['odoo.exceptions'] = odoo.exceptions
+sys.modules['odoo.fields'] = odoo.fields
+sys.modules['odoo.models'] = odoo.models
+sys.modules['odoo.osv'] = odoo.osv
+sys.modules['odoo.api'] = odoo.api
 
 # Stub for external dependency used by asset_controller
 import types as _types
@@ -136,7 +139,12 @@ class PostControllerTest(unittest.TestCase):
     def test_create_post_missing_name_returns_400(self, mock_request):
         env = MagicMock()
         mock_request.env = env
-        mock_request.httprequest.files = types.SimpleNamespace(getlist=lambda n: [])
+        # On garde la version la plus explicite pour simuler la requête
+        files_mock = MagicMock()
+        files_mock.getlist.return_value = []
+        files_mock.get.return_value = None
+        mock_request.httprequest.files = files_mock
+        mock_request.httprequest.form.to_dict.return_value = {}
         mock_request.jsonrequest = None
 
         res = self.controller.create_post()
@@ -148,7 +156,12 @@ class PostControllerTest(unittest.TestCase):
     def test_create_post_json_missing_name_returns_400(self, mock_request):
         env = MagicMock()
         mock_request.env = env
-        mock_request.httprequest.files = types.SimpleNamespace(getlist=lambda n: [])
+        # On garde la version la plus explicite ici aussi
+        files_mock = MagicMock()
+        files_mock.getlist.return_value = []
+        files_mock.get.return_value = None
+        mock_request.httprequest.files = files_mock
+        mock_request.httprequest.form.to_dict.return_value = {}
         mock_request.jsonrequest = {}
 
         res = self.controller.create_post()

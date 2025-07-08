@@ -120,11 +120,15 @@ class ChatController(http.Controller):
             participant_ids.extend([int(pid) for pid in participants])
 
         # Vérifier si une conversation avec exactement ces participants existe déjà
-        existing_conv = (
-            request.env["chat.conversation"]
-            .sudo()
-            .search([("participant_ids", "=", list(set(participant_ids)))], limit=1)
+        chat_conv_model = request.env["chat.conversation"].sudo()
+        conversations = chat_conv_model.search(
+            [("participant_ids", "in", list(set(participant_ids)))]
         )
+        existing_conv = False
+        for c in conversations:
+            if set(c.participant_ids.ids) == set(participant_ids):
+                existing_conv = c
+                break
 
         if existing_conv:
             conv = existing_conv

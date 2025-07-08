@@ -23,9 +23,10 @@ export default function CreatePost({ onCreated }) {
 
     setLoading(true)
     try {
-      const post = await postsService.createPost(formData)
-      onCreated && onCreated(post)
-      setName('')
+      const response = await postsService.createPost(formData)
+      const newPost = response.data
+      onCreated && onCreated(newPost)
+      setTitle('')
       setText('')
       setFile(null)
     } catch (err) {

@@ -41,7 +41,10 @@ describe('PostsPage behaviour', () => {
 
   test('new post appears first', async () => {
     postsService.fetchPosts.mockResolvedValue([{ id: 1, title: 'old', body: 'old' }])
-    postsService.createPost.mockResolvedValue({ id: 2, title: 'new', body: 'new' })
+    postsService.createPost.mockResolvedValue({
+      status: 'success',
+      data: { id: 2, title: 'new', body: 'new' }
+    })
 
     await act(async () => {
       ReactDOM.createRoot(container).render(<PostsPage />)

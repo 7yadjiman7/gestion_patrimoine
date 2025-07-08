@@ -51,10 +51,13 @@ describe('PostsPage behaviour', () => {
     })
     await act(() => Promise.resolve())
 
+    const titleInput = container.querySelector('input[placeholder="Titre"]')
     const textarea = container.querySelector('textarea')
     const button = container.querySelector('button')
 
     await act(async () => {
+      titleInput.value = 'titre'
+      titleInput.dispatchEvent(new Event('input', { bubbles: true }))
       textarea.value = 'new'
       textarea.dispatchEvent(new Event('input', { bubbles: true }))
     })

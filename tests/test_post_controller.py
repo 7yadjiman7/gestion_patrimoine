@@ -3,9 +3,84 @@ from unittest.mock import MagicMock, patch
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import types
 
-import controllers.post_controller as post_controller
+# Create a minimal stub for the `odoo` package used by controllers
+odoo = types.ModuleType("odoo")
+odoo.http = types.SimpleNamespace(
+    Controller=object,
+    route=lambda *a, **k: (lambda f: f),
+    request=MagicMock(),
+    Response=MagicMock(),
+)
+odoo.exceptions = types.SimpleNamespace(AccessError=Exception, ValidationError=Exception)
+odoo.fields = types.SimpleNamespace(
+    Date=MagicMock(),
+    Datetime=MagicMock(),
+    Char=MagicMock(),
+    Text=MagicMock(),
+    Selection=MagicMock(),
+    Many2one=MagicMock(),
+    Many2many=MagicMock(),
+    One2many=MagicMock(),
+    Image=MagicMock(),
+    Integer=MagicMock(),
+    Boolean=MagicMock(),
+)
+odoo.models = types.SimpleNamespace(Model=object)
+odoo.osv = types.SimpleNamespace(expression=MagicMock())
+odoo.api = types.SimpleNamespace(
+    depends=lambda *args: (lambda f: f),
+    model_create_multi=lambda f: f,
+)
+odoo._ = lambda x: x
+
+sys.modules.setdefault('odoo', odoo)
+sys.modules.setdefault('odoo.http', odoo.http)
+sys.modules.setdefault('odoo.exceptions', odoo.exceptions)
+sys.modules.setdefault('odoo.fields', odoo.fields)
+sys.modules.setdefault('odoo.models', odoo.models)
+sys.modules.setdefault('odoo.osv', odoo.osv)
+sys.modules.setdefault('odoo.api', odoo.api)
+
+# Stub for external dependency used by asset_controller
+import types as _types
+dateutil = _types.ModuleType('dateutil')
+relativedelta_mod = _types.ModuleType('dateutil.relativedelta')
+relativedelta_mod.relativedelta = MagicMock()
+dateutil.relativedelta = relativedelta_mod
+sys.modules.setdefault('dateutil', dateutil)
+sys.modules.setdefault('dateutil.relativedelta', relativedelta_mod)
+
+# Minimal stub for werkzeug.exceptions.BadRequest
+werkzeug_exceptions = _types.ModuleType('werkzeug.exceptions')
+werkzeug_exceptions.BadRequest = type('BadRequest', (Exception,), {})
+sys.modules.setdefault('werkzeug.exceptions', werkzeug_exceptions)
+
+import importlib.util
+
+# Load the controller without executing the controllers package __init__
+controllers_pkg = types.ModuleType('controllers')
+controllers_pkg.__path__ = []
+
+# Provide a minimal stub for asset_controller used by post_controller
+asset_controller = types.ModuleType('controllers.asset_controller')
+def handle_api_errors(func):
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+    return wrapper
+
+asset_controller.handle_api_errors = handle_api_errors
+asset_controller.CORS_HEADERS = {}
+
+controllers_pkg.asset_controller = asset_controller
+sys.modules.setdefault('controllers', controllers_pkg)
+sys.modules.setdefault('controllers.asset_controller', asset_controller)
+
+post_path = os.path.join(os.path.dirname(__file__), '..', 'controllers', 'post_controller.py')
+spec = importlib.util.spec_from_file_location('controllers.post_controller', post_path)
+post_controller = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(post_controller)
 
 
 class PostControllerTest(unittest.TestCase):
@@ -16,8 +91,8 @@ class PostControllerTest(unittest.TestCase):
     def test_list_posts_order(self, mock_request):
         env = MagicMock()
         posts = [
-            MagicMock(id=1, name='A', body='b', author_id=MagicMock(name='u'), create_date='2024-01-01', post_type='text', attachment_ids=[], like_ids=[], comment_ids=[]),
-            MagicMock(id=2, name='B', body='b', author_id=MagicMock(name='u'), create_date='2024-01-02', post_type='text', attachment_ids=[], like_ids=[], comment_ids=[]),
+            MagicMock(id=1, name='A', body='b', user_id=MagicMock(name='u'), create_date='2024-01-01', post_type='text', attachment_ids=[], like_ids=[], comment_ids=[]),
+            MagicMock(id=2, name='B', body='b', user_id=MagicMock(name='u'), create_date='2024-01-02', post_type='text', attachment_ids=[], like_ids=[], comment_ids=[]),
         ]
         env['intranet.post'].sudo().search.return_value = posts
         mock_request.env = env

@@ -23,7 +23,7 @@ class IntranetPostController(http.Controller):
                 'id': post.id,
                 'title': post.name,
                 'body': post.body,
-                'author': post.author_id.name,
+                'author': post.user_id.name,
                 'create_date': post.create_date,
                 'type': post.post_type,
                 'image': f"/web/image/intranet.post/{post.id}/image" if post.image else None,
@@ -52,7 +52,7 @@ class IntranetPostController(http.Controller):
             'name': name,
             'body': data.get('body'),
             'post_type': data.get('type', 'text'),
-            'author_id': request.env.user.id,
+            'user_id': request.env.user.id,
             'department_id': int(data.get('department_id')) if data.get('department_id') else False,
         }
         
@@ -80,7 +80,7 @@ class IntranetPostController(http.Controller):
             'id': record.id,
             'title': record.name,
             'body': record.body,
-            'author': record.author_id.name,
+            'author': record.user_id.name,
             'create_date': record.create_date,
             'type': record.post_type,
             'image': f"/web/image/intranet.post/{record.id}/image" if record.image else None,

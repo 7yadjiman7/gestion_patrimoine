@@ -122,7 +122,7 @@ class PostControllerTest(unittest.TestCase):
         env = MagicMock()
         post = MagicMock()
         post.exists.return_value = True
-        env['intranet.post'].sudo().browse.return_value = post
+        env['intranet.post'].sudo.return_value.browse.return_value = post
         like_model = MagicMock()
         env['intranet.post.like'].sudo.return_value = like_model
         like_model.search.return_value = []
@@ -172,7 +172,7 @@ class PostControllerTest(unittest.TestCase):
         env = MagicMock()
         post = MagicMock()
         post.exists.return_value = True
-        env['intranet.post'].sudo().browse.return_value = post
+        env['intranet.post'].sudo.return_value.browse.return_value = post
         env['intranet.post.comment'].sudo.return_value = MagicMock()
         mock_request.env = env
 
@@ -180,6 +180,47 @@ class PostControllerTest(unittest.TestCase):
 
         self.assertEqual(res.status_code, 400)
         env['intranet.post.comment'].sudo().create.assert_not_called()
+
+    @patch('controllers.post_controller.request')
+    def test_add_comment_success(self, mock_request):
+        env = MagicMock()
+        post_model = MagicMock()
+        comment_model = MagicMock()
+        env.__getitem__.side_effect = lambda key: post_model if key == 'intranet.post' else comment_model
+        post = MagicMock()
+        post.exists.return_value = True
+        post.id = 2
+        post_model.sudo.return_value.browse.return_value = post
+        comment_model.sudo.return_value = comment_model
+        comment_model.create.return_value = MagicMock(id=4)
+        mock_request.env = env
+        mock_request.env.user.id = 9
+
+        res = self.controller.add_comment(2, content='hello')
+
+        comment_model.create.assert_called_with({'post_id': post.id, 'user_id': 9, 'content': 'hello'})
+        self.assertIn('application/json', res.headers.get('Content-Type'))
+
+    @patch('controllers.post_controller.request')
+    def test_get_comments(self, mock_request):
+        env = MagicMock()
+        post_model = MagicMock()
+        comment_model = MagicMock()
+        env.__getitem__.side_effect = lambda key: post_model if key == 'intranet.post' else comment_model
+        post = MagicMock()
+        post.exists.return_value = True
+        post.id = 5
+        post_model.sudo.return_value.browse.return_value = post
+        c1 = MagicMock(id=1, content='c', user_id=MagicMock(name='u1', id=2), create_date='d1')
+        c2 = MagicMock(id=2, content='d', user_id=MagicMock(name='u2', id=3), create_date='d2')
+        comment_model.search.return_value = [c1, c2]
+        comment_model.sudo.return_value = comment_model
+        mock_request.env = env
+
+        res = self.controller.get_comments(5)
+
+        comment_model.search.assert_called_with([('post_id', '=', post.id)], order='create_date asc')
+        self.assertIn('application/json', res.headers.get('Content-Type'))
 
     @patch('controllers.post_controller.request')
     def test_add_view_adds_user(self, mock_request):

@@ -134,6 +134,32 @@ class IntranetPostController(http.Controller):
 
         return Response(json.dumps({'status': 'success', 'data': {'id': comment.id}}, default=str), headers=CORS_HEADERS)
 
+    @http.route('/api/intranet/posts/<int:post_id>/comments', auth='user', type='http', methods=['GET'], csrf=False)
+    @handle_api_errors
+    def get_comments(self, post_id, **kw):
+        post = request.env['intranet.post'].sudo().browse(post_id)
+        if not post.exists():
+            return Response(json.dumps({'status': 'error', 'message': 'Post not found'}), status=404, headers=CORS_HEADERS)
+
+        comment_model = request.env['intranet.post.comment'].sudo()
+        comments = comment_model.search([('post_id', '=', post.id)], order='create_date asc')
+
+        result = [
+            {
+                'id': c.id,
+                'content': c.content,
+                'author': c.user_id.name,
+                'author_id': c.user_id.id,
+                'create_date': c.create_date,
+            }
+            for c in comments
+        ]
+
+        return Response(
+            json.dumps({'status': 'success', 'data': result}, default=str),
+            headers=CORS_HEADERS,
+        )
+
     @http.route('/api/intranet/posts/<int:post_id>/likes', auth='user', type='http', methods=['POST'], csrf=False)
     @handle_api_errors
     def toggle_like(self, post_id, **kw):

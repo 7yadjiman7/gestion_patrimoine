@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import postsService from "../../services/postsService"
 import chatService from "../../services/chatService"
 import { ThumbsUp, MessageCircle } from "lucide-react"
@@ -23,6 +23,9 @@ export default function Post({ post }) {
     const [likes, setLikes] = useState(post.like_count || 0)
     const [hasLiked, setHasLiked] = useState(false) // Idéalement, l'API devrait nous dire si l'utilisateur actuel a déjà liké
     const [comments, setComments] = useState(post.comments || [])
+    useEffect(() => {
+        postsService.viewPost(post.id).catch(() => {})
+    }, [post.id])
     const [showComment, setShowComment] = useState(false)
     const [newComment, setNewComment] = useState("")
 
@@ -87,10 +90,11 @@ export default function Post({ post }) {
                 )}
             </div>
 
-            {/* Stats (Likes/Commentaires) */}
+            {/* Stats (Likes/Commentaires/Vues) */}
             <div className="px-4 py-2 flex justify-between items-center text-sm text-slate-500 dark:text-slate-400 border-t border-b border-slate-200 dark:border-slate-700">
                 <span>{likes} J'aime</span>
                 <span>{post.comment_count} Commentaires</span>
+                <span>{post.view_count} Vues</span>
             </div>
 
             {/* Barre d'actions */}

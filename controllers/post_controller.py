@@ -34,6 +34,7 @@ class IntranetPostController(http.Controller):
                 ],
                 'like_count': len(post.like_ids),
                 'comment_count': len(post.comment_ids),
+                'view_count': post.view_count,
             })
         return Response(
             json.dumps({'status': 'success', 'data': result}, default=str),
@@ -162,3 +163,45 @@ class IntranetPostController(http.Controller):
             ),
             headers=CORS_HEADERS,
         )
+
+    @http.route('/api/intranet/posts/<int:post_id>/views', auth='user', type='http', methods=['POST'], csrf=False)
+    @handle_api_errors
+    def add_view(self, post_id, **kw):
+        post = request.env['intranet.post'].sudo().browse(post_id)
+        if not post.exists():
+            return Response(json.dumps({'status': 'error', 'message': 'Post not found'}), status=404, headers=CORS_HEADERS)
+
+        post.write({'viewer_ids': [(4, request.env.user.id)]})
+        return Response(
+            json.dumps({'status': 'success', 'data': {'view_count': post.view_count}}, default=str),
+            headers=CORS_HEADERS,
+        )
+
+    @http.route('/admin/posts', auth='user', type='http', methods=['GET'], csrf=False)
+    def admin_posts_page(self, **kw):
+        if not request.env.user.has_group('gestion_patrimoine.group_patrimoine_admin'):
+            return Response('Unauthorized', status=403, headers={'Content-Type': 'text/plain'})
+
+        posts = request.env['intranet.post'].sudo().search([], order='create_date desc')
+        rows = []
+        for p in posts:
+            view_url = f"/web#id={p.id}&model=intranet.post&view_type=form"
+            delete_url = f"/admin/posts/{p.id}/delete"
+            row = f"<tr><td>{p.name}</td><td>{p.user_id.name}</td><td>{p.view_count}</td><td><a href='{view_url}'>Voir</a> | <a href='{delete_url}'>Supprimer</a></td></tr>"
+            rows.append(row)
+        html = (
+            "<html><body><h1>Liste des publications</h1><table border='1'>"
+            "<tr><th>Titre</th><th>Auteur</th><th>Vues</th><th>Action</th></tr>"
+            + "".join(rows)
+            + "</table></body></html>"
+        )
+        return Response(html, headers={'Content-Type': 'text/html'})
+
+    @http.route('/admin/posts/<int:post_id>/delete', auth='user', type='http', methods=['GET'], csrf=False)
+    def admin_post_delete(self, post_id, **kw):
+        if not request.env.user.has_group('gestion_patrimoine.group_patrimoine_admin'):
+            return Response('Unauthorized', status=403, headers={'Content-Type': 'text/plain'})
+        post = request.env['intranet.post'].sudo().browse(post_id)
+        if post.exists():
+            post.unlink()
+        return request.redirect('/admin/posts')

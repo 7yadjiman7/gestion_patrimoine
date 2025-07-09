@@ -14,6 +14,9 @@ const createPost = (formData) =>
 const likePost = id =>
   api.post(`/api/intranet/posts/${id}/likes`).then(res => res.data)
 
+const viewPost = id =>
+  api.post(`/api/intranet/posts/${id}/views`).then(res => res.data)
+
 const addComment = (id, content) =>
   api
     .post(`/api/intranet/posts/${id}/comments`, { content })
@@ -23,5 +26,6 @@ export default {
   fetchPosts,
   createPost,
   likePost,
-  addComment
+  addComment,
+  viewPost
 }

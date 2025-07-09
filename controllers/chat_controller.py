@@ -19,10 +19,14 @@ class ChatController(http.Controller):
         result = []
         for conv in conversations:
             last_message = conv.message_ids[-1] if conv.message_ids else False
+            other_partners = conv.participant_ids.filtered(
+                lambda u: u.id != user.id
+            )
+            conv_name = conv.name or ", ".join(other_partners.mapped("name"))
             result.append(
                 {
                     "id": conv.id,
-                    "name": conv.name or ", ".join(conv.participant_ids.mapped("name")),
+                    "name": conv_name,
                     "last_message": (
                         last_message.body if last_message else "Aucun message"
                     ),
@@ -139,9 +143,11 @@ class ChatController(http.Controller):
                 .create({"participant_ids": [(6, 0, list(set(participant_ids)))]})
             )
 
+        other_partners = conv.participant_ids.filtered(lambda u: u.id != user.id)
+        conv_name = conv.name or ", ".join(other_partners.mapped("name"))
         result = {
             "id": conv.id,
-            "name": conv.name or ", ".join(conv.participant_ids.mapped("name")),
+            "name": conv_name,
             "last_message": False,
             "last_date": False,
         }

@@ -226,7 +226,10 @@ class PostControllerTest(unittest.TestCase):
 
         res = self.controller.get_comments(5)
 
-        comment_model.search.assert_called_with([('post_id', '=', post.id)], order='create_date asc')
+        comment_model.search.assert_called_with([
+            ('post_id', '=', post.id),
+            ('parent_id', '=', False)
+        ], order='create_date asc')
         self.assertIn('application/json', res.headers.get('Content-Type'))
 
     @patch('controllers.post_controller.request')

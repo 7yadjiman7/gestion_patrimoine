@@ -4,6 +4,11 @@ import { useNavigate } from "react-router-dom"
 
 const API_PREFIX = "/web"
 
+// Nom de la base de données Odoo pour l'authentification. Peut être défini via
+// la variable d'environnement VITE_ODOO_DB; "odoo17_2" est utilisé par défaut
+// si elle est absente.
+const ODOO_DB = import.meta.env.VITE_ODOO_DB || "odoo17_2"
+
 // On ajoute les champs optionnels pour le département à l'interface User
 export interface User {
     id: number
@@ -54,7 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     params: {
                         login: email,
                         password: password,
-                        db: "odoo17_2",
+                        db: ODOO_DB,
                     },
                 },
                 {

@@ -1,5 +1,10 @@
 import { useState, useEffect } from 'react';
 
+// Nom de la base de données Odoo. Peut être configuré via la variable
+// d'environnement VITE_ODOO_DB. Si elle n'est pas définie, on utilise
+// "odoo17_2" par défaut pour conserver un comportement compatible.
+const ODOO_DB = import.meta.env.VITE_ODOO_DB || 'odoo17_2';
+
 
 // Interface pour la réponse de notre nouvelle route /api/users/me
 interface UserInfoResponse {
@@ -52,7 +57,7 @@ export const login = async (
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         jsonrpc: '2.0',
-        params: { db: 'odoo17_2', login: email, password: password },
+        params: { db: ODOO_DB, login: email, password: password },
       }),
       credentials: 'include',
     });

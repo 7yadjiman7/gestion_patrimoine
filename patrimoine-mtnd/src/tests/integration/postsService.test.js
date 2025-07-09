@@ -29,7 +29,11 @@ describe('postsService', () => {
 
     const post = await postsService.createPost(fd)
 
-    expect(api.post).toHaveBeenCalledWith('/api/intranet/posts', fd)
+    expect(api.post).toHaveBeenCalledWith(
+      '/api/intranet/posts',
+      fd,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    )
     expect(post).toEqual({ status: 'success', data: { id: 2 } })
   })
 
@@ -49,5 +53,4 @@ describe('postsService', () => {
     const res = await postsService.viewPost(7)
 
     expect(api.post).toHaveBeenCalledWith('/api/intranet/posts/7/views')
-    expect(res).toEqual({ status: 'success', data: { view_count: 4 } })
-  })})
+    expect(res).toEqual({ status: 'success', data: { view_count: 4 } })  })})

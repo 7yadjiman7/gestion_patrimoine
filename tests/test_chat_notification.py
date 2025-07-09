@@ -67,6 +67,8 @@ class ChatMessageNotificationTest(unittest.TestCase):
         with patch('models.chat.models.Model.create', return_value=[fake_record]):
             chat.ChatMessage.create(fake_self, [{'conversation_id': 1, 'body': 'hi'}])
         fake_bus.sendmany.assert_called_once()
+        args, _ = fake_bus.sendmany.call_args
+        self.assertEqual(args[0][0][1]['type'], 'chat_message')
 
 if __name__ == '__main__':
     unittest.main()

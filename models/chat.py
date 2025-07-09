@@ -41,6 +41,7 @@ class ChatMessage(models.Model):
         for message in messages:
             participants = message.conversation_id.participant_ids
             payload = {
+                'type': 'chat_message',
                 'id': message.id,
                 'author_name': message.sender_id.name,
                 'content': message.body,

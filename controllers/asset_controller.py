@@ -359,10 +359,9 @@ class PatrimoineAssetController(http.Controller):
                     # Vous pourriez valider les types ici si nécessaire
                     custom_values_data[field_id] = value
 
-            # Stocker les valeurs personnalisées sous forme de JSON stringifié dans custom_values
-            # Assurez-vous que patrimoine.asset a bien un champ fields.Serialized ou Text pour custom_values
+            # Stocker directement les valeurs personnalisées dans le champ JSON
             if custom_values_data:
-                new_item.write({"custom_values": json.dumps(custom_values_data)})
+                new_item.write({"custom_values": custom_values_data})
 
             # 5. Gérer les détails spécifiques (informatique, véhicule, mobilier)
             # Puisque patrimoine.asset a maintenant subcategory_id,
@@ -493,9 +492,7 @@ class PatrimoineAssetController(http.Controller):
                             asset.employee_id.name if asset.employee_id else None
                         ),
                         "details": details,
-                        "customValues": (
-                            json.loads(asset.custom_values) if asset.custom_values else {}
-                        ),
+                        "customValues": asset.custom_values or {},
                     }
                 )
             return Response(
@@ -601,9 +598,7 @@ class PatrimoineAssetController(http.Controller):
                             asset.employee_id.name if asset.employee_id else None
                         ),
                         "details": details,
-                        "customValues": (
-                            json.loads(asset.custom_values) if asset.custom_values else {}
-                        ),
+                        "customValues": asset.custom_values or {},
                     }
                 )
             return Response(
@@ -678,11 +673,7 @@ class PatrimoineAssetController(http.Controller):
                             asset.employee_id.id if asset.employee_id else None
                         ),
                         "details": details,
-                        "customValues": (
-                            json.loads(asset.custom_values)
-                            if asset.custom_values
-                            else {}
-                        ),
+                        "customValues": asset.custom_values or {},
                     }
                 )
 
@@ -722,7 +713,7 @@ class PatrimoineAssetController(http.Controller):
                     "department": (asset.department_id.name if asset.department_id else None), 
                     "department_id": (asset.department_id.id if asset.department_id else None), # Inclure l'ID du département
                     "details": details, 
-                    "customValues": json.loads(asset.custom_values) if asset.custom_values else {}
+                    "customValues": asset.custom_values or {}
                 })
             return Response(json.dumps(asset_data), headers={"Content-Type": "application/json"})
         except Exception as e:
@@ -949,7 +940,7 @@ class PatrimoineAssetController(http.Controller):
             "assigned_to_id": asset.employee_id.id if asset.employee_id else None,
             "fournisseur_id": asset.fournisseur.id if asset.fournisseur else None,
             "details": details,
-            "customValues": json.loads(asset.custom_values) if asset.custom_values else {}
+            "customValues": asset.custom_values or {}
         }
 
         return Response(
@@ -1433,9 +1424,7 @@ class PatrimoineAssetController(http.Controller):
             "value": item.valeur_acquisition,
             "status": item.etat,
             "details": details,
-            "customValues": (
-                json.loads(item.custom_values) if item.custom_values else {}
-            ),
+            "customValues": item.custom_values or {},
         }
 
         return Response(
@@ -1487,9 +1476,7 @@ class PatrimoineAssetController(http.Controller):
             "serial_number": item.numero_serie,
             "model": item.modele,
             "manufacturer": item.marque,
-            "custom_fields": (
-                json.loads(item.custom_values) if item.custom_values else {}
-            )
+            "custom_fields": item.custom_values or {}
         }
 
         return Response(
@@ -1525,11 +1512,9 @@ class PatrimoineAssetController(http.Controller):
                     "location_id", item.location_id.id if item.location_id else False
                 ),
                 "etat": post.get("status", item.etat),
-                "custom_values": json.dumps(
-                    post.get(
-                        "custom_values",
-                        json.loads(item.custom_values) if item.custom_values else {},
-                    )
+                "custom_values": post.get(
+                    "custom_values",
+                    item.custom_values or {},
                 ),
             }
 
@@ -1645,9 +1630,7 @@ class PatrimoineAssetController(http.Controller):
                 "value": item.valeur_acquisition,
                 "status": item.etat,
                 "details": details,
-                "customValues": (
-                    json.loads(item.custom_values) if item.custom_values else {}
-                ),
+                "customValues": item.custom_values or {},
             }
             return Response(
                 json.dumps(item_data), headers={"Content-Type": "application/json"}
@@ -1739,7 +1722,7 @@ class PatrimoineAssetController(http.Controller):
             if not item.exists():
                 return Response(status=404)
 
-            values = json.loads(item.custom_values) if item.custom_values else {}
+            values = item.custom_values or {}
             return Response(
                 json.dumps(values), headers={"Content-Type": "application/json"}
             )
@@ -1761,7 +1744,7 @@ class PatrimoineAssetController(http.Controller):
                 return {"status": "error", "message": "Item not found"}
 
             values = post.get("values", {})
-            item.write({"custom_values": json.dumps(values)})
+            item.write({"custom_values": values})
             return {"status": "success"}
         except Exception as e:
             _logger.error("Error saving field values: %s", str(e))
@@ -1859,11 +1842,11 @@ class PatrimoineAssetController(http.Controller):
                 if not item.exists():
                     return {"status": "error", "message": "Item not found"}
 
-                item.write({"custom_values": json.dumps(values)})
+                item.write({"custom_values": values})
                 return {"status": "success"}
             else:
                 # Sauvegarde des valeurs par défaut pour la sous-catégorie
-                subcategory.write({"default_values": json.dumps(values)})
+                subcategory.write({"default_values": values})
                 return {"status": "success"}
 
         except Exception as e:

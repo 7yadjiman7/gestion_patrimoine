@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 import os
 import sys
+import json
 
 import types
 
@@ -121,8 +122,11 @@ class PostControllerTest(unittest.TestCase):
     def test_toggle_like_create(self, mock_request):
         env = MagicMock()
         post = MagicMock()
+        post.id = 42
         post.exists.return_value = True
-        env['intranet.post'].sudo().browse.return_value = post
+        post_model = MagicMock()
+        post_model.browse = MagicMock(return_value=post)
+        env['intranet.post'].sudo.return_value = post_model
         like_model = MagicMock()
         env['intranet.post.like'].sudo.return_value = like_model
         like_model.search.return_value = []
@@ -171,8 +175,11 @@ class PostControllerTest(unittest.TestCase):
     def test_add_comment_without_content_returns_400(self, mock_request):
         env = MagicMock()
         post = MagicMock()
+        post.id = 42
         post.exists.return_value = True
-        env['intranet.post'].sudo().browse.return_value = post
+        post_model = MagicMock()
+        post_model.browse = MagicMock(return_value=post)
+        env['intranet.post'].sudo.return_value = post_model
         env['intranet.post.comment'].sudo.return_value = MagicMock()
         mock_request.env = env
 
@@ -185,6 +192,7 @@ class PostControllerTest(unittest.TestCase):
     def test_add_view_adds_user(self, mock_request):
         env = MagicMock()
         post = MagicMock()
+        post.id = 42
         post.exists.return_value = True
         env['intranet.post'].sudo().browse.return_value = post
         mock_request.env = env
@@ -194,6 +202,47 @@ class PostControllerTest(unittest.TestCase):
 
         post.write.assert_called_with({'viewer_ids': [(4, 8)]})
         self.assertIn('application/json', res.headers.get('Content-Type'))
+
+    @patch('controllers.post_controller.request')
+    def test_add_comment_with_parent(self, mock_request):
+        env = MagicMock()
+        post = MagicMock()
+        post.id = 42
+        post.exists.return_value = True
+        post_model = MagicMock()
+        post_model.browse = MagicMock(return_value=post)
+        env['intranet.post'].sudo.return_value = post_model
+        comment_model = MagicMock()
+        env['intranet.post.comment'].sudo.return_value = comment_model
+        mock_request.env = env
+        mock_request.env.user.id = 9
+
+        self.controller.add_comment(1, content='child', parent_id=5)
+
+        comment_model.create.assert_called_once()
+        args = comment_model.create.call_args[0][0]
+        self.assertEqual(args.get('parent_id'), 5)
+
+    @patch('controllers.post_controller.Response')
+    @patch('controllers.post_controller.request')
+    def test_get_comments_with_children(self, mock_request, mock_response):
+        env = MagicMock()
+        post = MagicMock()
+        post.exists.return_value = True
+        env['intranet.post'].sudo().browse.return_value = post
+        comment_model = MagicMock()
+        env['intranet.post.comment'].sudo.return_value = comment_model
+
+        child = MagicMock(id=2, user_id=MagicMock(id=4, name='U2'), content='c2', create_date='d2', child_ids=[])
+        parent = MagicMock(id=1, user_id=MagicMock(id=3, name='U1'), content='c1', create_date='d1', child_ids=[child])
+        comment_model.search.return_value = [parent]
+        mock_request.env = env
+
+        self.controller.get_comments(1)
+
+        args, kwargs = mock_response.call_args
+        payload = json.loads(args[0])
+        self.assertEqual(len(payload['data'][0]['children']), 1)
 
 
 if __name__ == '__main__':

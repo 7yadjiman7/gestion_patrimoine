@@ -1,4 +1,4 @@
-from odoo import models, fields
+from odoo import models, fields, api
 
 class ChatConversation(models.Model):
     _name = "chat.conversation"
@@ -30,6 +30,7 @@ class ChatMessage(models.Model):
     body = fields.Text(string="Contenu", required=True)
     date = fields.Datetime(string="Date", default=fields.Datetime.now)
 
+    @api.model_create_multi
     def create(self, vals_list):
         """Create messages and notify participants on the bus."""
         messages = super().create(vals_list)

@@ -56,7 +56,8 @@ export default function ChatPage() {
         loadConversations()
     }
 
-    useOdooBus("chat_channel", handleNewMessage)
+    // Listen for new chat messages in real time
+    useOdooBus(handleNewMessage)
 
     const startConversation = async emp => {
         if (!emp.user_id) {

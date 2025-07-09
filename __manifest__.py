@@ -31,7 +31,12 @@
         "reports/report_patrimoine_templates.xml",
         "reports/report_patrimoine.xml",
     ],
-    'assets': {},
+    'assets': {
+        'web.assets_frontend': [
+            'gestion_patrimoine/patrimoine-mtnd/dist/assets/*.js',
+            'gestion_patrimoine/patrimoine-mtnd/dist/assets/*.css',
+        ],
+    },
     'installable': True,
     'application': True,
     'license': 'LGPL-3',

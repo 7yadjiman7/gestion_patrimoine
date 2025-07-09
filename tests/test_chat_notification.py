@@ -27,10 +27,12 @@ odoo.fields = types.SimpleNamespace(
     Binary=MagicMock(),
     Json=MagicMock(),
 )
+odoo.api = types.SimpleNamespace(model_create_multi=lambda f: f)
 odoo._ = lambda x: x
 sys.modules['odoo'] = odoo
 sys.modules['odoo.models'] = odoo.models
 sys.modules['odoo.fields'] = odoo.fields
+sys.modules['odoo.api'] = odoo.api
 
 import importlib.util
 

@@ -43,7 +43,6 @@ describe('postsService', () => {
     const res = await postsService.likePost(3)
 
     expect(api.post).toHaveBeenCalledWith('/api/intranet/posts/3/likes')
-    // On garde la version la plus complète et robuste du test
     expect(res).toEqual({ status: 'success', data: { liked: true, like_count: 5 } })
   })
 
@@ -52,5 +51,24 @@ describe('postsService', () => {
 
     const res = await postsService.viewPost(7)
 
-    expect(api.post).toHaveBeenCalledWith('/api/intranet/posts/7/views')
-    expect(res).toEqual({ status: 'success', data: { view_count: 4 } })  })})
+    expect(api.post).toHaveBeenCalledWith('/api/intranet/posts/7/views')    expect(res).toEqual({ status: 'success', data: { view_count: 4 } })
+  })
+
+  test('addComment posts data with parent id', async () => {
+    api.post.mockResolvedValue({ data: { status: 'success', data: { id: 10 } } })
+
+    const res = await postsService.addComment(5, 'hi', 1)
+
+    expect(api.post).toHaveBeenCalledWith('/api/intranet/posts/5/comments', { content: 'hi', parent_id: 1 })
+    expect(res).toEqual({ status: 'success', data: { id: 10 } })
+  })
+
+  test('fetchComments retrieves list', async () => {
+    api.get.mockResolvedValue({ data: { status: 'success', data: [{ id: 3 }] } })
+
+    const res = await postsService.fetchComments(9)
+
+    expect(api.get).toHaveBeenCalledWith('/api/intranet/posts/9/comments')
+    expect(res).toEqual([{ id: 3 }])
+  })
+})

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react"
 import postsService from "../../services/postsService"
-import chatService from "../../services/chatService"
 import { ThumbsUp, MessageCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -22,11 +21,18 @@ export default function Post({ post }) {
     // On suppose que ces données viennent de l'API
     const [likes, setLikes] = useState(post.like_count || 0)
     const [hasLiked, setHasLiked] = useState(false) // Idéalement, l'API devrait nous dire si l'utilisateur actuel a déjà liké
-    const [comments, setComments] = useState(post.comments || [])
+    const [comments, setComments] = useState([])
+    const [replyTo, setReplyTo] = useState(null)
     useEffect(() => {
         postsService.viewPost(post.id).catch(() => {})
     }, [post.id])
     const [showComment, setShowComment] = useState(false)
+
+    useEffect(() => {
+        if (showComment) {
+            postsService.fetchComments(post.id).then(setComments).catch(() => {})
+        }
+    }, [showComment, post.id])
     const [newComment, setNewComment] = useState("")
 
     const handleLike = async () => {
@@ -42,13 +48,16 @@ export default function Post({ post }) {
     const handleSendComment = async () => {
         if (!newComment.trim()) return
         try {
-            await postsService.addComment(post.id, newComment)
-            // Create or get conversation with the author
-            const conv = await chatService.createConversation([post.author_id])
-            await chatService.sendMessage(conv.id, newComment)
-            setComments(prev => [...prev, { content: newComment }])
+            await postsService.addComment(post.id, newComment, replyTo)
+            setComments(prev => [...prev, {
+                content: newComment,
+                author: 'Vous',
+                create_date: new Date().toISOString(),
+                id: Date.now(),
+                parent_id: replyTo,
+            }])
             setNewComment("")
-            setShowComment(false)
+            setReplyTo(null)
         } catch (e) {
             console.error(e)
         }
@@ -117,22 +126,47 @@ export default function Post({ post }) {
             </div>
 
             {showComment && (
-                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" onClick={() => setShowComment(false)}>
-                    <div className="bg-white dark:bg-slate-800 p-4 rounded-lg w-full max-w-md" onClick={e => e.stopPropagation()}>
+                <div
+                    className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"
+                    onClick={() => setShowComment(false)}
+                >
+                    <div
+                        className="bg-white dark:bg-slate-800 p-4 rounded-lg w-full max-w-md"
+                        onClick={e => e.stopPropagation()}
+                    >
                         <Textarea
-                            className="w-full mb-4 text-base border rounded-md bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 focus-visible:ring-blue-500"
+                            className="w-full mb-2 text-base border rounded-md bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 focus-visible:ring-blue-500"
                             value={newComment}
                             onChange={e => setNewComment(e.target.value)}
-                            placeholder="Votre commentaire..."
+                            placeholder={replyTo ? 'Votre réponse...' : 'Votre commentaire...'}
                             rows="3"
                         />
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-2 mb-4">
                             <Button variant="outline" onClick={() => setShowComment(false)}>
                                 Annuler
                             </Button>
                             <Button onClick={handleSendComment} className="bg-blue-600 hover:bg-blue-700">
                                 Envoyer
                             </Button>
+                        </div>
+                        <div className="space-y-4 max-h-60 overflow-y-auto">
+                            {comments.map(c => (
+                                <div key={c.id} className="border-t pt-2 text-sm">
+                                    <div className="flex justify-between">
+                                        <span className="font-semibold">{c.author}</span>
+                                        <span className="text-xs text-slate-500">{formatDate(c.create_date)}</span>
+                                    </div>
+                                    <p className="mt-1 mb-1">{c.content}</p>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setReplyTo(c.id)}
+                                        className="text-xs"
+                                    >
+                                        Répondre
+                                    </Button>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>

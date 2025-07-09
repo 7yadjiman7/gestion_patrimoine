@@ -17,15 +17,19 @@ const likePost = id =>
 const viewPost = id =>
   api.post(`/api/intranet/posts/${id}/views`).then(res => res.data)
 
-const addComment = (id, content) =>
+const addComment = (id, content, parentId = null) =>
   api
-    .post(`/api/intranet/posts/${id}/comments`, { content })
+    .post(`/api/intranet/posts/${id}/comments`, { content, parent_id: parentId })
     .then(res => res.data)
+
+const fetchComments = id =>
+  api.get(`/api/intranet/posts/${id}/comments`).then(res => res.data.data)
 
 export default {
   fetchPosts,
   createPost,
   likePost,
   addComment,
-  viewPost
+  viewPost,
+  fetchComments
 }

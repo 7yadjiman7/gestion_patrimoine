@@ -99,6 +99,7 @@ class ChatController(http.Controller):
 
         channel = f"chat_channel_{conv_id}"
         message_data = {
+            "type": "chat_message",
             "id": msg.id,
             "sender_id": msg.sender_id.id,
             "sender_name": msg.sender_id.name,
@@ -106,7 +107,7 @@ class ChatController(http.Controller):
             "date": msg.create_date,
             "conversation_id": conv.id,
         }
-        request.env["bus.bus"]._sendone(channel, "new_message", message_data)
+        request.env["bus.bus"]._sendone(channel, message_data)
 
         return {"status": "success", "message_id": msg.id}
 

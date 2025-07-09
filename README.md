@@ -120,3 +120,9 @@ curl -X POST -H "Cookie: session_id=<SESSION>" \
   http://localhost:8069/api/intranet/posts?db=<DB>
 ```
 
+
+## Troubleshooting
+
+### Couldn't bind the websocket
+If you see the error "Couldn't bind the websocket," make sure the Odoo server is started with longpolling enabled. Run it with `--longpolling-port=8072` or via the `gevent` service so the chat features work properly.
+

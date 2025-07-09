@@ -118,19 +118,24 @@ class IntranetPostController(http.Controller):
     # Garde la version de 'main' pour ajouter des commentaires
     @http.route('/api/intranet/posts/<int:post_id>/comments', auth='user', type='json', methods=['POST'], csrf=False)
     @handle_api_errors
-    def add_comment(self, post_id, content=None, **kw):
+    def add_comment(self, post_id, content=None, parent_id=None, **kw):
         content = content or kw.get('content')
+        parent_id = parent_id or kw.get('parent_id')
         if not content:
             raise ValidationError('Comment content is required')
         post = request.env['intranet.post'].sudo().browse(post_id)
         if not post.exists():
             return Response(json.dumps({'status': 'error', 'message': 'Post not found'}), status=404, headers=CORS_HEADERS)
 
-        comment = request.env['intranet.post.comment'].sudo().create({
+        vals = {
             'post_id': post.id,
             'user_id': request.env.user.id,
             'content': content,
-        })
+        }
+        if parent_id:
+            vals['parent_id'] = parent_id
+
+        comment = request.env['intranet.post.comment'].sudo().create(vals)
 
         return Response(json.dumps({'status': 'success', 'data': {'id': comment.id}}, default=str), headers=CORS_HEADERS)
 
@@ -142,23 +147,20 @@ class IntranetPostController(http.Controller):
             return Response(json.dumps({'status': 'error', 'message': 'Post not found'}), status=404, headers=CORS_HEADERS)
 
         comment_model = request.env['intranet.post.comment'].sudo()
-        comments = comment_model.search([('post_id', '=', post.id)], order='create_date asc')
+        comments = comment_model.search([('post_id', '=', post.id), ('parent_id', '=', False)], order='create_date asc')
 
-        result = [
-            {
-                'id': c.id,
-                'content': c.content,
-                'author': c.user_id.name,
-                'author_id': c.user_id.id,
-                'create_date': c.create_date,
+        def serialize(comment):
+            return {
+                'id': comment.id,
+                'user_id': comment.user_id.id,
+                'user_name': comment.user_id.name,
+                'content': comment.content,
+                'create_date': comment.create_date,
+                'children': [serialize(c) for c in comment.child_ids],
             }
-            for c in comments
-        ]
 
-        return Response(
-            json.dumps({'status': 'success', 'data': result}, default=str),
-            headers=CORS_HEADERS,
-        )
+        data = [serialize(c) for c in comments]
+        return Response(json.dumps({'status': 'success', 'data': data}, default=str), headers=CORS_HEADERS)
 
     @http.route('/api/intranet/posts/<int:post_id>/likes', auth='user', type='http', methods=['POST'], csrf=False)
     @handle_api_errors

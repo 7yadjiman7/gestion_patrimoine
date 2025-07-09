@@ -79,6 +79,16 @@ class IntranetPostComment(models.Model):
         "res.users", string="Auteur", required=True, default=lambda self: self.env.user
     )
     content = fields.Text(string="Commentaire", required=True)
+    parent_id = fields.Many2one(
+        'intranet.post.comment',
+        string='Commentaire parent',
+        ondelete='cascade'
+    )
+    child_ids = fields.One2many(
+        'intranet.post.comment',
+        'parent_id',
+        string='Réponses'
+    )
 
 
 class IntranetPostLike(models.Model):

@@ -7,8 +7,14 @@ import types
 
 # Create a minimal stub for the `odoo` package used by controllers
 odoo = types.ModuleType("odoo")
+
 def _response_side_effect(*args, **kwargs):
-    return MagicMock(headers={'Content-Type': 'application/json'}, status_code=kwargs.get('status'))
+    resp = MagicMock()
+    headers = {"Content-Type": "application/json"}
+    headers.update(kwargs.get("headers", {}))
+    resp.headers = headers
+    resp.status_code = kwargs.get("status")
+    return resp
 
 odoo.http = types.SimpleNamespace(
     Controller=object,
@@ -16,15 +22,7 @@ odoo.http = types.SimpleNamespace(
     request=MagicMock(),
     Response=MagicMock(side_effect=_response_side_effect),
 )
-odoo.http.Response.return_value.headers = {'Content-Type': 'application/json'}
-def _response_side_effect(*args, **kwargs):
-    resp = MagicMock()
-    headers = {'Content-Type': 'application/json'}
-    headers.update(kwargs.get('headers', {}))
-    resp.headers = headers
-    resp.status_code = kwargs.get('status')
-    return resp
-odoo.http.Response.side_effect = _response_side_effect
+odoo.http.Response.return_value.headers = {"Content-Type": "application/json"}
 odoo.exceptions = types.SimpleNamespace(AccessError=Exception, ValidationError=Exception)
 odoo.fields = types.SimpleNamespace(
     Date=MagicMock(),

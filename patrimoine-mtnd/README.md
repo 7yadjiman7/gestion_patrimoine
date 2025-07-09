@@ -24,6 +24,20 @@ npm run build
 
 Assurez-vous qu'un serveur Odoo configuré avec le module **gestion_patrimoine** tourne sur le même hôte afin que les requêtes API soient résolues correctement.
 
+## Intégration avec Odoo
+
+Avant d'installer le module Odoo, compilez l'application front‑end afin de
+générer les fichiers JavaScript et CSS référencés dans `__manifest__.py`.
+
+```bash
+npm install
+npm run build
+```
+
+Les ressources produites se trouvent dans le dossier `dist/` et seront servies
+par Odoo via les bundles d'actifs. Exécutez de nouveau cette commande après toute
+mise à jour du code React.
+
 
 ## Exécution des tests
 

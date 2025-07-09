@@ -181,6 +181,20 @@ class PostControllerTest(unittest.TestCase):
         self.assertEqual(res.status_code, 400)
         env['intranet.post.comment'].sudo().create.assert_not_called()
 
+    @patch('controllers.post_controller.request')
+    def test_add_view_adds_user(self, mock_request):
+        env = MagicMock()
+        post = MagicMock()
+        post.exists.return_value = True
+        env['intranet.post'].sudo().browse.return_value = post
+        mock_request.env = env
+        mock_request.env.user.id = 8
+
+        res = self.controller.add_view(2)
+
+        post.write.assert_called_with({'viewer_ids': [(4, 8)]})
+        self.assertIn('application/json', res.headers.get('Content-Type'))
+
 
 if __name__ == '__main__':
     unittest.main()

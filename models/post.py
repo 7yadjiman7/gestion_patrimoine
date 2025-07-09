@@ -47,10 +47,25 @@ class IntranetPost(models.Model):
     like_ids = fields.One2many(
         "intranet.post.like", "post_id", string="Mentions j'aime"
     )
+    viewer_ids = fields.Many2many(
+        "res.users",
+        "intranet_post_view_rel",
+        "post_id",
+        "user_id",
+        string="Vues",
+    )
+    view_count = fields.Integer(
+        string="Nombre de vues", compute="_compute_view_count", store=True
+    )
     share_ids = fields.One2many(
         "intranet.post.share", "post_id", string="Partages"
     )
     active = fields.Boolean(string="Actif", default=True)
+
+    @api.depends("viewer_ids")
+    def _compute_view_count(self):
+        for post in self:
+            post.view_count = len(post.viewer_ids)
 
 
 class IntranetPostComment(models.Model):

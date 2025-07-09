@@ -42,4 +42,12 @@ describe('postsService', () => {
     // On garde la version la plus complète et robuste du test
     expect(res).toEqual({ status: 'success', data: { liked: true, like_count: 5 } })
   })
-})
+
+  test('viewPost calls view endpoint', async () => {
+    api.post.mockResolvedValue({ data: { status: 'success', data: { view_count: 4 } } })
+
+    const res = await postsService.viewPost(7)
+
+    expect(api.post).toHaveBeenCalledWith('/api/intranet/posts/7/views')
+    expect(res).toEqual({ status: 'success', data: { view_count: 4 } })
+  })})

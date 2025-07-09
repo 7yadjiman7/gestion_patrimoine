@@ -110,15 +110,17 @@ export default function AdminStatsPage() {
 
     return (
         <div className="container mx-auto p-4 sm:p-6 lg:p-8">
-            <h1 className="text-3xl font-bold text-gray-800 mb-8">
-                Statistiques du Parc Matériel
-            </h1>
+            <div className="text-center mb-12 mt-10">
+                <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
+                    Statistiques du Parc Matériel
+                </h1>
+            </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <Card>
                     <CardHeader>
                         <CardTitle>Répartition par Statut Global</CardTitle>
                     </CardHeader>
-                    <CardContent style={{ height: "300px" }}>
+                    <CardContent className="bg-white" style={{ height: "300px" }}>
                         <ResponsiveContainer>
                             <PieChart>
                                 <Pie
@@ -158,7 +160,7 @@ export default function AdminStatsPage() {
                     <CardHeader>
                         <CardTitle>Matériels par Département</CardTitle>
                     </CardHeader>
-                    <CardContent style={{ height: "300px" }}>
+                    <CardContent className="bg-white" style={{ height: "300px" }}>
                         <ResponsiveContainer>
                             <BarChart
                                 data={statsByDepartment}
@@ -184,7 +186,7 @@ export default function AdminStatsPage() {
                     <CardHeader>
                         <CardTitle>Matériels par Type Général</CardTitle>
                     </CardHeader>
-                    <CardContent style={{ height: "300px" }}>
+                    <CardContent className="bg-white" style={{ height: "300px" }}>
                         <ResponsiveContainer>
                             <BarChart
                                 data={statsByType}
@@ -210,7 +212,7 @@ export default function AdminStatsPage() {
                     <CardHeader>
                         <CardTitle>Âge du Parc Matériel</CardTitle>
                     </CardHeader>
-                    <CardContent style={{ height: "300px" }}>
+                    <CardContent className="bg-white" style={{ height: "300px" }}>
                         <ResponsiveContainer>
                             <BarChart data={statsByAge}>
                                 <XAxis
@@ -238,7 +240,7 @@ export default function AdminStatsPage() {
                     <CardHeader>
                         <CardTitle>Valeur du Parc par Département</CardTitle>
                     </CardHeader>
-                    <CardContent style={{ height: "300px" }}>
+                    <CardContent className="bg-white" style={{ height: "300px" }}>
                         <ResponsiveContainer>
                             <BarChart data={statsByDepartmentValue}>
                                 <XAxis dataKey="name" />

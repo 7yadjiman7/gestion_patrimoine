@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import postsService from "../../services/postsService"
 import chatService from "../../services/chatService"
-import { ThumbsUp, MessageCircle, Share2, MoreHorizontal } from "lucide-react"
+import { ThumbsUp, MessageCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 
@@ -70,9 +70,7 @@ export default function Post({ post }) {
                         </p>
                     </div>
                 </div>
-                <button className="text-slate-400 hover:text-slate-600 dark:hover:text-white">
-                    <MoreHorizontal size={20} />
-                </button>
+
             </div>
 
             {/* Contenu du post */}
@@ -111,12 +109,7 @@ export default function Post({ post }) {
                 >
                     <MessageCircle size={18} /> Commenter
                 </Button>
-                <Button
-                    variant="ghost"
-                    className="w-full gap-2 font-semibold text-slate-500 dark:text-slate-400"
-                >
-                    <Share2 size={18} /> Partager
-                </Button>
+
             </div>
 
             {showComment && (

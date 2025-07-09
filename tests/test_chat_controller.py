@@ -49,7 +49,10 @@ class ChatControllerTest(unittest.TestCase):
         env.__getitem__.return_value = conv_model
         conv_model.sudo.return_value = conv_model
         conv_record = MagicMock(id=5)
+        conv_record.participant_ids = MagicMock()
         conv_record.participant_ids.ids = [1, 2]
+        conv_record.participant_ids.filtered.return_value = conv_record.participant_ids
+        conv_record.participant_ids.mapped.return_value = ["u1", "u2"]
         conv_model.search.return_value = [conv_record]
         mock_request.env = env
         mock_request.env.user.id = 1
@@ -67,7 +70,10 @@ class ChatControllerTest(unittest.TestCase):
         env.__getitem__.return_value = conv_model
         conv_model.sudo.return_value = conv_model
         conv_model.search.return_value = []
-        new_conv = MagicMock(id=7, participant_ids=MagicMock(mapped=lambda x: ['u1','u2']))
+        new_conv_partners = MagicMock()
+        new_conv_partners.filtered.return_value = new_conv_partners
+        new_conv_partners.mapped.return_value = ["u1", "u2"]
+        new_conv = MagicMock(id=7, participant_ids=new_conv_partners)
         conv_model.create.return_value = new_conv
         mock_request.env = env
         mock_request.env.user.id = 1

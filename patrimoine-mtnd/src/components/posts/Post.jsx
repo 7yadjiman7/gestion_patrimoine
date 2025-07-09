@@ -22,6 +22,7 @@ export default function Post({ post }) {
     const [likes, setLikes] = useState(post.like_count || 0)
     const [hasLiked, setHasLiked] = useState(false) // Idéalement, l'API devrait nous dire si l'utilisateur actuel a déjà liké
     const [comments, setComments] = useState([])
+    const [commentCount, setCommentCount] = useState(post.comment_count || 0)
     const [replyTo, setReplyTo] = useState(null)
     useEffect(() => {
         postsService.viewPost(post.id).catch(() => {})
@@ -30,7 +31,13 @@ export default function Post({ post }) {
 
     useEffect(() => {
         if (showComment) {
-            postsService.fetchComments(post.id).then(setComments).catch(() => {})
+            postsService
+                .fetchComments(post.id)
+                .then(data => {
+                    setComments(data)
+                    setCommentCount(Array.isArray(data) ? data.length : 0)
+                })
+                .catch(() => {})
         }
     }, [showComment, post.id])
     const [newComment, setNewComment] = useState("")
@@ -56,6 +63,7 @@ export default function Post({ post }) {
                 id: Date.now(),
                 parent_id: replyTo,
             }])
+            setCommentCount(prev => prev + 1)
             setNewComment("")
             setReplyTo(null)
         } catch (e) {
@@ -102,7 +110,7 @@ export default function Post({ post }) {
             {/* Stats (Likes/Commentaires/Vues) */}
             <div className="px-4 py-2 flex justify-between items-center text-sm text-slate-500 dark:text-slate-400 border-t border-b border-slate-200 dark:border-slate-700">
                 <span>{likes} J'aime</span>
-                <span>{post.comment_count} Commentaires</span>
+                <span>{commentCount} Commentaires</span>
                 <span>{post.view_count} Vues</span>
             </div>
 
@@ -153,10 +161,10 @@ export default function Post({ post }) {
                             {comments.map(c => (
                                 <div key={c.id} className="border-t pt-2 text-sm">
                                     <div className="flex justify-between">
-                                        <span className="font-semibold">{c.author}</span>
+                                        <span className="font-semibold text-slate-800 dark:text-slate-300">{c.author || c.user_name}</span>
                                         <span className="text-xs text-slate-500">{formatDate(c.create_date)}</span>
                                     </div>
-                                    <p className="mt-1 mb-1">{c.content}</p>
+                                    <p className="mt-1 mb-1 text-slate-800 dark:text-slate-300">{c.content}</p>
                                     <Button
                                         variant="ghost"
                                         size="sm"

@@ -14,7 +14,18 @@ npm install
 npm run dev
 ```
 
+
 Le serveur de développement utilise un proxy afin de communiquer avec Odoo. Les routes `/api`, `/web`, `/websocket` ainsi que `/longpolling` sont redirigées vers les ports locaux d'Odoo. Pour `/longpolling`, la cible est `http://localhost:8072` et les options `changeOrigin` et `secure` correspondent aux autres règles.
+
+## Configuration de la base de données
+
+Par défaut, l'application se connecte à la base **odoo17_2**. Vous pouvez personnaliser ce nom en créant un fichier `.env` à la racine du projet et en définissant la variable `VITE_ODOO_DB` :
+
+```bash
+echo "VITE_ODOO_DB=ma_base_odoo" > .env
+```
+
+Si aucune valeur n'est spécifiée, la valeur `odoo17_2` sera utilisée automatiquement.
 
 ## Construction pour la production
 

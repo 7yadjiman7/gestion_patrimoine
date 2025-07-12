@@ -2147,10 +2147,23 @@ class PatrimoineAssetController(http.Controller):
 
     # --- API pour créer une demande (utilisée par le directeur) ---
     @http.route('/api/patrimoine/demandes', auth='user', type='json', methods=['POST'], csrf=False)
-    def create_demande(self, motif_demande, lignes, **kw):
+    def create_demande(self, motif_demande=None, lignes=None, **kw):
+        """Créer une demande de matériel avec plusieurs lignes.
+
+        Cette route est appelée en JSON depuis le frontend. Pour éviter les
+        erreurs de paramètres manquants quand l'appelant n'envoie pas les
+        champs attendus ou que le payload n'est pas correctement parsé, les
+        arguments sont optionnels et récupérés depuis ``kw`` si nécessaire.
+        """
         try:
             if not request.env.user.has_group("gestion_patrimoine.group_patrimoine_director"):
                 raise AccessError("Accès refusé.")
+
+            motif_demande = motif_demande or kw.get('motif_demande')
+            lignes = lignes or kw.get('lignes', [])
+
+            if not motif_demande or not lignes:
+                raise ValidationError("Motif et lignes de demande requis")
 
             # 1. Créer la demande "header" avec le motif
             demande_vals = {

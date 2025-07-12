@@ -2319,10 +2319,11 @@ class PatrimoineAssetController(http.Controller):
     # --- API pour créer une déclaration de perte (par Employé/Directeur) ---
 
     @http.route(
-        "/api/patrimoine/pertes", auth="user", type="json", methods=["POST"], csrf=False
+        "/api/patrimoine/pertes", auth="user", type="http", methods=["POST"], csrf=False
     )
-    def create_perte(self, asset_id, motif, **kw):  # Prend l'asset_id et le motif
+    def create_perte(self, **post):
         try:
+            post = request.httprequest.form.to_dict()
             current_user = request.env.user
             # L'utilisateur doit être un agent ou directeur (ou tout groupe autorisé à déclarer des pertes)
             # Cette permission est aussi gérée par ir.model.access.csv et record_rules.xml
@@ -2335,7 +2336,17 @@ class PatrimoineAssetController(http.Controller):
                     "Accès refusé. Seuls les agents et directeurs peuvent créer des déclarations de perte."
                 )
 
-            # Vérifier que l'asset existe
+            asset_id = post.get("asset_id")
+            motif = post.get("motif") or post.get("circonstances")
+            date_perte = post.get("date_perte")
+            lieu_perte = post.get("lieu_perte")
+            circonstances = post.get("circonstances")
+            actions_entreprises = post.get("actions_entreprises")
+            rapport_police = post.get("rapport_police") in ("1", "true", "True", "on")
+
+            if not asset_id or not motif:
+                raise ValidationError("Asset ou motif manquant.")
+
             asset = request.env["patrimoine.asset"].browse(int(asset_id))
             if not asset.exists():
                 raise ValidationError("Bien concerné non trouvé.")
@@ -2343,25 +2354,62 @@ class PatrimoineAssetController(http.Controller):
             perte_vals = {
                 "asset_id": int(asset_id),
                 "motif": motif,
-                "declarer_par_id": current_user.id,  # L'utilisateur courant est le déclarant
-                "date": fields.Datetime.now(),  # La date est par défaut dans le modèle
-                "state": "pending",  # Par défaut 'pending'
+                "date_perte": date_perte,
+                "lieu_perte": lieu_perte,
+                "circonstances": circonstances,
+                "actions_entreprises": actions_entreprises,
+                "rapport_police": rapport_police,
+                "declarer_par_id": current_user.id,
             }
+
             new_perte = request.env["patrimoine.perte"].create(perte_vals)
-            return {
-                "status": "success",
-                "perte_id": new_perte.id,
-                "perte_name": new_perte.name,
-            }
+
+            # Gestion du document joint (procès-verbal)
+            if "document" in request.httprequest.files:
+                document = request.httprequest.files["document"]
+                if document:
+                    request.env["ir.attachment"].create(
+                        {
+                            "name": document.filename,
+                            "datas": base64.b64encode(document.read()),
+                            "res_model": "patrimoine.perte",
+                            "res_id": new_perte.id,
+                            "mimetype": document.mimetype,
+                        }
+                    )
+
+            return Response(
+                json.dumps(
+                    {
+                        "status": "success",
+                        "perte_id": new_perte.id,
+                        "perte_name": new_perte.name,
+                    },
+                    default=str,
+                ),
+                headers=CORS_HEADERS,
+            )
         except AccessError as e:
             _logger.error("Access denied creating perte: %s", str(e))
-            return {"status": "error", "message": f"Accès refusé: {e.name}"}
+            return Response(
+                json.dumps({"status": "error", "message": str(e)}),
+                status=403,
+                headers=CORS_HEADERS,
+            )
         except ValidationError as e:
             _logger.error("Validation error creating perte: %s", str(e))
-            return {"status": "error", "message": f"Erreur de validation: {e.name}"}
+            return Response(
+                json.dumps({"status": "error", "message": str(e)}),
+                status=400,
+                headers=CORS_HEADERS,
+            )
         except Exception as e:
             _logger.error("Error creating perte: %s", str(e))
-            return {"status": "error", "message": str(e)}
+            return Response(
+                json.dumps({"status": "error", "message": str(e)}),
+                status=500,
+                headers=CORS_HEADERS,
+            )
 
     # --- API pour lister les déclarations de perte ---
     @http.route("/api/patrimoine/pertes", auth="user", type="http", methods=["GET"])

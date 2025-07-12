@@ -15,34 +15,28 @@ import {
     CheckCircle,
     Archive,
     AlertTriangle,
-    User,
-    MapPin,
-    Euro,
 } from "lucide-react"
 
-// Styles des cartes pour la cohérence visuelle
+// Styles des cartes (alignés sur CategoryItemsPage)
 const cardClasses = {
-    base: "relative group w-full h-96 rounded-2xl overflow-hidden shadow-lg cursor-pointer transform hover:-translate-y-2 transition-all duration-300 hover:shadow-indigo-100",
+    base: "relative group w-full h-96 rounded-2xl overflow-hidden shadow-2xl cursor-pointer transform hover:-translate-y-3 transition-all duration-500 hover:shadow-2xl hover:ring-2 hover:ring-indigo-500/50",
     imageContainer: "relative w-full h-full overflow-hidden",
-    image: "w-full h-full object-cover transition-transform duration-700 group-hover:scale-105",
+    image: "w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ease-in-out",
     imageOverlay:
-        "absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent",
+        "absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent transition-opacity duration-300 group-hover:opacity-90",
     content: "absolute bottom-0 left-0 right-0 p-6",
-    title: "font-bold text-lg text-white truncate",
-    code: "text-xs font-mono text-white opacity-80",
-    statusBar: "absolute top-4 right-4",
-    statusBadge:
-        "text-white text-xs font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm",
-    hoverDetails:
-        "absolute inset-0 bg-white bg-opacity-95 p-6 flex flex-col justify-center items-start gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300",
-    detailItem: "flex items-center gap-2 text-sm text-gray-700",
+    statusBar: "flex justify-between items-center gap-2",
+    typeBadge: "text-white text-sm font-medium bg-indigo-600/90 px-3 py-1 rounded-full backdrop-blur-sm",
+    statusBadge: "text-white text-sm font-medium px-3 py-1 rounded-full backdrop-blur-sm",
 }
 
 const getStatusColor = status => {
     switch (status?.toLowerCase()) {
         case "service":
+        case "en service":
             return "#16a34a" // vert
         case "stock":
+        case "en stock":
             return "#eab308" // jaune
         default:
             return "#dc2626" // rouge
@@ -96,15 +90,35 @@ export default function DirDashboardPage() {
     }, [directorDepartmentId])
 
     const filteredMaterials = Array.isArray(materials)
-        ? materials.filter(
-              material =>
-                  material.name
-                      .toLowerCase()
-                      .includes(searchQuery.toLowerCase()) ||
-                  material.code
-                      ?.toLowerCase()
-                      .includes(searchQuery.toLowerCase())
-          )
+        ? materials.filter(material => {
+              const query = searchQuery.toLowerCase()
+              return (
+                  (material.name &&
+                      material.name.toLowerCase().includes(query)) ||
+                  (material.code &&
+                      material.code.toLowerCase().includes(query)) ||
+                  (material.status &&
+                      material.status.toLowerCase().includes(query)) ||
+                  (material.type &&
+                      material.type.toLowerCase().includes(query)) ||
+                  (material.category_general_name &&
+                      material.category_general_name
+                          .toLowerCase()
+                          .includes(query)) ||
+                  (material.category_detailed_name &&
+                      material.category_detailed_name
+                          .toLowerCase()
+                          .includes(query)) ||
+                  (material.location &&
+                      material.location.toLowerCase().includes(query)) ||
+                  (material.assignedTo &&
+                      material.assignedTo.toLowerCase().includes(query)) ||
+                  (material.acquisitionDate &&
+                      material.acquisitionDate.toLowerCase().includes(query)) ||
+                  (material.value &&
+                      material.value.toString().toLowerCase().includes(query))
+              )
+          })
         : []
 
     const handleMaterialClick = materialId => {
@@ -121,7 +135,7 @@ export default function DirDashboardPage() {
     return (
         <div className="container mx-auto p-4 sm:p-6 lg:p-8">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-white">
+                <h1 className="text-3xl font-bold text-slate-100">
                     Matériels de la Direction - {user?.department_name || "N/A"}
                 </h1>
                 <p className="text-gray-400 mt-1">
@@ -159,11 +173,11 @@ export default function DirDashboardPage() {
             )}
 
             <div className="mb-8 w-full flex justify-between items-center">
-                <div className="relative flex-grow max-w-lg">
-                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
+                <div className="relative w-full max-w-lg">
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-orange-400" />
                     <Input
                         placeholder="Rechercher dans les matériels de la direction..."
-                        className="pl-12 w-full py-3 text-base bg-slate-800 border-slate-700 text-white rounded-lg"
+                        className="pl-12 w-full py-5 text-lg bg-slate-800 text-slate-100 border-slate-600 rounded-xl shadow-sm placeholder:text-slate-400"
                         value={searchQuery}
                         onChange={e => setSearchQuery(e.target.value)}
                     />
@@ -200,49 +214,38 @@ export default function DirDashboardPage() {
                                     }}
                                 />
                                 <div className={cardClasses.imageOverlay} />
-                                <div className={cardClasses.hoverDetails}>
-                                    <div className={cardClasses.detailItem}>
-                                        <User className="h-4 w-4 text-purple-500" />
-                                        <span>
-                                            {material.assignedTo ||
-                                                "Non affecté"}
-                                        </span>
-                                    </div>
-                                    <div className={cardClasses.detailItem}>
-                                        <Euro className="h-4 w-4 text-green-500" />
-                                        <span>
-                                            {material.value
-                                                ? `${material.value.toLocaleString("fr-FR")} €`
-                                                : "N/A"}
-                                        </span>
-                                    </div>
-                                    <div className={cardClasses.detailItem}>
-                                        <MapPin className="h-4 w-4 text-red-500" />
-                                        <span>
-                                            {material.location || "N/A"}
-                                        </span>
-                                    </div>
-                                </div>
                             </div>
                             <div className={cardClasses.content}>
-                                <h3 className={cardClasses.title}>
-                                    {material.name}
-                                </h3>
-                                <p className={cardClasses.code}>
-                                    {material.code || "N/A"}
-                                </p>
-                            </div>
-                            <div className={cardClasses.statusBar}>
-                                <span
-                                    className={cardClasses.statusBadge}
-                                    style={{
-                                        backgroundColor: getStatusColor(
-                                            material.status
-                                        ),
-                                    }}
-                                >
-                                    {material.status || "N/A"}
-                                </span>
+                                <div className="mt-2 mb-10 text-white">
+                                    <h2 className="text-xl font-semibold truncate">
+                                        Nom: {material.name}
+                                    </h2>
+                                    {material.value && (
+                                        <p className="text-sm text-white">
+                                            Valeur : {material.value}
+                                        </p>
+                                    )}
+                                    {material.assignedTo && (
+                                        <p className="text-sm text-white">
+                                            Attribué à : {material.assignedTo}
+                                        </p>
+                                    )}
+                                </div>
+                                <div className={cardClasses.statusBar}>
+                                    <span className={cardClasses.typeBadge}>
+                                        {material.type || "Type"}
+                                    </span>
+                                    <span
+                                        className={cardClasses.statusBadge}
+                                        style={{
+                                            backgroundColor: getStatusColor(
+                                                material.status
+                                            ),
+                                        }}
+                                    >
+                                        {material.status || "Statut"}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     ))

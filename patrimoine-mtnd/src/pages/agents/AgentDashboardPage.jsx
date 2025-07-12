@@ -2,15 +2,6 @@ import React, { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { toast } from "react-hot-toast"
 import { Card, CardContent } from "@/components/ui/card"
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
 import materialService from "@/services/materialService"
 import { useAuth } from "@/context/AuthContext"
 import { StatCard } from "@/components/ui/stat-card"
@@ -28,8 +19,10 @@ import {
 const getStatusColor = status => {
     switch (status?.toLowerCase()) {
         case "service":
+        case "en service":
             return "#16a34a" // vert
         case "stock":
+        case "en stock":
             return "#eab308" // jaune
         default:
             return "#dc2626" // rouge pour hs, reforme etc.
@@ -90,15 +83,29 @@ export default function AgentDashboardPage() {
     }, [])
 
     const filteredMaterials = Array.isArray(materials)
-        ? materials.filter(
-              material =>
-                  material.name
-                      .toLowerCase()
-                      .includes(searchQuery.toLowerCase()) ||
-                  material.code
-                      ?.toLowerCase()
-                      .includes(searchQuery.toLowerCase())
-          )
+        ? materials.filter(material => {
+              const query = searchQuery.toLowerCase()
+              return (
+                  (material.name &&
+                      material.name.toLowerCase().includes(query)) ||
+                  (material.code &&
+                      material.code.toLowerCase().includes(query)) ||
+                  (material.status &&
+                      material.status.toLowerCase().includes(query)) ||
+                  (material.type &&
+                      material.type.toLowerCase().includes(query)) ||
+                  (material.category &&
+                      material.category.toLowerCase().includes(query)) ||
+                  (material.location &&
+                      material.location.toLowerCase().includes(query)) ||
+                  (material.assignedTo &&
+                      material.assignedTo.toLowerCase().includes(query)) ||
+                  (material.acquisitionDate &&
+                      material.acquisitionDate.toLowerCase().includes(query)) ||
+                  (material.value &&
+                      material.value.toString().toLowerCase().includes(query))
+              )
+          })
         : []
 
     if (isLoading) {
@@ -118,10 +125,10 @@ export default function AgentDashboardPage() {
     return (
         <div className="container mx-auto p-4 sm:p-6 lg:p-8">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-800">
+                <h1 className="text-3xl font-bold text-slate-100">
                     Mon Tableau de Bord
                 </h1>
-                <p className="text-lg text-gray-500 mt-1">
+                <p className="text-gray-400 mt-1">
                     Bonjour {currentUser?.name}, voici la liste des matériels
                     qui vous sont affectés.
                 </p>
@@ -159,10 +166,10 @@ export default function AgentDashboardPage() {
             {/* Barre de recherche - Nouvelle version pleine largeur */}
             <div className="mb-8 w-full">
               <div className="relative w-full max-w-4xl mx-auto">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-orange-400" />
                 <Input
                   placeholder="Rechercher dans mes matériels..."
-                  className="pl-12 w-full py-5 text-lg border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-xl shadow-sm"
+                  className="pl-12 w-full py-5 text-lg bg-slate-800 text-slate-100 border-slate-600 rounded-xl shadow-sm placeholder:text-slate-400"
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                 />
@@ -196,11 +203,21 @@ export default function AgentDashboardPage() {
                                 <div className={cardClasses.imageOverlay} />
                             </div>
 
-                            {/* Card Content - Nouvelle version simplifiée */}
+                            {/* Card Content */}
                             <div className={cardClasses.content}>
+                              <div className="mt-2 mb-10 text-white">
+                                <h2 className="text-xl font-semibold truncate">
+                                  Nom: {material.name}
+                                </h2>
+                                {material.value && (
+                                  <p className="text-sm text-white">
+                                    Valeur : {material.value}
+                                  </p>
+                                )}
+                              </div>
                               <div className={cardClasses.statusBar}>
                                 <span className={cardClasses.typeBadge}>
-                                  {material.category}
+                                  {material.category || 'Type'}
                                 </span>
                                 <span
                                   className={cardClasses.statusBadge}

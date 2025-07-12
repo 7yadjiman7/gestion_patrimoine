@@ -2170,7 +2170,29 @@ class PatrimoineAssetController(http.Controller):
             raise AccessError("Accès refusé.")
 
         motif_demande = motif_demande or kw.get('motif_demande')
-        lignes = lignes or kw.get('lignes', [])
+        lignes = lignes or kw.get('lignes')
+
+        if motif_demande is None or lignes is None:
+            data = None
+            try:
+                data = request.jsonrequest
+            except Exception:
+                data = None
+            if not data:
+                body = getattr(request.httprequest, 'data', None)
+                if body:
+                    try:
+                        if isinstance(body, bytes):
+                            body = body.decode('utf-8')
+                        data = json.loads(body or "{}")
+                    except Exception:
+                        data = None
+            if isinstance(data, dict):
+                motif_demande = motif_demande or data.get('motif_demande')
+                lignes = lignes if lignes is not None else data.get('lignes')
+
+        if lignes is None:
+            lignes = []
 
         _logger.info(
             "User %s creating demande, motif=%s, lines=%s",

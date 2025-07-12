@@ -1,0 +1,129 @@
+@startuml
+' Style et Titre
+skinparam classAttributeIconSize 0
+title "Diagramme de Classes : Intranet et Gestion de Patrimoine"
+
+' --- Classe principale des utilisateurs ---
+class "res.users" as User {
+  +name: String
+  +employee_ids: hr.employee[]
+}
+
+class "hr.employee" as Employee {
+  +name: String
+  +user_id: res.users
+  +department_id: hr.department
+  +parent_id: hr.employee
+}
+
+class "hr.department" as Department {
+  +name: String
+  +manager_id: hr.employee
+}
+
+' --- Classes du module de Gestion de Patrimoine ---
+package "Module de Gestion de Patrimoine" {
+  
+  class "patrimoine.asset" as Asset {
+    +name: String
+    +code: String
+    +etat: Selection
+    +valeur_acquisition: Float
+    +date_acquisition: Date
+    +image: Binary
+    --
+    +employee_id: hr.employee
+    +department_id: hr.department
+    +subcategory_id: asset.subcategory
+  }
+
+  class "asset.category" as Category {
+    +name: String
+    +code: String
+    +type: Selection
+  }
+
+  class "asset.subcategory" as SubCategory {
+    +name: String
+    +code: String
+    --
+    +category_id: asset.category
+  }
+  
+  class "patrimoine.perte" as Perte {
+    +name: String
+    +date_perte: Date
+    +motif: Text
+    +state: Selection
+    --
+    +asset_id: patrimoine.asset
+    +declarer_par_id: res.users
+    +manager_id: hr.employee
+  }
+  
+  class "patrimoine.demande_materiel" as Demande {
+    +motif_demande: Text
+    +state: Selection
+    --
+    +demandeur_id: res.users
+  }
+
+  class "patrimoine.demande_materiel.ligne" as DemandeLigne {
+    +quantite: Integer
+    --
+    +demande_id: patrimoine.demande_materiel
+    +demande_subcategory_id: asset.subcategory
+  }
+}
+
+' --- Classes du module Intranet ---
+package "Module Intranet" {
+  class "intranet.post" as Post {
+    +name: String
+    +body: Text
+    +image: Image
+    --
+    +user_id: res.users
+  }
+
+  class "intranet.post.comment" as Comment {
+    +content: Text
+    --
+    +post_id: intranet.post
+    +user_id: res.users
+  }
+  
+  class "intranet.post.like" as Like {
+    --
+    +post_id: intranet.post
+    +user_id: res.users
+  }
+}
+
+
+' --- Relations ---
+
+User "1" -- "0..1" Employee : "est lié à"
+Employee "1" -- "0..1" Department : "appartient à"
+Department "1" -- "0..1" Employee : "est dirigé par"
+Employee "1" -- "0..*" Employee : "manage"
+
+Asset "1" -- "0..1" Employee : "est affecté à"
+Asset "1" -- "0..1" Department : "est dans"
+Asset "1" -- "1" SubCategory : "appartient à"
+SubCategory "1" -- "1" Category : "est un type de"
+
+Perte "1" -- "1" Asset : "concerne"
+Perte "1" -- "1" User : "est déclarée par"
+
+Demande "1" -- "1..*" DemandeLigne : "contient"
+Demande "1" -- "1" User : "est faite par"
+DemandeLigne "1" -- "1" SubCategory : "concerne"
+
+Post "1" -- "1" User : "est créé par"
+Post "1" -- "0..*" Comment : "a"
+Post "1" -- "0..*" Like : "a"
+Comment "1" -- "1" User : "est écrit par"
+Like "1" -- "1" User : "est fait par"
+
+@enduml

@@ -1,0 +1,45 @@
+@startuml
+' Style et direction du diagramme
+autonumber
+skinparam actorStyle awesome
+skinparam sequence {
+    ArrowColor #138D75
+    ActorBorderColor #138D75
+    LifeLineBorderColor #117A65
+    ParticipantBorderColor #117A65
+    DatabaseBorderColor #117A65
+}
+
+title "Diagramme de Séquence : Génération de la Fiche de Vie"
+
+actor "Gestionnaire" as Admin
+participant "Interface (React)" as UI
+participant "Serveur (Odoo)" as Server
+participant "Moteur PDF\n(wkhtmltopdf)" as PDF_Engine
+database "Base de Données" as DB
+
+Admin -> UI : Clique sur "Imprimer la Fiche de Vie"
+activate UI
+
+UI -> Server : envoieRequetePDF(assetId)
+activate Server
+
+Server -> DB : recherche(matériel.details, matériel.historique)
+activate DB
+DB --> Server : retourne(données du matériel)
+deactivate DB
+
+Server -> Server : génèreRapportHTML("template_fiche_vie", données)
+
+Server -> PDF_Engine : convertitEnPDF(rapportHTML)
+activate PDF_Engine
+PDF_Engine --> Server : retourne(fluxDeDonneesPDF)
+deactivate PDF_Engine
+
+Server --> UI : reponseSucces(200 OK, donnéesPDF)
+deactivate Server
+
+UI -> Admin : Ouvre le PDF dans un nouvel onglet ou lance le téléchargement
+deactivate UI
+
+@enduml

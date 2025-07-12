@@ -1,0 +1,52 @@
+@startuml
+' Style et direction du diagramme
+left to right direction
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor #FFF2CC
+    BorderColor #D6B656
+}
+
+' Titre du diagramme
+title "Cas d'Utilisation : Déclaration de Perte"
+
+' Acteurs
+actor "Utilisateur (Agent)" as Agent
+actor "Chef de Service" as Chef
+actor "Gestionnaire de Patrimoine" as Gestionnaire
+
+' Héritage
+Chef --|> Agent
+Gestionnaire --|> Agent
+
+' Cas d'utilisation
+usecase "Déclarer une perte" as UC_Declarer
+usecase "Valider la déclaration (N+1)" as UC_Valider
+usecase "Traiter la déclaration (Final)" as UC_Traiter
+
+' Cas d'utilisation inclus
+usecase "S'authentifier" as UC_Auth
+usecase "Joindre un justificatif" as UC_Joindre
+
+' --- Associations entre les Acteurs et les Cas d'utilisation ---
+
+' N'importe quel utilisateur peut initier une déclaration
+Agent --> UC_Declarer
+
+' Seul le Chef de Service fait la première validation
+Chef --> UC_Valider
+
+' Seul le Gestionnaire de Patrimoine fait le traitement final
+Gestionnaire --> UC_Traiter
+
+' --- Relations entre les cas d'utilisation ---
+
+' Toutes les actions nécessitent d'être authentifié
+UC_Declarer ..> UC_Auth : <<include>>
+UC_Valider ..> UC_Auth : <<include>>
+UC_Traiter ..> UC_Auth : <<include>>
+
+' Joindre un justificatif est une action possible lors de la déclaration
+UC_Declarer ..> UC_Joindre : <<extend>>
+
+@enduml

@@ -1,0 +1,70 @@
+@startuml
+' Style et direction du diagramme
+left to right direction
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor #FEFECE
+    BorderColor #A80036
+}
+
+' Définition des acteurs
+actor "Utilisateur (Agent)" as Agent
+actor "Chef de Service" as Chef
+actor "Gestionnaire de Patrimoine" as Gestionnaire
+actor "Administrateur Système" as Admin
+
+' Définition des relations d'héritage
+' Un Chef, un Gestionnaire et un Admin sont aussi des Utilisateurs
+Chef --|> Agent
+Gestionnaire --|> Agent
+Admin --|> Agent
+
+' Boîte du système
+rectangle "Intranet de Gestion de Patrimoine" {
+
+  ' Cas d'utilisation de base pour tous les utilisateurs
+  usecase "Utiliser l'Intranet\n(Chat & Posts)" as UC_Intranet
+  usecase "Gérer ses Biens Affectés" as UC_Biens
+  usecase "S'authentifier" as UC_Auth
+
+  ' Cas d'utilisation pour le Chef de Service
+  usecase "Valider les Demandes (N+1)" as UC_Valider
+
+  ' Cas d'utilisation pour le Gestionnaire de Patrimoine
+  usecase "Gérer le Parc Matériel (CRUD)" as UC_CRUD
+  usecase "Traiter les Demandes/Pertes" as UC_Traiter
+  usecase "Consulter les Statistiques" as UC_Stats
+
+  ' Cas d'utilisation pour l'Administrateur Système
+  usecase "Gérer les Utilisateurs & Droits" as UC_UserMgmt
+}
+
+' --- Associations entre les Acteurs et les Cas d'utilisation ---
+
+' L'Agent (et donc tous les autres)
+Agent --> UC_Intranet
+Agent --> UC_Biens
+
+' Le Chef de Service
+Chef --> UC_Valider
+
+' Le Gestionnaire de Patrimoine
+Gestionnaire --> UC_CRUD
+Gestionnaire --> UC_Traiter
+Gestionnaire --> UC_Stats
+
+' L'Administrateur Système
+Admin --> UC_UserMgmt
+
+
+' --- Relations d'inclusion pour l'authentification ---
+
+UC_Intranet .> UC_Auth : <<include>>
+UC_Biens ..> UC_Auth : <<include>>
+UC_Valider ...> UC_Auth : <<include>>
+UC_CRUD ....> UC_Auth : <<include>>
+UC_Traiter .....> UC_Auth : <<include>>
+UC_Stats ......> UC_Auth : <<include>>
+UC_UserMgmt .......> UC_Auth : <<include>>
+
+@enduml

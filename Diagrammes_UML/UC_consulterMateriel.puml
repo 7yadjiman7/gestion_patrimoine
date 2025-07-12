@@ -1,0 +1,47 @@
+@startuml
+' Style et direction du diagramme
+left to right direction
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor #LightSkyBlue
+    BorderColor #1a5276
+}
+
+' Titre du diagramme
+title "Cas d'Utilisation : Consulter les Matériels"
+
+' Acteurs
+actor "Utilisateur (Agent)" as Agent
+actor "Chef de Service" as Chef
+actor "Gestionnaire de Patrimoine" as Gestionnaire
+
+' Héritage
+Chef --|> Agent
+Gestionnaire --|> Agent
+
+' Cas d'utilisation principal
+usecase "Consulter les matériels" as UC_Consulter
+
+' Cas d'utilisation étendus (spécificités de la consultation)
+usecase "Voir uniquement ses biens affectés" as UC_VoirSesBiens
+usecase "Voir les biens de son département" as UC_VoirDepartement
+usecase "Voir tout le parc matériel" as UC_VoirTout
+usecase "Filtrer / Rechercher un bien" as UC_Filtrer
+usecase "Accéder aux détails d'un bien" as UC_Details
+
+' Associations
+Agent --> UC_Consulter
+Chef --> UC_Consulter
+Gestionnaire --> UC_Consulter
+
+' Relations <<extend>>
+' La consultation de base est étendue par des vues spécifiques au rôle
+UC_VoirSesBiens --|> UC_Consulter : <<extend>>
+UC_VoirDepartement --|> UC_Consulter : <<extend>>
+UC_VoirTout --|> UC_Consulter : <<extend>>
+
+' La recherche et l'accès aux détails sont des extensions possibles de la consultation
+UC_Consulter ..> UC_Filtrer : <<extend>>
+UC_Consulter ..> UC_Details : <<extend>>
+
+@enduml

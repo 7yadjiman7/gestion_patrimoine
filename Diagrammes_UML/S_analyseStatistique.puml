@@ -1,0 +1,52 @@
+@startuml
+' Style et direction du diagramme
+autonumber
+skinparam actorStyle awesome
+skinparam sequence {
+    ArrowColor #8E44AD
+    ActorBorderColor #8E44AD
+    LifeLineBorderColor #8E44AD
+    ParticipantBorderColor #8E44AD
+    DatabaseBorderColor #8E44AD
+}
+
+title "Diagramme de Séquence : Analyse des Statistiques du Parc"
+
+actor "Gestionnaire" as Admin
+participant "Interface (React)" as UI
+participant "Serveur (Odoo)" as Server
+database "Base de Données" as DB
+
+Admin -> UI : Navigue vers la page des statistiques
+activate UI
+
+UI -> Server : envoieRequetesStats()
+activate Server
+
+' Le serveur reçoit et traite plusieurs demandes en parallèle
+par
+    Server -> DB : rechercheStatsParDepartement()
+    activate DB
+    DB --> Server : retourne(données agrégées)
+    deactivate DB
+else
+    Server -> DB : rechercheStatsParAge()
+    activate DB
+    DB --> Server : retourne(données agrégées)
+    deactivate DB
+else
+    Server -> DB : rechercheStatsParValeur()
+    activate DB
+    DB --> Server : retourne(données agrégées)
+    deactivate DB
+end
+
+Server --> UI : reponseSucces(200 OK, toutesLesStats)
+deactivate Server
+
+UI -> UI : Met à jour l'état et génère les graphiques
+
+UI -> Admin : Affiche le tableau de bord avec les graphiques
+deactivate UI
+
+@enduml

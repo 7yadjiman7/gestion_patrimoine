@@ -1,0 +1,44 @@
+@startuml
+' Style et direction du diagramme
+autonumber
+skinparam actorStyle awesome
+skinparam sequence {
+    ArrowColor #2E86C1
+    ActorBorderColor #2E86C1
+    LifeLineBorderColor #2980B9
+    ParticipantBorderColor #2980B9
+}
+
+title "Diagramme de Séquence : Attribution de Matériel"
+
+actor "Gestionnaire" as Admin
+participant "Interface (React)" as UI
+participant "Serveur (Odoo)" as Server
+database "Base de Données" as DB
+
+Admin -> UI : Sélectionne un matériel et clique sur "Affecter"
+activate UI
+
+UI -> Server : envoieRequeteMouvement(assetId, employeeId, 'affectation')
+activate Server
+
+Server -> DB : recherche(matériel, employé)
+activate DB
+DB --> Server : retourne(objets matériel, employé)
+deactivate DB
+
+Server -> Server : créeEnregistrement('patrimoine.mouvement')
+Server -> Server : metAJour(matériel.etat='service', matériel.employee_id=...)
+
+Server -> DB : sauvegarde(mouvement, matériel)
+activate DB
+DB --> Server : confirmationSauvegarde
+deactivate DB
+
+Server --> UI : reponseSucces(200 OK)
+deactivate Server
+
+UI -> Admin : afficheMessage("Matériel affecté avec succès")
+deactivate UI
+
+@enduml

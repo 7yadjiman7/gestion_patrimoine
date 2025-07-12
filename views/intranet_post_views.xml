@@ -6,7 +6,6 @@
         <field name="arch" type="xml">
             <tree string="Publications">
                 <field name="name"/>
-                <!-- Use alias field 'author_id' to avoid view errors -->
                 <field name="author_id"/>
                 <field name="department_id" optional="show"/>
                 <field name="create_date"/>
@@ -22,7 +21,6 @@
                 <sheet>
                     <group>
                         <field name="name"/>
-                        <!-- Display author information via alias field -->
                         <field name="author_id" readonly="1"/>
                         <field name="department_id"/>
                         <field name="post_type"/>
@@ -32,7 +30,7 @@
                         <field name="body" colspan="4" nolabel="1" widget="html"/>
                     </group>
                     <group>
-                        <field name="image" widget="image" class="oe_avatar"/>
+                        <field name="image" widget="image" class="oe_avatar" alt="Image du post"/>
                         <field name="attachment_ids" widget="many2many_binary"/>
                     </group>
                 </sheet>
@@ -50,13 +48,20 @@
                     <t t-name="kanban-box">
                         <div class="oe_kanban_global_click">
                             <t t-if="record.image.raw_value">
-                                <img t-att-src="'/web/image/intranet.post/' + record.id + '/image'" class="o_mini_avatar"/>
+                                <img t-att-src="'/web/image/intranet.post/' + record.id + '/image'" class="o_mini_avatar" alt="Image du post"/>
                             </t>
                             <div class="oe_kanban_details">
-                                <strong><field name="name"/></strong>
-                                <div><field name="body"/></div>
-                                <div class="oe_subtle"><field name="create_date"/></div>
+                                <strong>
+                                    <field name="name"/>
+                                </strong>
+                                <div t-if="record.body.raw_value">
+                                    <t t-esc="record.body.raw_value[:100] + '...'" />
+                                </div>
+                                <div class="oe_subtle">
+                                    <field name="create_date"/>
+                                </div>
                             </div>
+
                         </div>
                     </t>
                 </templates>

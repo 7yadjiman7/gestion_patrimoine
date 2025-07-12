@@ -164,7 +164,7 @@ export default function DirDemandeMateriel() {
                                 <div>
                                     <Label
                                         htmlFor="motif"
-                                        className="text-xl font-semibold text-gray-800 mb-2"
+                                        className="text-xl font-semibold text-black mb-2"
                                     >
                                         Motif de la Demande *
                                     </Label>
@@ -174,7 +174,9 @@ export default function DirDemandeMateriel() {
                                         onChange={e => setMotif(e.target.value)}
                                         required
                                         placeholder="Raison générale de cette demande..."
-                                        className="mt-2"
+                                        className="w-full text-black p-2.5 border border-slate-300 rounded-lg shadow-sm 
+                                                    focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 
+                                                    hover:border-orange-400 transition duration-200"
                                     />
                                 </div>
                                 <div>
@@ -247,6 +249,9 @@ export default function DirDemandeMateriel() {
                                                         )
                                                     }
                                                     required
+                                                    className="w-full text-black p-2.5 border border-slate-300 rounded-lg shadow-sm 
+                                                    focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 
+                                                    hover:border-orange-400 transition duration-200"
                                                 />
                                             </div>
                                             <div>

@@ -1,0 +1,45 @@
+@startuml
+' Style et direction du diagramme
+autonumber
+skinparam actorStyle awesome
+skinparam sequence {
+    ArrowColor #D35400
+    ActorBorderColor #D35400
+    LifeLineBorderColor #BA4A00
+    ParticipantBorderColor #BA4A00
+    DatabaseBorderColor #BA4A00
+}
+
+title "Diagramme de Séquence : Mise Hors Service d'un Matériel"
+
+actor "Gestionnaire" as Admin
+participant "Interface (React)" as UI
+participant "Serveur (Odoo)" as Server
+database "Base de Données" as DB
+
+Admin -> UI : Sélectionne un matériel\net clique sur "Mettre HS"
+activate UI
+
+UI -> Server : envoieRequeteMiseHS(assetId)
+activate Server
+
+Server -> DB : recherche(matériel)
+activate DB
+DB --> Server : retourne(objet matériel)
+deactivate DB
+
+Server -> Server : metAJour(matériel.etat='hs')
+Server -> Server : créeEntreeFicheVie("Mise hors service", assetId)
+
+Server -> DB : sauvegarde(matériel, fiche de vie)
+activate DB
+DB --> Server : confirmationSauvegarde
+deactivate DB
+
+Server --> UI : reponseSucces(200 OK)
+deactivate Server
+
+UI -> Admin : afficheMessage("Le matériel a été mis hors service.")
+deactivate UI
+
+@enduml

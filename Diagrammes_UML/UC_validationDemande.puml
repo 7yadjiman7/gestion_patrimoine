@@ -1,0 +1,56 @@
+@startuml
+' Style et direction du diagramme
+left to right direction
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor #E8DAEF
+    BorderColor #884EA0
+}
+
+' Titre du diagramme
+title "Cas d'Utilisation : Validation d'une Demande de Matériel"
+
+' Acteurs
+actor "Utilisateur (Agent)" as Agent
+actor "Chef de Service" as Chef
+actor "Gestionnaire de Patrimoine" as Gestionnaire
+
+' Héritage
+Chef --|> Agent
+Gestionnaire --|> Agent
+
+' Cas d'utilisation
+usecase "Faire une demande" as UC_Demander
+usecase "Valider la demande (N+1)" as UC_Valider_Chef
+usecase "Traiter la demande (Final)" as UC_Traiter_Gestionnaire
+usecase "Notifier l'utilisateur" as UC_Notifier
+
+' Cas d'utilisation inclus
+usecase "S'authentifier" as UC_Auth
+
+' --- Associations entre les Acteurs et les Cas d'utilisation ---
+
+' L'Agent initie la demande
+Agent --> UC_Demander
+
+' Le Chef de Service effectue la première validation
+Chef --> UC_Valider_Chef
+
+' Le Gestionnaire de Patrimoine effectue le traitement final
+Gestionnaire --> UC_Traiter_Gestionnaire
+
+
+' --- Relations entre les cas d'utilisation ---
+
+' Toutes les actions principales nécessitent d'être authentifié
+UC_Demander ..> UC_Auth : <<include>>
+UC_Valider_Chef ..> UC_Auth : <<include>>
+UC_Traiter_Gestionnaire ..> UC_Auth : <<include>>
+
+' La validation par le chef est une condition préalable au traitement par le gestionnaire
+UC_Traiter_Gestionnaire --|> UC_Valider_Chef
+
+' Après le traitement final, le système notifie l'utilisateur
+UC_Traiter_Gestionnaire ..> UC_Notifier : <<extend>>
+
+@enduml

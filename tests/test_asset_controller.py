@@ -138,5 +138,32 @@ class AssetControllerTest(unittest.TestCase):
         returned = json.loads(args[0])
         self.assertEqual(returned['demande_id'], demande_record.id)
 
+    @patch('controllers.asset_controller.request')
+    def test_create_demande_json_payload(self, mock_request):
+        env = MagicMock()
+        demande_model = MagicMock()
+        ligne_model = MagicMock()
+        env.__getitem__.side_effect = lambda model: demande_model if model == 'patrimoine.demande.materiel' else ligne_model
+        demande_record = MagicMock(id=3)
+        demande_model.create.return_value = demande_record
+        ligne_model.create.return_value = MagicMock()
+        mock_request.env = env
+        mock_request.env.user.has_group.return_value = True
+        mock_request.env.user.id = 9
+        mock_request.jsonrequest = {
+            'motif_demande': 'json',
+            'lignes': [{'demande_subcategory_id': 1, 'quantite': 1}]
+        }
+        mock_request.httprequest = MagicMock(data=b'')
+
+        res = self.controller.create_demande()
+
+        demande_model.create.assert_called_with({'demandeur_id': 9, 'motif_demande': 'json'})
+        ligne_model.create.assert_called_once()
+        self.assertIsNone(res.status_code)
+        args, kwargs = odoo.http.Response.call_args
+        returned = json.loads(args[0])
+        self.assertEqual(returned['demande_id'], demande_record.id)
+
 if __name__ == '__main__':
     unittest.main()

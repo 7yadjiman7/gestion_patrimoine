@@ -2561,7 +2561,7 @@ class PatrimoineAssetController(http.Controller):
             _logger.error(f"Error processing perte {perte_id} by manager: {e}")
             return {"status": "error", "message": str(e)}
 
-    # --- API pour confirmer ou rejeter une déclaration de perte ---
+    # --- API pour approuver ou rejeter une déclaration de perte ---
     @http.route(
         "/api/patrimoine/pertes/<int:perte_id>/process",
         auth="user",
@@ -2571,7 +2571,7 @@ class PatrimoineAssetController(http.Controller):
     )
     def process_perte(
         self, perte_id, action, **kw
-    ):  # 'action' sera 'confirm' ou 'reject'
+    ):  # 'action' sera 'approve' ou 'reject'
         try:
             perte = request.env["patrimoine.perte"].browse(perte_id)
             if not perte.exists():
@@ -2588,8 +2588,8 @@ class PatrimoineAssetController(http.Controller):
                     "Accès refusé. Seul un administrateur du patrimoine peut traiter les déclarations de perte."
                 )
 
-            if action == "confirm":
-                perte.action_confirm()
+            if action == "approve":
+                perte.action_approve()
             elif action == "reject":
                 perte.action_reject()
             else:

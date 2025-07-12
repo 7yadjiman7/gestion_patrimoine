@@ -2155,61 +2155,61 @@ class PatrimoineAssetController(http.Controller):
             return Response(json.dumps({'error': str(e)}), status=500)
 
     # --- API pour créer une demande (utilisée par le directeur) ---
-    @http.route('/api/patrimoine/demandes', auth='user', type='json', methods=['POST'], csrf=False)
+    @http.route('/api/patrimoine/demandes', auth='user', type='http', methods=['POST'], csrf=False)
+    @handle_api_errors
     def create_demande(self, motif_demande=None, lignes=None, **kw):
         """Créer une demande de matériel avec plusieurs lignes.
 
-        Cette route est appelée en JSON depuis le frontend. Pour éviter les
-        erreurs de paramètres manquants quand l'appelant n'envoie pas les
-        champs attendus ou que le payload n'est pas correctement parsé, les
-        arguments sont optionnels et récupérés depuis ``kw`` si nécessaire.
+        Cette route est appelée depuis le frontend. Pour éviter les erreurs de
+        paramètres manquants quand l'appelant n'envoie pas les champs attendus
+        ou que le payload n'est pas correctement parsé, les arguments sont
+        optionnels et récupérés depuis ``kw`` si nécessaire.
         """
-        try:
-            if not request.env.user.has_group("gestion_patrimoine.group_patrimoine_director"):
-                raise AccessError("Accès refusé.")
 
-            motif_demande = motif_demande or kw.get('motif_demande')
-            lignes = lignes or kw.get('lignes', [])
+        if not request.env.user.has_group("gestion_patrimoine.group_patrimoine_director"):
+            raise AccessError("Accès refusé.")
 
-            _logger.info(
-                "User %s creating demande, motif=%s, lines=%s",
-                request.env.user.id,
+        motif_demande = motif_demande or kw.get('motif_demande')
+        lignes = lignes or kw.get('lignes', [])
+
+        _logger.info(
+            "User %s creating demande, motif=%s, lines=%s",
+            request.env.user.id,
+            motif_demande,
+            len(lignes),
+        )
+
+        if not motif_demande or not lignes:
+            _logger.error(
+                "Validation failed for create_demande: motif_demande=%s, lines=%s",
                 motif_demande,
-                len(lignes),
+                lignes,
             )
+            raise ValidationError("Motif et lignes de demande requis")
 
-            if not motif_demande or not lignes:
-                _logger.error(
-                    "Validation failed for create_demande: motif_demande=%s, lines=%s",
-                    motif_demande,
-                    lignes,
-                )
-                raise ValidationError("Motif et lignes de demande requis")
+        # 1. Créer la demande "header" avec le motif
+        demande_vals = {
+            'demandeur_id': request.env.user.id,
+            'motif_demande': motif_demande,
+        }
+        new_demande = request.env['patrimoine.demande.materiel'].create(demande_vals)
+        _logger.info("Demande created with id %s", new_demande.id)
 
-            # 1. Créer la demande "header" avec le motif
-            demande_vals = {
-                'demandeur_id': request.env.user.id,
-                'motif_demande': motif_demande,
-            }
-            new_demande = request.env['patrimoine.demande.materiel'].create(demande_vals)
-            _logger.info("Demande created with id %s", new_demande.id)
+        # 2. Parcourir et créer chaque ligne reçue
+        for ligne in lignes:
+            request.env['patrimoine.demande.materiel.ligne'].create({
+                'demande_id': new_demande.id,
+                'demande_subcategory_id': int(ligne.get('demande_subcategory_id')),
+                'quantite': int(ligne.get('quantite')),
+                'destinataire_department_id': int(ligne.get('destinataire_department_id')) if ligne.get('destinataire_department_id') else False,
+                'destinataire_location_id': int(ligne.get('destinataire_location_id')) if ligne.get('destinataire_location_id') else False,
+                'destinataire_employee_id': int(ligne.get('destinataire_employee_id')) if ligne.get('destinataire_employee_id') else False,
+            })
 
-            # 2. Parcourir et créer chaque ligne reçue
-            for ligne in lignes:
-                request.env['patrimoine.demande.materiel.ligne'].create({
-                    'demande_id': new_demande.id,
-                    'demande_subcategory_id': int(ligne.get('demande_subcategory_id')),
-                    'quantite': int(ligne.get('quantite')),
-                    'destinataire_department_id': int(ligne.get('destinataire_department_id')) if ligne.get('destinataire_department_id') else False,
-                    'destinataire_location_id': int(ligne.get('destinataire_location_id')) if ligne.get('destinataire_location_id') else False,
-                    'destinataire_employee_id': int(ligne.get('destinataire_employee_id')) if ligne.get('destinataire_employee_id') else False,
-                })
-
-            return {"status": "success", "demande_id": new_demande.id}
-        except Exception as e:
-            request.env.cr.rollback()
-            _logger.error("Erreur lors de la création de la demande multi-lignes: %s", str(e))
-            return {"status": "error", "message": str(e)}
+        return Response(
+            json.dumps({'status': 'success', 'demande_id': new_demande.id}),
+            headers=CORS_HEADERS,
+        )
 
     # Endpoints standardisés pour les demandes de matériel
     @http.route('/api/patrimoine/demandes/<int:demande_id>/approve', type='json', auth='user', methods=['POST'])
@@ -2570,7 +2570,7 @@ class PatrimoineAssetController(http.Controller):
             _logger.error(f"Error processing perte {perte_id} by manager: {e}")
             return {"status": "error", "message": str(e)}
 
-    # --- API pour confirmer ou rejeter une déclaration de perte ---
+    # --- API pour approuver ou rejeter une déclaration de perte ---
     @http.route(
         "/api/patrimoine/pertes/<int:perte_id>/process",
         auth="user",
@@ -2580,7 +2580,7 @@ class PatrimoineAssetController(http.Controller):
     )
     def process_perte(
         self, perte_id, action, **kw
-    ):  # 'action' sera 'confirm' ou 'reject'
+    ):  # 'action' sera 'approve' ou 'reject'
         try:
             perte = request.env["patrimoine.perte"].browse(perte_id)
             if not perte.exists():
@@ -2597,8 +2597,8 @@ class PatrimoineAssetController(http.Controller):
                     "Accès refusé. Seul un administrateur du patrimoine peut traiter les déclarations de perte."
                 )
 
-            if action == "confirm":
-                perte.action_confirm()
+            if action == "approve":
+                perte.action_approve()
             elif action == "reject":
                 perte.action_reject()
             else:

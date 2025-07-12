@@ -2,10 +2,11 @@ import unittest
 from unittest.mock import MagicMock, patch
 import os
 import sys
+import json
 import types
 import importlib.util
 
-# Minimal Odoo stubs
+# On garde la version la plus complète pour simuler l'environnement Odoo
 odoo = types.ModuleType("odoo")
 
 def _response_side_effect(*args, **kwargs):
@@ -22,15 +23,14 @@ odoo.http = types.SimpleNamespace(
     request=MagicMock(),
     Response=MagicMock(side_effect=_response_side_effect),
 )
-odoo.http.Response.return_value.headers = {"Content-Type": "application/json"}
 
-class AccessError(Exception):
+class _AccessError(Exception):
     pass
 
-class ValidationError(Exception):
+class _ValidationError(Exception):
     pass
 
-odoo.exceptions = types.SimpleNamespace(AccessError=AccessError, ValidationError=ValidationError)
+odoo.exceptions = types.SimpleNamespace(AccessError=_AccessError, ValidationError=_ValidationError)
 odoo.fields = types.SimpleNamespace(
     Date=MagicMock(),
     Datetime=MagicMock(),
@@ -46,65 +46,43 @@ odoo.fields = types.SimpleNamespace(
 )
 odoo.models = types.SimpleNamespace(Model=object)
 odoo.osv = types.SimpleNamespace(expression=MagicMock())
-odoo.api = types.SimpleNamespace(depends=lambda *a: (lambda f: f), model_create_multi=lambda f: f)
 odoo._ = lambda x: x
+sys.modules.setdefault("odoo", odoo)
+sys.modules.setdefault("odoo.http", odoo.http)
+sys.modules.setdefault("odoo.exceptions", odoo.exceptions)
+sys.modules.setdefault("odoo.fields", odoo.fields)
+sys.modules.setdefault("odoo.models", odoo.models)
+sys.modules.setdefault("odoo.osv", odoo.osv)
 
-sys.modules['odoo'] = odoo
-sys.modules['odoo.http'] = odoo.http
-sys.modules['odoo.exceptions'] = odoo.exceptions
-sys.modules['odoo.fields'] = odoo.fields
-sys.modules['odoo.models'] = odoo.models
-sys.modules['odoo.osv'] = odoo.osv
-sys.modules['odoo.api'] = odoo.api
 
-# External stubs
-import types as _types
-dateutil = _types.ModuleType('dateutil')
-relativedelta_mod = _types.ModuleType('dateutil.relativedelta')
+# Simuler les dépendances externes
+dateutil = types.ModuleType('dateutil')
+relativedelta_mod = types.ModuleType('dateutil.relativedelta')
 relativedelta_mod.relativedelta = MagicMock()
 dateutil.relativedelta = relativedelta_mod
 sys.modules.setdefault('dateutil', dateutil)
 sys.modules.setdefault('dateutil.relativedelta', relativedelta_mod)
 
-werkzeug_exceptions = _types.ModuleType('werkzeug.exceptions')
+werkzeug_exceptions = types.ModuleType('werkzeug.exceptions')
 werkzeug_exceptions.BadRequest = type('BadRequest', (Exception,), {})
 sys.modules.setdefault('werkzeug.exceptions', werkzeug_exceptions)
 
 
+# Charger le contrôleur à tester
+controllers_pkg = types.ModuleType('controllers')
+controllers_pkg.__path__ = []
+sys.modules.setdefault('controllers', controllers_pkg)
+
+asset_path = os.path.join(os.path.dirname(__file__), '..', 'controllers', 'asset_controller.py')
+spec = importlib.util.spec_from_file_location('controllers.asset_controller', asset_path)
+asset_controller = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(asset_controller)
+sys.modules['controllers.asset_controller'] = asset_controller
+controllers_pkg.asset_controller = asset_controller
+
 class AssetControllerTest(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.prev_controllers = sys.modules.get('controllers')
-        cls.prev_asset_controller = sys.modules.get('controllers.asset_controller')
-
-        # Ensure our exception classes are used in case other tests modified them
-        sys.modules['odoo.exceptions'] = odoo.exceptions
-
-        controllers_pkg = types.ModuleType('controllers')
-        controllers_pkg.__path__ = []
-        sys.modules['controllers'] = controllers_pkg
-
-        asset_path = os.path.join(os.path.dirname(__file__), '..', 'controllers', 'asset_controller.py')
-        spec = importlib.util.spec_from_file_location('controllers.asset_controller', asset_path)
-        cls.asset_controller = importlib.util.module_from_spec(spec)
-        sys.modules['controllers.asset_controller'] = cls.asset_controller
-        spec.loader.exec_module(cls.asset_controller)
-        controllers_pkg.asset_controller = cls.asset_controller
-
-    @classmethod
-    def tearDownClass(cls):
-        if cls.prev_asset_controller is None:
-            sys.modules.pop('controllers.asset_controller', None)
-        else:
-            sys.modules['controllers.asset_controller'] = cls.prev_asset_controller
-
-        if cls.prev_controllers is None:
-            sys.modules.pop('controllers', None)
-        else:
-            sys.modules['controllers'] = cls.prev_controllers
-
     def setUp(self):
-        self.controller = self.asset_controller.PatrimoineAssetController()
+        self.controller = asset_controller.PatrimoineAssetController()
 
     @patch('controllers.asset_controller.request')
     def test_create_mouvement_access_error_returns_403(self, mock_request):
@@ -112,7 +90,6 @@ class AssetControllerTest(unittest.TestCase):
         env.user.has_group.return_value = False
         mock_request.env = env
         mock_request.httprequest.data = '{}'
-
         res = self.controller.create_mouvement()
         self.assertEqual(res.status_code, 403)
 
@@ -122,10 +99,44 @@ class AssetControllerTest(unittest.TestCase):
         env.user.has_group.return_value = True
         mock_request.env = env
         mock_request.httprequest.data = '{}'
-
         res = self.controller.create_mouvement()
         self.assertEqual(res.status_code, 400)
 
+    @patch('controllers.asset_controller.request')
+    def test_create_demande_missing_params_returns_400(self, mock_request):
+        env = MagicMock()
+        mock_request.env = env
+        mock_request.env.user.has_group.return_value = True
+        res = self.controller.create_demande(motif_demande=None, lignes=None)
+        self.assertEqual(res.status_code, 400)
+
+    @patch('controllers.asset_controller.request')
+    def test_create_demande_unauthorized_returns_403(self, mock_request):
+        env = MagicMock()
+        mock_request.env = env
+        mock_request.env.user.has_group.return_value = False
+        res = self.controller.create_demande(motif_demande='m', lignes=[{'quantite':1,'demande_subcategory_id':1}])
+        self.assertEqual(res.status_code, 403)
+
+    @patch('controllers.asset_controller.request')
+    def test_create_demande_success(self, mock_request):
+        env = MagicMock()
+        demande_model = MagicMock()
+        ligne_model = MagicMock()
+        env.__getitem__.side_effect = lambda model: demande_model if model == 'patrimoine.demande.materiel' else ligne_model
+        demande_record = MagicMock(id=2)
+        demande_model.create.return_value = demande_record
+        ligne_model.create.return_value = MagicMock()
+        mock_request.env = env
+        mock_request.env.user.has_group.return_value = True
+        mock_request.env.user.id = 7
+        res = self.controller.create_demande(motif_demande='test', lignes=[{'demande_subcategory_id':1,'quantite':2}])
+        demande_model.create.assert_called_with({'demandeur_id': 7, 'motif_demande': 'test'})
+        ligne_model.create.assert_called_once()
+        self.assertIsNone(res.status_code)
+        args, kwargs = odoo.http.Response.call_args
+        returned = json.loads(args[0])
+        self.assertEqual(returned['demande_id'], demande_record.id)
 
 if __name__ == '__main__':
     unittest.main()

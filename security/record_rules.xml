@@ -130,7 +130,7 @@
             <field name="domain_force">
                     ['|',
                         ('demandeur_id', '=', user.id), # Mes propres demandes
-                        ('demandeur_id.department_id.manager_id.user_id', '=', user.id)
+                        ('demandeur_id.employee_id.department_id.manager_id.user_id', '=', user.id)
                     ]
             </field>
         </record>

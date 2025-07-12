@@ -1239,9 +1239,18 @@ class PatrimoineAssetController(http.Controller):
                 json.dumps(response_data), content_type="application/json", status=200
             )
 
-        except (ValidationError, AccessError) as e:
+        except AccessError as e:
             _logger.error(
-                "Validation ou Erreur d'accès lors de la création du mouvement: %s", str(e)
+                "Access denied creating mouvement: %s", str(e)
+            )
+            return Response(
+                json.dumps({"status": "error", "message": str(e)}),
+                content_type="application/json",
+                status=403,
+            )
+        except ValidationError as e:
+            _logger.error(
+                "Validation error creating mouvement: %s", str(e)
             )
             return Response(
                 json.dumps({"status": "error", "message": str(e)}),

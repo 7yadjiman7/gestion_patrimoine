@@ -4,8 +4,9 @@ import os
 import sys
 import json
 import types
+import importlib.util
 
-# Minimal odoo stubs similar to other tests
+# On garde la version la plus complète pour simuler l'environnement Odoo
 odoo = types.ModuleType("odoo")
 
 def _response_side_effect(*args, **kwargs):
@@ -22,6 +23,7 @@ odoo.http = types.SimpleNamespace(
     request=MagicMock(),
     Response=MagicMock(side_effect=_response_side_effect),
 )
+
 class _AccessError(Exception):
     pass
 
@@ -29,7 +31,19 @@ class _ValidationError(Exception):
     pass
 
 odoo.exceptions = types.SimpleNamespace(AccessError=_AccessError, ValidationError=_ValidationError)
-odoo.fields = types.SimpleNamespace(Date=MagicMock())
+odoo.fields = types.SimpleNamespace(
+    Date=MagicMock(),
+    Datetime=MagicMock(),
+    Char=MagicMock(),
+    Text=MagicMock(),
+    Selection=MagicMock(),
+    Many2one=MagicMock(),
+    Many2many=MagicMock(),
+    One2many=MagicMock(),
+    Image=MagicMock(),
+    Integer=MagicMock(),
+    Boolean=MagicMock(),
+)
 odoo.models = types.SimpleNamespace(Model=object)
 odoo.osv = types.SimpleNamespace(expression=MagicMock())
 odoo._ = lambda x: x
@@ -40,7 +54,8 @@ sys.modules.setdefault("odoo.fields", odoo.fields)
 sys.modules.setdefault("odoo.models", odoo.models)
 sys.modules.setdefault("odoo.osv", odoo.osv)
 
-# Stub external dependencies used by the controller
+
+# Simuler les dépendances externes
 dateutil = types.ModuleType('dateutil')
 relativedelta_mod = types.ModuleType('dateutil.relativedelta')
 relativedelta_mod.relativedelta = MagicMock()
@@ -52,9 +67,8 @@ werkzeug_exceptions = types.ModuleType('werkzeug.exceptions')
 werkzeug_exceptions.BadRequest = type('BadRequest', (Exception,), {})
 sys.modules.setdefault('werkzeug.exceptions', werkzeug_exceptions)
 
-import importlib.util
 
-# Load controller without executing controllers package __init__
+# Charger le contrôleur à tester
 controllers_pkg = types.ModuleType('controllers')
 controllers_pkg.__path__ = []
 sys.modules.setdefault('controllers', controllers_pkg)
@@ -69,6 +83,24 @@ controllers_pkg.asset_controller = asset_controller
 class AssetControllerTest(unittest.TestCase):
     def setUp(self):
         self.controller = asset_controller.PatrimoineAssetController()
+
+    @patch('controllers.asset_controller.request')
+    def test_create_mouvement_access_error_returns_403(self, mock_request):
+        env = MagicMock()
+        env.user.has_group.return_value = False
+        mock_request.env = env
+        mock_request.httprequest.data = '{}'
+        res = self.controller.create_mouvement()
+        self.assertEqual(res.status_code, 403)
+
+    @patch('controllers.asset_controller.request')
+    def test_create_mouvement_validation_error_returns_400(self, mock_request):
+        env = MagicMock()
+        env.user.has_group.return_value = True
+        mock_request.env = env
+        mock_request.httprequest.data = '{}'
+        res = self.controller.create_mouvement()
+        self.assertEqual(res.status_code, 400)
 
     @patch('controllers.asset_controller.request')
     def test_create_demande_missing_params_returns_400(self, mock_request):
@@ -98,9 +130,7 @@ class AssetControllerTest(unittest.TestCase):
         mock_request.env = env
         mock_request.env.user.has_group.return_value = True
         mock_request.env.user.id = 7
-
         res = self.controller.create_demande(motif_demande='test', lignes=[{'demande_subcategory_id':1,'quantite':2}])
-
         demande_model.create.assert_called_with({'demandeur_id': 7, 'motif_demande': 'test'})
         ligne_model.create.assert_called_once()
         self.assertIsNone(res.status_code)

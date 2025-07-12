@@ -16,13 +16,28 @@ api.interceptors.request.use(
         if (sessionId) {
             config.headers["X-Openerp-Session-Id"] = sessionId
         }
+        if (process.env.NODE_ENV !== "production") {
+            console.debug("Request:", {
+                method: config.method,
+                url: `${config.baseURL || ''}${config.url}`,
+                data: config.data,
+            })
+        }
         return config
     },
     error => Promise.reject(error)
 )
 
 api.interceptors.response.use(
-    response => response,
+    response => {
+        if (process.env.NODE_ENV !== "production") {
+            console.debug(`Response from ${response.config.url}:`, {
+                status: response.status,
+                data: response.data,
+            })
+        }
+        return response
+    },
     error => {
         if (error.code === "ERR_NETWORK" || error.message.includes("CORS")) {
             console.error("CORS Error:", error)

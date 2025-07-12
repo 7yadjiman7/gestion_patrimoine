@@ -132,7 +132,9 @@ export default function DirDemandeMateriel() {
 
         setIsLoading(true)
         try {
-            await materialService.createDemande(dataToSend)
+            console.debug(dataToSend)
+            const response = await materialService.createDemande(dataToSend)
+            console.debug(response)
             toast.success("Demande soumise avec succès !")
             navigate("/director/dashboard")
         } catch (error) {

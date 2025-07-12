@@ -24,7 +24,13 @@ odoo.http = types.SimpleNamespace(
     Response=MagicMock(side_effect=_response_side_effect),
 )
 odoo.http.Response.return_value.headers = {"Content-Type": "application/json"}
-odoo.exceptions = types.SimpleNamespace(AccessError=Exception, ValidationError=Exception)
+class _AccessError(Exception):
+    pass
+
+class _ValidationError(Exception):
+    pass
+
+odoo.exceptions = types.SimpleNamespace(AccessError=_AccessError, ValidationError=_ValidationError)
 odoo.fields = types.SimpleNamespace(
     Date=MagicMock(),
     Datetime=MagicMock(),
@@ -46,13 +52,13 @@ odoo.api = types.SimpleNamespace(
 )
 odoo._ = lambda x: x
 
-sys.modules['odoo'] = odoo
-sys.modules['odoo.http'] = odoo.http
-sys.modules['odoo.exceptions'] = odoo.exceptions
-sys.modules['odoo.fields'] = odoo.fields
-sys.modules['odoo.models'] = odoo.models
-sys.modules['odoo.osv'] = odoo.osv
-sys.modules['odoo.api'] = odoo.api
+sys.modules.setdefault('odoo', odoo)
+sys.modules.setdefault('odoo.http', odoo.http)
+sys.modules.setdefault('odoo.exceptions', odoo.exceptions)
+sys.modules.setdefault('odoo.fields', odoo.fields)
+sys.modules.setdefault('odoo.models', odoo.models)
+sys.modules.setdefault('odoo.osv', odoo.osv)
+sys.modules.setdefault('odoo.api', odoo.api)
 
 # Stub for external dependency used by asset_controller
 import types as _types

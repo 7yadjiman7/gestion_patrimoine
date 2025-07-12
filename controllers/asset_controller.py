@@ -2162,7 +2162,19 @@ class PatrimoineAssetController(http.Controller):
             motif_demande = motif_demande or kw.get('motif_demande')
             lignes = lignes or kw.get('lignes', [])
 
+            _logger.info(
+                "User %s creating demande, motif=%s, lines=%s",
+                request.env.user.id,
+                motif_demande,
+                len(lignes),
+            )
+
             if not motif_demande or not lignes:
+                _logger.error(
+                    "Validation failed for create_demande: motif_demande=%s, lines=%s",
+                    motif_demande,
+                    lignes,
+                )
                 raise ValidationError("Motif et lignes de demande requis")
 
             # 1. Créer la demande "header" avec le motif
@@ -2171,6 +2183,7 @@ class PatrimoineAssetController(http.Controller):
                 'motif_demande': motif_demande,
             }
             new_demande = request.env['patrimoine.demande.materiel'].create(demande_vals)
+            _logger.info("Demande created with id %s", new_demande.id)
 
             # 2. Parcourir et créer chaque ligne reçue
             for ligne in lignes:

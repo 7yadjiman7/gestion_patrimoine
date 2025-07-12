@@ -64,7 +64,7 @@ class PatrimoinePerte(models.Model):
     def create(self, vals):
         if vals.get("name", _("Nouveau")) == _("Nouveau"):
             vals["name"] = self.env["ir.sequence"].next_by_code(
-                "patrimoine.perte"
+                "patrimoine.perte.code"
             ) or _("Nouveau")
         return super(PatrimoinePerte, self).create(vals)
 

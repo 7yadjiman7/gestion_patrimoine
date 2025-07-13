@@ -188,6 +188,7 @@ class PostControllerTest(unittest.TestCase):
         env['intranet.post'].sudo.return_value = post_model
         env['intranet.post.comment'].sudo.return_value = MagicMock()
         mock_request.env = env
+        mock_request.jsonrequest = None
 
         res = self.controller.add_comment(1)
 
@@ -208,6 +209,7 @@ class PostControllerTest(unittest.TestCase):
         comment_model.create.return_value = MagicMock(id=4)
         mock_request.env = env
         mock_request.env.user.id = 9
+        mock_request.jsonrequest = None
 
         res = self.controller.add_comment(2, content='hello')
 
@@ -266,6 +268,7 @@ class PostControllerTest(unittest.TestCase):
         env['intranet.post.comment'].sudo.return_value = comment_model
         mock_request.env = env
         mock_request.env.user.id = 9
+        mock_request.jsonrequest = None
 
         self.controller.add_comment(1, content='child', parent_id=5)
 

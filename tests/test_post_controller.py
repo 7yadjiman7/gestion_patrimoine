@@ -273,6 +273,31 @@ class PostControllerTest(unittest.TestCase):
         args = comment_model.create.call_args[0][0]
         self.assertEqual(args.get('parent_id'), 5)
 
+    @patch('controllers.post_controller.request')
+    def test_add_comment_json_payload(self, mock_request):
+        env = MagicMock()
+        post = MagicMock()
+        post.id = 7
+        post.exists.return_value = True
+        post_model = MagicMock()
+        comment_model = MagicMock()
+        env.__getitem__.side_effect = (
+            lambda key: post_model if key == 'intranet.post' else comment_model
+        )
+        post_model.sudo.return_value.browse.return_value = post
+        comment_model.sudo.return_value = comment_model
+        mock_request.env = env
+        mock_request.env.user.id = 4
+
+        mock_request.jsonrequest = {'content': 'hello json'}
+        mock_request.httprequest = MagicMock()
+        mock_request.httprequest.data = None
+
+        res = self.controller.add_comment(7)
+
+        comment_model.create.assert_called_with({'post_id': post.id, 'user_id': 4, 'content': 'hello json'})
+        self.assertIn('application/json', res.headers.get('Content-Type'))
+
     @patch('controllers.post_controller.Response')
     @patch('controllers.post_controller.request')
     def test_get_comments_with_children(self, mock_request, mock_response):

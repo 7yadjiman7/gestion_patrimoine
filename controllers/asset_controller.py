@@ -2407,6 +2407,9 @@ class PatrimoineAssetController(http.Controller):
             }
 
             new_perte = request.env["patrimoine.perte"].create(perte_vals)
+            # Déplace immédiatement la déclaration à l'état "to_approve"
+            # afin qu'elle soit visible pour validation côté manager
+            new_perte.action_submit()
 
             # Gestion du document joint (procès-verbal)
             if "document" in request.httprequest.files:

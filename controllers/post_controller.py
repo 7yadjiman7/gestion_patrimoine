@@ -116,7 +116,7 @@ class IntranetPostController(http.Controller):
             headers=CORS_HEADERS,)
 
     # Garde la version de 'main' pour ajouter des commentaires
-    @http.route('/api/intranet/posts/<int:post_id>/comments', auth='user', type='json', methods=['POST'], csrf=False)
+    @http.route('/api/intranet/posts/<int:post_id>/comments', auth='user', type='http', methods=['POST'], csrf=False)
     @handle_api_errors
     def add_comment(self, post_id, content=None, parent_id=None, **kw):
         content = content or kw.get('content')

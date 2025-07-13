@@ -120,6 +120,31 @@ curl -X POST -H "Cookie: session_id=<SESSION>" \
   http://localhost:8069/api/intranet/posts?db=<DB>
 ```
 
+### `/api/intranet/posts/<post_id>/comments`
+`<post_id>` doit être l'identifiant numérique du post.
+* **GET** : renvoie la liste des commentaires du post (hiérarchie complète).
+* **POST** : ajoute un commentaire. Le champ `content` est obligatoire ; utilisez
+  `parent_id` pour répondre à un commentaire existant.
+
+#### Exemples `curl`
+
+```bash
+# Récupérer les commentaires du post 1
+curl -X GET -H "Cookie: session_id=<SESSION>" \
+  http://localhost:8069/api/intranet/posts/1/comments?db=<DB>
+
+# Ajouter un commentaire au post 1
+curl -X POST -H "Cookie: session_id=<SESSION>" \
+  -F "content=Mon commentaire" \
+  http://localhost:8069/api/intranet/posts/1/comments?db=<DB>
+
+# Répondre au commentaire 42
+curl -X POST -H "Cookie: session_id=<SESSION>" \
+  -F "content=Ma réponse" \
+  -F "parent_id=42" \
+  http://localhost:8069/api/intranet/posts/1/comments?db=<DB>
+```
+
 
 ## Troubleshooting
 

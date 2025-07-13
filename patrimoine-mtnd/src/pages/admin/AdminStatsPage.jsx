@@ -18,10 +18,10 @@ import {
 
 const COLORS_PIE = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"]
 const COLORS_BAR = ["#8884d8", "#82ca9d", "#ffc658", "#ff80b3", "#a4de6c"]
-const toEuro = value =>
+const toCfa = value =>
     new Intl.NumberFormat("fr-FR", {
         style: "currency",
-        currency: "EUR",
+        currency: "XOF",
     }).format(value)
 
 export default function AdminStatsPage() {
@@ -256,8 +256,8 @@ export default function AdminStatsPage() {
                         <ResponsiveContainer>
                             <BarChart data={statsByDepartmentValue}>
                                 <XAxis dataKey="name" />
-                                <YAxis tickFormatter={toEuro} width={90} />
-                                <Tooltip formatter={toEuro} />
+                                <YAxis tickFormatter={toCfa} width={90} />
+                                <Tooltip formatter={toCfa} />
                                 <Bar
                                     dataKey="value"
                                     name="Valeur totale"

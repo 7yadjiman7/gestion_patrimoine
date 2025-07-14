@@ -9,7 +9,7 @@
                 <field name="asset_id" string="Bien concerné"/>
                 <field name="date_perte" string="Date déclaration"/>
                 <field name="declarer_par_id" string="Déclarant"/>
-                <field name="state" widget="statusbar"/>
+                <field name="state" widget="statusbar" statusbar_visible="draft,to_approve,manager_approved,approved,rejected"/>
             </tree>
         </field>
     </record>
@@ -20,7 +20,7 @@
         <field name="arch" type="xml">
             <form string="Déclaration de perte">
                 <header>
-                    <field name="state" widget="statusbar" statusbar_visible="pending,confirmed,rejected,processed"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,to_approve,manager_approved,approved,rejected"/>
                 </header>
                 <sheet>
                     <group>

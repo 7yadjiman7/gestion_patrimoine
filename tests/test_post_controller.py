@@ -301,6 +301,36 @@ class PostControllerTest(unittest.TestCase):
         comment_model.create.assert_called_with({'post_id': post.id, 'user_id': 4, 'content': 'hello json'})
         self.assertIn('application/json', res.headers.get('Content-Type'))
 
+    @patch('controllers.post_controller.request')
+    def test_add_comment_form_payload(self, mock_request):
+        env = MagicMock()
+        post = MagicMock()
+        post.id = 10
+        post.exists.return_value = True
+        post_model = MagicMock()
+        comment_model = MagicMock()
+        env.__getitem__.side_effect = (
+            lambda key: post_model if key == 'intranet.post' else comment_model
+        )
+        post_model.sudo.return_value.browse.return_value = post
+        comment_model.sudo.return_value = comment_model
+        mock_request.env = env
+        mock_request.env.user.id = 12
+
+        mock_request.jsonrequest = None
+        httprequest = MagicMock()
+        form_mock = MagicMock()
+        form_mock.to_dict.return_value = {'content': 'form hello'}
+        httprequest.form = form_mock
+        httprequest.data = None
+        mock_request.httprequest = httprequest
+        mock_request.params = {}
+
+        res = self.controller.add_comment(10)
+
+        comment_model.create.assert_called_with({'post_id': post.id, 'user_id': 12, 'content': 'form hello'})
+        self.assertIn('application/json', res.headers.get('Content-Type'))
+
     @patch('controllers.post_controller.Response')
     @patch('controllers.post_controller.request')
     def test_get_comments_with_children(self, mock_request, mock_response):

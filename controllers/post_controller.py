@@ -120,6 +120,21 @@ class IntranetPostController(http.Controller):
     @handle_api_errors
     def add_comment(self, post_id, content=None, parent_id=None, **kw):
         data = request.jsonrequest or {}
+        if not data and not kw and content is None and parent_id is None:
+            form_data = {}
+            if (
+                getattr(request, 'httprequest', None)
+                and getattr(request.httprequest, 'form', None)
+                and callable(getattr(request.httprequest.form, 'to_dict', None))
+            ):
+                result = request.httprequest.form.to_dict()
+                if isinstance(result, dict):
+                    form_data = result
+            params = getattr(request, 'params', {})
+            if not isinstance(params, dict):
+                params = {}
+            data = form_data or params
+
         content = content or kw.get('content') or data.get('content')
         parent_id = parent_id or kw.get('parent_id') or data.get('parent_id')
 

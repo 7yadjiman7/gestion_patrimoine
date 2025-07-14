@@ -73,6 +73,13 @@ controllers_pkg = types.ModuleType('controllers')
 controllers_pkg.__path__ = []
 sys.modules.setdefault('controllers', controllers_pkg)
 
+common_path = os.path.join(os.path.dirname(__file__), '..', 'controllers', 'common.py')
+spec_common = importlib.util.spec_from_file_location('controllers.common', common_path)
+common_module = importlib.util.module_from_spec(spec_common)
+spec_common.loader.exec_module(common_module)
+sys.modules['controllers.common'] = common_module
+controllers_pkg.common = common_module
+
 asset_path = os.path.join(os.path.dirname(__file__), '..', 'controllers', 'asset_controller.py')
 spec = importlib.util.spec_from_file_location('controllers.asset_controller', asset_path)
 asset_controller = importlib.util.module_from_spec(spec)

@@ -1,6 +1,9 @@
 from odoo import http
 from odoo.http import request, Response
 import json
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 class ChatController(http.Controller):

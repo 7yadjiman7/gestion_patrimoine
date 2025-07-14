@@ -60,7 +60,7 @@ sys.modules.setdefault('odoo.models', odoo.models)
 sys.modules.setdefault('odoo.osv', odoo.osv)
 sys.modules.setdefault('odoo.api', odoo.api)
 
-# Stub for external dependency used by asset_controller
+# Stub for external dependencies
 import types as _types
 dateutil = _types.ModuleType('dateutil')
 relativedelta_mod = _types.ModuleType('dateutil.relativedelta')
@@ -80,24 +80,25 @@ import importlib.util
 controllers_pkg = types.ModuleType('controllers')
 controllers_pkg.__path__ = []
 
-# Provide a minimal stub for asset_controller used by post_controller
-asset_controller = types.ModuleType('controllers.asset_controller')
+# Provide a minimal stub for common module used by post_controller
+common_module = types.ModuleType('controllers.common')
+
 def handle_api_errors(func):
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except Exception as e:
+        except Exception:
             resp = MagicMock()
             resp.status_code = 400
             return resp
     return wrapper
 
-asset_controller.handle_api_errors = handle_api_errors
-asset_controller.CORS_HEADERS = {}
+common_module.handle_api_errors = handle_api_errors
+common_module.CORS_HEADERS = {}
 
-controllers_pkg.asset_controller = asset_controller
+controllers_pkg.common = common_module
 sys.modules.setdefault('controllers', controllers_pkg)
-sys.modules.setdefault('controllers.asset_controller', asset_controller)
+sys.modules.setdefault('controllers.common', common_module)
 
 post_path = os.path.join(os.path.dirname(__file__), '..', 'controllers', 'post_controller.py')
 spec = importlib.util.spec_from_file_location('controllers.post_controller', post_path)

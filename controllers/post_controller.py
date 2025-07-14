@@ -5,8 +5,7 @@ from odoo import http
 from odoo.http import request, Response
 from odoo.exceptions import ValidationError
 
-# Assurez-vous que handle_api_errors est bien importé depuis votre autre contrôleur
-from .asset_controller import handle_api_errors, CORS_HEADERS
+from .common import handle_api_errors, CORS_HEADERS
 
 _logger = logging.getLogger(__name__)
 

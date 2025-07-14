@@ -134,14 +134,17 @@ curl -X GET -H "Cookie: session_id=<SESSION>" \
   http://localhost:8069/api/intranet/posts/1/comments?db=<DB>
 
 # Ajouter un commentaire au post 1
-curl -X POST -H "Cookie: session_id=<SESSION>" \
-  -F "content=Mon commentaire" \
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -H "Cookie: session_id=<SESSION>" \
+  -d '{"content": "Mon commentaire"}' \
   http://localhost:8069/api/intranet/posts/1/comments?db=<DB>
 
 # Répondre au commentaire 42
-curl -X POST -H "Cookie: session_id=<SESSION>" \
-  -F "content=Ma réponse" \
-  -F "parent_id=42" \
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -H "Cookie: session_id=<SESSION>" \
+  -d '{"content": "Ma réponse", "parent_id": 42}' \
   http://localhost:8069/api/intranet/posts/1/comments?db=<DB>
 ```
 

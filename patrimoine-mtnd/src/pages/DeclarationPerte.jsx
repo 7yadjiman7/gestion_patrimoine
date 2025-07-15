@@ -306,7 +306,14 @@ export default function DeclarationPerte() {
                                 )}
                             </div>
 
-                            <div className="pt-4 flex justify-end">
+                            <div className="pt-4 flex justify-end space-x-4">
+                                <Button
+                                    type="button"
+                                    onClick={() => navigate(-1)}
+                                    variant="outline"
+                                >
+                                    Annuler
+                                </Button>
                                 <Button
                                     type="submit"
                                     disabled={isLoading}

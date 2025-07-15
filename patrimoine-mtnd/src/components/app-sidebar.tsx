@@ -110,7 +110,7 @@ export default function AppSidebar({ onCollapseChange }: AppSidebarProps) {
                 },
                 {
                     icon: <FileText className="h-5 w-5" />,
-                    label: "Posts (admin)",
+                    label: "Tableau des posts",
                     path: "/admin/posts",
                 },
             ],

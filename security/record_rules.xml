@@ -157,7 +157,7 @@
             <field name="domain_force">
                 ['|',
                  ('declarer_par_id', '=', user.id),
-                 ('declarer_par_id.employee_ids.parent_id.user_id', '=', user.id)
+                 ('declarer_par_id.employee_ids.department_id', '=', user.employee_id.department_id.id)
                 ]
             </field>
             <field name="perm_read" eval="1"/>

@@ -5,11 +5,11 @@
         <field name="model">patrimoine.perte</field>
         <field name="arch" type="xml">
             <tree string="Déclarations de perte">
+                <field name="state" widget="statusbar" statusbar_visible="draft,to_approve,manager_approved,approved,rejected"/>
                 <field name="name" string="Référence"/>
                 <field name="asset_id" string="Bien concerné"/>
                 <field name="date_perte" string="Date déclaration"/>
                 <field name="declarer_par_id" string="Déclarant"/>
-                <field name="state" widget="statusbar" statusbar_visible="draft,to_approve,manager_approved,approved,rejected"/>
             </tree>
         </field>
     </record>
@@ -21,6 +21,7 @@
             <form string="Déclaration de perte">
                 <header>
                     <field name="state" widget="statusbar" statusbar_visible="draft,to_approve,manager_approved,approved,rejected"/>
+                    <button string="Mes déclarations" type="action" name="%(action_perte_my)d"/>
                 </header>
                 <sheet>
                     <group>
@@ -45,6 +46,13 @@
         <field name="name">Déclarations de perte</field>
         <field name="res_model">patrimoine.perte</field>
         <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="action_perte_my" model="ir.actions.act_window">
+        <field name="name">Mes déclarations</field>
+        <field name="res_model">patrimoine.perte</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[("declarer_par_id", "=", uid)]</field>
     </record>
 
     <!-- Menu principal -->

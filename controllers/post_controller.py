@@ -118,6 +118,16 @@ class IntranetPostController(http.Controller):
     @http.route('/api/intranet/posts/<int:post_id>/comments', auth='user', type='json', methods=['POST'], csrf=False)
     @handle_api_errors
     def add_comment(self, post_id, content=None, parent_id=None, **kw):
+        _logger.info(
+            "add_comment called with json=%s kw=%s form=%s params=%s",
+            request.jsonrequest,
+            kw,
+            getattr(request.httprequest, "form", None).to_dict()
+            if getattr(getattr(request, "httprequest", None), "form", None)
+            else None,
+            getattr(request, "params", None),
+        )
+
         data = request.jsonrequest or {}
         if not data and not kw and content is None and parent_id is None:
             form_data = {}
@@ -137,6 +147,10 @@ class IntranetPostController(http.Controller):
         content = content or kw.get('content') or data.get('content')
         parent_id = parent_id or kw.get('parent_id') or data.get('parent_id')
 
+        _logger.info(
+            "Parsed comment content=%s parent_id=%s", content, parent_id
+        )
+
         if not content:
             raise ValidationError('Comment content is required')
         post = request.env['intranet.post'].sudo().browse(post_id)
@@ -152,6 +166,7 @@ class IntranetPostController(http.Controller):
             vals['parent_id'] = parent_id
 
         comment = request.env['intranet.post.comment'].sudo().create(vals)
+        _logger.info("Comment created with id=%s", comment.id)
 
         return Response(json.dumps({'status': 'success', 'data': {'id': comment.id}}, default=str), headers=CORS_HEADERS)
 

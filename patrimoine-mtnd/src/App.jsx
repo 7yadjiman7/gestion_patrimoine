@@ -16,6 +16,7 @@ import CategoryItemsPage from './pages/admin/CategoryItemsPage';
 import AdminDemandeMateriel from './pages/admin/AdminDemandesMateriel';
 import AdminMouvement from './pages/admin/AdminMouvement';
 import AdminDeclarationsPerte from './pages/admin/AdminDeclarationsPerte';
+import AdminPostsPage from './pages/admin/AdminPostsPage';
 import AdminStatsPage from './pages/admin/AdminStatsPage';
 import DeclarationPerte from './pages/DeclarationPerte';
 import DirDashboardPage from './pages/director/DirDashboardPage';
@@ -111,6 +112,14 @@ function AppContent() {
                   element={
                       <ProtectedRoute roles={[ROLES.ADMIN]}>
                           <AdminDeclarationsPerte />
+                      </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/admin/posts"
+                  element={
+                      <ProtectedRoute roles={[ROLES.ADMIN]}>
+                          <AdminPostsPage />
                       </ProtectedRoute>
                   }
               />

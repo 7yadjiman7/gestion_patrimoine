@@ -71,4 +71,12 @@ describe('postsService', () => {
     expect(api.get).toHaveBeenCalledWith('/api/intranet/posts/9/comments')
     expect(res).toEqual([{ id: 3 }])
   })
+
+  test('deletePost calls admin delete route', async () => {
+    api.get.mockResolvedValue({})
+
+    await postsService.deletePost(12)
+
+    expect(api.get).toHaveBeenCalledWith('/admin/posts/12/delete')
+  })
 })

@@ -27,11 +27,15 @@ const addComment = (id, content, parentId = null) => {
 const fetchComments = id =>
   api.get(`/api/intranet/posts/${id}/comments`).then(res => res.data.data)
 
+const deletePost = id =>
+  api.get(`/admin/posts/${id}/delete`)
+
 export default {
   fetchPosts,
   createPost,
   likePost,
   addComment,
   viewPost,
-  fetchComments
+  fetchComments,
+  deletePost
 }

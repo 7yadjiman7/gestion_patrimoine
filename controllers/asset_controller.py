@@ -2469,16 +2469,24 @@ class PatrimoineAssetController(http.Controller):
                     json.dumps([]), headers={"Content-Type": "application/json"}
                 )
 
-            # On cherche les employés qui ont ce manager (current_employee) comme supérieur
-            team_employee_ids = (
+            # Recherche des employés ayant ce manager comme supérieur hiérarchique
+            employee_ids = (
                 request.env["hr.employee"]
                 .search([("parent_id", "=", current_employee.id)])
                 .ids
             )
 
+            # S'il n'y a pas de subordonnés directs, on récupère les employés du même département
+            if not employee_ids and current_employee.department_id:
+                employee_ids = (
+                    request.env["hr.employee"]
+                    .search([("department_id", "=", current_employee.department_id.id)])
+                    .ids
+                )
+
             # On cherche les déclarations faites par ces employés et qui sont en attente de validation
             domain = [
-                ("declarer_par_id.employee_ids", "in", team_employee_ids),
+                ("declarer_par_id.employee_ids", "in", employee_ids),
                 ("state", "=", "to_approve"),
             ]
 

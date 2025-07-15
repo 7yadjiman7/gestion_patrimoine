@@ -110,7 +110,7 @@ export default function DeclarationPerte() {
             toast.success(
                 "Déclaration de perte soumise avec succès pour validation."
             )
-            navigate("/dashboard-agent")
+            navigate("/agent")
         } catch (error) {
             toast.error(`Erreur lors de la soumission : ${error.message}`)
         } finally {

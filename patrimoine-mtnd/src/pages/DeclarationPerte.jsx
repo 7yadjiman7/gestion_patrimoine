@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { toast } from "react-hot-toast"
 import materialService from "@/services/materialService"
 import { Button } from "@/components/ui/button"
+import { PlusCircle } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
@@ -135,7 +136,14 @@ export default function DeclarationPerte() {
                         </p>
                     </div>
                 </div>
-                <div className="flex justify-end my-4">
+                <div className="flex justify-between my-4">
+                    <Button
+                        className="gap-2"
+                        onClick={() => navigate("/director/demandes")}
+                    >
+                        <PlusCircle className="h-4 w-4" />
+                        Faire une demande
+                    </Button>
                     <Button
                         variant="outline"
                         onClick={() => navigate("/mes-pertes")}

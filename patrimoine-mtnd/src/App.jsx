@@ -19,6 +19,7 @@ import AdminDeclarationsPerte from './pages/admin/AdminDeclarationsPerte';
 import AdminPostsPage from './pages/admin/AdminPostsPage';
 import AdminStatsPage from './pages/admin/AdminStatsPage';
 import DeclarationPerte from './pages/DeclarationPerte';
+import MyDeclarationsPage from './pages/user/MyDeclarationsPage';
 import DirDashboardPage from './pages/director/DirDashboardPage';
 import UnauthorizedPage from './pages/UnauthorizedPage'; // N'oubliez pas l'import
 import ChatPage from './pages/chat/ChatPage';
@@ -208,6 +209,21 @@ function AppContent() {
                           ]}
                       >
                           <DeclarationPerte />
+                      </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/mes-pertes"
+                  element={
+                      <ProtectedRoute
+                          roles={[
+                              ROLES.AGENT,
+                              ROLES.MANAGER,
+                              ROLES.DIRECTOR,
+                              ROLES.ADMIN,
+                          ]}
+                      >
+                          <MyDeclarationsPage />
                       </ProtectedRoute>
                   }
               />

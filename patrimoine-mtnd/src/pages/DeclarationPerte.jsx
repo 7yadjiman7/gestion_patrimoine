@@ -135,6 +135,15 @@ export default function DeclarationPerte() {
                         </p>
                     </div>
                 </div>
+                <div className="flex justify-end my-4">
+                    <Button
+                        variant="outline"
+                        onClick={() => navigate("/mes-pertes")}
+                        className="hover:bg-orange-500 hover:text-white"
+                    >
+                        Mes déclarations
+                    </Button>
+                </div>
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="bg-white shadow-lg border border-slate-200">
                         <div className="p-6 space-y-8">

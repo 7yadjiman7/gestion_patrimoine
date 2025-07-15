@@ -141,7 +141,7 @@ export default function AppSidebar({ onCollapseChange }: AppSidebarProps) {
                 {
                     icon: <Home className="h-5 w-5" />,
                     label: "Page d'Accueil",
-                    path: "/agent/dashboard",
+                    path: "/agent",
                 },
                 {
                     icon: <AlertCircle className="h-5 w-5" />,

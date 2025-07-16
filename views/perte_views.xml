@@ -14,6 +14,13 @@
         </field>
     </record>
 
+    <record id="action_perte_my" model="ir.actions.act_window">
+        <field name="name">Mes déclarations</field>
+        <field name="res_model">patrimoine.perte</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[("declarer_par_id", "=", uid)]</field>
+    </record>
+
     <record id="view_perte_form" model="ir.ui.view">
         <field name="name">patrimoine.perte.form</field>
         <field name="model">patrimoine.perte</field>
@@ -46,13 +53,6 @@
         <field name="name">Déclarations de perte</field>
         <field name="res_model">patrimoine.perte</field>
         <field name="view_mode">tree,form</field>
-    </record>
-
-    <record id="action_perte_my" model="ir.actions.act_window">
-        <field name="name">Mes déclarations</field>
-        <field name="res_model">patrimoine.perte</field>
-        <field name="view_mode">tree,form</field>
-        <field name="domain">[("declarer_par_id", "=", uid)]</field>
     </record>
 
     <!-- Menu principal -->

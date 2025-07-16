@@ -1,12 +1,18 @@
 import json
 import logging
+import os
 from functools import wraps
 from odoo.exceptions import AccessError, ValidationError
 from odoo.http import Response
 
+# Allow overriding the CORS origin via an environment variable so deployments
+# can specify their frontend URL.  Using a specific origin is required when the
+# client sends credentials (cookies or auth headers).
+ALLOWED_ORIGIN = os.environ.get("ALLOWED_ORIGIN", "http://localhost:5174")
+
 CORS_HEADERS = {
     "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Origin, Content-Type, X-Auth-Token, X-Openerp-Session-Id",
     "Access-Control-Allow-Credentials": "true",

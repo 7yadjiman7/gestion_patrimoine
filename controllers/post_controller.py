@@ -204,6 +204,7 @@ class IntranetPostController(http.Controller):
                 'user_id': comment.user_id.id,
                 'user_name': comment.user_id.name,
                 'content': comment.content,
+                'parent_id': comment.parent_id.id if comment.parent_id else None,
                 'create_date': comment.create_date,
                 'children': [serialize(c) for c in comment.child_ids],
             }

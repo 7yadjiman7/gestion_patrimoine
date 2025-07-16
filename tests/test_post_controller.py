@@ -220,8 +220,9 @@ class PostControllerTest(unittest.TestCase):
         comment_model.create.assert_called_with({'post_id': post.id, 'user_id': 9, 'content': 'hello'})
         self.assertIn('application/json', res.headers.get('Content-Type'))
 
+    @patch('controllers.post_controller.Response')
     @patch('controllers.post_controller.request')
-    def test_get_comments(self, mock_request):
+    def test_get_comments(self, mock_request, mock_response):
         env = MagicMock()
         post_model = MagicMock()
         comment_model = MagicMock()
@@ -231,18 +232,24 @@ class PostControllerTest(unittest.TestCase):
         post.id = 5
         post_model.sudo.return_value.browse.return_value = post
         c1 = MagicMock(id=1, content='c', user_id=MagicMock(name='u1', id=2), create_date='d1')
+        c1.parent_id = None
         c2 = MagicMock(id=2, content='d', user_id=MagicMock(name='u2', id=3), create_date='d2')
+        c2.parent_id = None
         comment_model.search.return_value = [c1, c2]
         comment_model.sudo.return_value = comment_model
         mock_request.env = env
 
-        res = self.controller.get_comments(5)
+        self.controller.get_comments(5)
 
         comment_model.search.assert_called_with([
             ('post_id', '=', post.id),
             ('parent_id', '=', False)
         ], order='create_date asc')
-        self.assertIn('application/json', res.headers.get('Content-Type'))
+        args, kwargs = mock_response.call_args
+        payload = json.loads(args[0])
+        for comment in payload['data']:
+            self.assertIn('parent_id', comment)
+            self.assertIsNone(comment['parent_id'])
 
     @patch('controllers.post_controller.request')
     def test_add_view_adds_user(self, mock_request):
@@ -370,6 +377,8 @@ class PostControllerTest(unittest.TestCase):
 
         child = MagicMock(id=2, user_id=MagicMock(id=4, name='U2'), content='c2', create_date='d2', child_ids=[])
         parent = MagicMock(id=1, user_id=MagicMock(id=3, name='U1'), content='c1', create_date='d1', child_ids=[child])
+        parent.parent_id = None
+        child.parent_id = MagicMock(id=parent.id)
         comment_model.search.return_value = [parent]
         mock_request.env = env
 
@@ -378,6 +387,11 @@ class PostControllerTest(unittest.TestCase):
         args, kwargs = mock_response.call_args
         payload = json.loads(args[0])
         self.assertEqual(len(payload['data'][0]['children']), 1)
+        parent_payload = payload['data'][0]
+        child_payload = parent_payload['children'][0]
+        self.assertIn('parent_id', parent_payload)
+        self.assertIsNone(parent_payload['parent_id'])
+        self.assertEqual(child_payload['parent_id'], parent_payload['id'])
 
 
 if __name__ == '__main__':

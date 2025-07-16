@@ -95,6 +95,7 @@ def handle_api_errors(func):
 
 common_module.handle_api_errors = handle_api_errors
 common_module.CORS_HEADERS = {}
+common_module.ALLOWED_ORIGIN = "http://testserver"
 
 controllers_pkg.common = common_module
 sys.modules.setdefault('controllers', controllers_pkg)

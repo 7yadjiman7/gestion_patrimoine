@@ -4,6 +4,7 @@ import { ThumbsUp, MessageCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import ApiImage from "@/components/ui/ApiImage"
+import { API_BASE_URL } from "@/config/api"
 import { useAuth } from "@/context/AuthContext"
 
 // Fonction pour formater la date
@@ -112,7 +113,7 @@ export default function Post({ post }) {
                 </p>
                 {post.image && (
                     <ApiImage
-                        src={`http://localhost${post.image}`}
+                        src={`${API_BASE_URL}${post.image}`}
                         alt="Image du post"
                         className="w-full rounded-lg border border-slate-200 dark:border-slate-700"
                     />

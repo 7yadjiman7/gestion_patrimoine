@@ -96,6 +96,7 @@ def handle_api_errors(func):
 common_module.handle_api_errors = handle_api_errors
 common_module.CORS_HEADERS = {}
 common_module.ALLOWED_ORIGIN = "http://testserver"
+common_module.json_response = lambda data, status=200: data
 
 controllers_pkg.common = common_module
 sys.modules.setdefault('controllers', controllers_pkg)
@@ -208,6 +209,7 @@ class PostControllerTest(unittest.TestCase):
         post.id = 2
         post_model.sudo.return_value.browse.return_value = post
         comment_model.sudo.return_value = comment_model
+        comment_model.search.return_value = []
         comment_model.create.return_value = MagicMock(id=4)
         mock_request.env = env
         mock_request.env.user.id = 9
@@ -291,6 +293,7 @@ class PostControllerTest(unittest.TestCase):
         )
         post_model.sudo.return_value.browse.return_value = post
         comment_model.sudo.return_value = comment_model
+        comment_model.search.return_value = []
         mock_request.env = env
         mock_request.env.user.id = 4
 
@@ -316,6 +319,7 @@ class PostControllerTest(unittest.TestCase):
         )
         post_model.sudo.return_value.browse.return_value = post
         comment_model.sudo.return_value = comment_model
+        comment_model.search.return_value = []
         mock_request.env = env
         mock_request.env.user.id = 12
 
@@ -332,6 +336,27 @@ class PostControllerTest(unittest.TestCase):
 
         comment_model.create.assert_called_with({'post_id': post.id, 'user_id': 12, 'content': 'form hello'})
         self.assertIn('application/json', res.headers.get('Content-Type'))
+
+    @patch('controllers.post_controller.request')
+    def test_add_comment_second_root_comment_returns_400(self, mock_request):
+        env = MagicMock()
+        post_model = MagicMock()
+        comment_model = MagicMock()
+        env.__getitem__.side_effect = lambda key: post_model if key == 'intranet.post' else comment_model
+        post = MagicMock()
+        post.exists.return_value = True
+        post.id = 15
+        post_model.sudo.return_value.browse.return_value = post
+        comment_model.sudo.return_value = comment_model
+        comment_model.search.return_value = [MagicMock(id=1)]
+        mock_request.env = env
+        mock_request.env.user.id = 3
+        mock_request.jsonrequest = {'content': 'dup'}
+
+        res = self.controller.add_comment(15)
+
+        self.assertEqual(res.status_code, 400)
+        comment_model.create.assert_not_called()
 
     @patch('controllers.post_controller.Response')
     @patch('controllers.post_controller.request')

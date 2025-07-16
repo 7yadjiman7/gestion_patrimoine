@@ -8,7 +8,7 @@ from odoo.osv import expression
 from werkzeug.exceptions import BadRequest
 import base64  # Pour encoder/décoder les fichiers
 import logging
-from .common import handle_api_errors, json_response, CORS_HEADERS,
+from .common import handle_api_errors, json_response, CORS_HEADERS
 
 
 def Response(*args, **kwargs):

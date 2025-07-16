@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import materialService from "@/services/materialService"
 import AppSidebar from "@/components/app-sidebar"
 import { API_BASE_URL } from "@/config/api"
+import ApiImage from "@/components/ui/ApiImage"
 import {
     Edit,
     FileText,
@@ -279,7 +280,7 @@ export default function MaterialDetailPage() {
                                         {/* Image à gauche */}
                                         {material.image && (
                                             <div className="w-full md:w-1/3 flex justify-center">
-                                                <img
+                                                <ApiImage
                                                     src={`${API_BASE_URL}${material.image}`}
                                                     alt={material.name}
                                                     className="rounded-lg border shadow-sm max-h-96 w-full object-contain"

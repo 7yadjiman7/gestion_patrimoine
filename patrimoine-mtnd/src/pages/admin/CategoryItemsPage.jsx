@@ -10,6 +10,7 @@ import { toast } from "react-hot-toast"
 import { Search, PlusCircle, Calendar, MapPin, Euro } from "lucide-react";
 import materialService from "@/services/materialService";
 import ApiImage from "@/components/ui/ApiImage";
+import { API_BASE_URL } from "@/config/api";
 
 // Nouveaux styles pour les cartes (inspirés de AdminMaterialTypes.jsx)
 const cardClasses = {
@@ -282,8 +283,9 @@ export default function CategoryItemsPage() {
                                 <div className={cardClasses.imageContainer}>
                                     <ApiImage
                                         src={
-                                            material.image ||
-                                            "/images/default-material.jpg"
+                                            material.image
+                                                ? `${API_BASE_URL}${material.image}`
+                                                : "/images/default-material.jpg"
                                         }
                                         alt={material.name}
                                         className={cardClasses.image}

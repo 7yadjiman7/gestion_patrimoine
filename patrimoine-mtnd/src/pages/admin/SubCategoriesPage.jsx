@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-hot-toast";
 import ApiImage from "@/components/ui/ApiImage";
+import { API_BASE_URL } from "@/config/api";
 
 export default function SubCategoriesPage() {
   const { type } = useParams();
@@ -102,7 +103,11 @@ export default function SubCategoriesPage() {
             className="relative rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 cursor-pointer group"
           >
             <ApiImage
-              src={category.image_url || "/placeholder.jpeg"}
+              src={
+                category.image_url
+                  ? `${API_BASE_URL}${category.image_url}`
+                  : "/placeholder.jpeg"
+              }
               alt={category.name}
               className="w-full h-80 object-cover brightness-110 contrast-110 saturate-125 transition-transform duration-700 group-hover:scale-105"
             />

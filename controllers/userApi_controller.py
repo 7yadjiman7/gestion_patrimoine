@@ -15,7 +15,7 @@ _logger = logging.getLogger(__name__)
 
 class UserApiController(http.Controller):
 
-    @http.route("/api/users/me", auth="user", type="json", methods=["POST"], csrf=False, cors=ALLOWED_ORIGIN)
+    @http.route("/api/users/me", auth="user", type="json", methods=["POST"], csrf=False)
     def get_user_info(self, **kw):
         """
         Retourne les informations détaillées de l'utilisateur connecté,

@@ -61,13 +61,6 @@ un espace de chat interne et un mur de posts pour partager les annonces du minis
 3. Installer le module via l'interface administrateur
 4. Dans le menu **Gestion du Patrimoine**, ouvrez l'élément **Posts** pour gérer les annonces internes.
 
-### Configuration CORS
-Définissez la variable d'environnement `ALLOWED_ORIGIN` avec l'URL autorisée pour les appels à l'API. Lorsque cette valeur est renseignée, le serveur renvoie cet hôte dans l'en-tête `Access-Control-Allow-Origin`. Plusieurs origines peuvent être séparées par des virgules et l'origine de la requête doit correspondre à la liste.
-
-```bash
-export ALLOWED_ORIGIN="https://intranet.example.com"
-```
-
 ## Dépendances
 - Odoo 17
 - Modules requis : base, hr, stock, account, fleet

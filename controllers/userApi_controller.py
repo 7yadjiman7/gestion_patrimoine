@@ -2,7 +2,7 @@ from odoo import http
 from odoo.http import request, Response as OdooResponse
 import json
 import logging
-from .common import CORS_HEADERS
+from .common import CORS_HEADERS, ALLOWED_ORIGIN
 
 
 def Response(*args, **kwargs):
@@ -15,7 +15,7 @@ _logger = logging.getLogger(__name__)
 
 class UserApiController(http.Controller):
 
-    @http.route("/api/users/me", auth="user", type="json", methods=["POST"], csrf=False, cors="*")
+    @http.route("/api/users/me", auth="user", type="json", methods=["POST"], csrf=False, cors=ALLOWED_ORIGIN)
     def get_user_info(self, **kw):
         """
         Retourne les informations détaillées de l'utilisateur connecté,

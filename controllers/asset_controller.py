@@ -8,7 +8,7 @@ from odoo.osv import expression
 from werkzeug.exceptions import BadRequest
 import base64  # Pour encoder/décoder les fichiers
 import logging
-from .common import handle_api_errors, json_response, CORS_HEADERS
+from .common import handle_api_errors, json_response, CORS_HEADERS, ALLOWED_ORIGIN
 
 
 def Response(*args, **kwargs):
@@ -20,7 +20,7 @@ _logger = logging.getLogger(__name__)
 
 
 class PatrimoineAssetController(http.Controller):
-    @http.route("/api/patrimoine/categories", auth="public", type="http", methods=["GET"], csrf=False, cors="*")
+    @http.route("/api/patrimoine/categories", auth="public", type="http", methods=["GET"], csrf=False, cors=ALLOWED_ORIGIN)
     def list_categories(self, **kw):
         try:
             domain = []
@@ -53,7 +53,7 @@ class PatrimoineAssetController(http.Controller):
             _logger.error("Error listing categories: %s", str(e))
             return Response(status=500)
 
-    @http.route("/api/patrimoine/demande_materiel/<int:demande_id>", auth="user", type="json", methods=["GET"], cors="*")
+    @http.route("/api/patrimoine/demande_materiel/<int:demande_id>", auth="user", type="json", methods=["GET"], cors=ALLOWED_ORIGIN)
     def get_demande_details(self, demande_id):
         try:
             demande = http.request.env['patrimoine.demande_materiel'].browse(demande_id)
@@ -73,7 +73,7 @@ class PatrimoineAssetController(http.Controller):
         except Exception as e:
             return {"error": str(e)}, 500
 
-    @http.route("/api/patrimoine/demande_materiel/<int:demande_id>", auth="user", type="http", methods=["GET"], cors="*")
+    @http.route("/api/patrimoine/demande_materiel/<int:demande_id>", auth="user", type="http", methods=["GET"], cors=ALLOWED_ORIGIN)
     def get_demande_details_http(self, demande_id):
         try:
             demande = request.env['patrimoine.demande_materiel'].browse(demande_id)
@@ -108,7 +108,7 @@ class PatrimoineAssetController(http.Controller):
         auth="public",
         type="http",
         methods=["GET"],
-        csrf=False, cors="*")
+        csrf=False, cors=ALLOWED_ORIGIN)
     @handle_api_errors
     def list_subcategories(self, category_id, **kw):
         domain = []
@@ -178,7 +178,7 @@ class PatrimoineAssetController(http.Controller):
         "/api/patrimoine/items/<int:subcategory_id>",
         auth="user",
         type="http",
-        methods=["GET"], cors="*")
+        methods=["GET"], cors=ALLOWED_ORIGIN)
     @handle_api_errors
     def list_items(self, subcategory_id, **kw):
         items = request.env["patrimoine.asset"].search(
@@ -235,7 +235,7 @@ class PatrimoineAssetController(http.Controller):
         )
 
     @http.route(
-        "/api/patrimoine/items", auth="user", type="json", methods=["POST"], csrf=False, cors="*")
+        "/api/patrimoine/items", auth="user", type="json", methods=["POST"], csrf=False, cors=ALLOWED_ORIGIN)
     def create_item(self, **post):
         _logger.info("Début de la création d'un item (matériel)")
         try:
@@ -400,7 +400,7 @@ class PatrimoineAssetController(http.Controller):
 
     # Gardez la première route pour lister TOUS les assets sans filtre
 
-    @http.route("/api/patrimoine/assets", auth="user", type="http", methods=["GET"], cors="*")
+    @http.route("/api/patrimoine/assets", auth="user", type="http", methods=["GET"], cors=ALLOWED_ORIGIN)
     def list_all_assets(
         self, **kw
     ):  # Renommée pour la clarté, prend tous les params au cas où
@@ -462,14 +462,14 @@ class PatrimoineAssetController(http.Controller):
     # NOUVELLE MÉTHODE list_assets_filtered POUR GÉRER LE FILTRAGE AVEC PATH VARIABLES
     @http.route(
         [
-            "/api/patrimoine/assets", # Nouvelle route pour lister tous les assets (sans filtre dans le chemin, cors="*")
+            "/api/patrimoine/assets", # Nouvelle route pour lister tous les assets (sans filtre dans le chemin, cors=ALLOWED_ORIGIN)
             "/api/patrimoine/assets/type/<string:general_type>",  # Pour filtrer par type général
             "/api/patrimoine/assets/category/<string:subcategory_code>",  # Pour filtrer par sous-catégorie
         ],
         auth="user",
         type="http",
         methods=["GET"],
-        cors="*",
+        cors=ALLOWED_ORIGIN,
     )
     def list_assets_filtered(
         self, general_type=None, subcategory_code=None, **kw
@@ -566,7 +566,7 @@ class PatrimoineAssetController(http.Controller):
                 headers={"Content-Type": "application/json"},
             )
 
-    @http.route('/api/patrimoine/assets/filter', auth='user', type='http', methods=['GET'], cors="*")
+    @http.route('/api/patrimoine/assets/filter', auth='user', type='http', methods=['GET'], cors=ALLOWED_ORIGIN)
     def get_filtered_assets(self, **kw):
         """
         Route générique pour filtrer les matériels en fonction de divers critères
@@ -642,7 +642,7 @@ class PatrimoineAssetController(http.Controller):
             )
 
     # --- NOUVELLE API : Lister les assets par Département ---
-    @http.route("/api/patrimoine/assets/department/<int:department_id>", auth="user", type="http", methods=["GET"], cors="*")
+    @http.route("/api/patrimoine/assets/department/<int:department_id>", auth="user", type="http", methods=["GET"], cors=ALLOWED_ORIGIN)
     def list_assets_by_department(self, department_id, **kw):
         _logger.info(f"list_assets_by_department: Requête reçue pour département ID: {department_id}")
         try:
@@ -674,7 +674,7 @@ class PatrimoineAssetController(http.Controller):
             _logger.error("Error listing assets by department: %s", str(e))
             return Response(json.dumps({'status': 'error', 'message': str(e)}), status=500, headers={"Content-Type": "application/json"})
 
-    @http.route('/api/patrimoine/assets', auth="user", type="http", methods=["POST"], csrf=False, cors="*")
+    @http.route('/api/patrimoine/assets', auth="user", type="http", methods=["POST"], csrf=False, cors=ALLOWED_ORIGIN)
     def create_asset(self, **post):
         _logger.info("Début de la création d'un asset via la route HTTP")
         try:
@@ -766,7 +766,7 @@ class PatrimoineAssetController(http.Controller):
                 headers={"Content-Type": "application/json"},
             )
 
-    @http.route('/api/patrimoine/assets/<int:asset_id>', auth="user", type="http", methods=["PUT"], csrf=False, cors="*")
+    @http.route('/api/patrimoine/assets/<int:asset_id>', auth="user", type="http", methods=["PUT"], csrf=False, cors=ALLOWED_ORIGIN)
     def update_asset(self, asset_id, **post):
         _logger.info(f"Début de la mise à jour de l'asset ID {asset_id}")
         try:
@@ -813,7 +813,7 @@ class PatrimoineAssetController(http.Controller):
         "/api/patrimoine/assets/<int:asset_id>",
         auth="user",
         type="http",
-        methods=["GET"], cors="*")
+        methods=["GET"], cors=ALLOWED_ORIGIN)
     @handle_api_errors
     def get_asset(self, asset_id, **kw):
         asset = request.env["patrimoine.asset"].browse(asset_id)
@@ -906,7 +906,7 @@ class PatrimoineAssetController(http.Controller):
 
     # NOUVELLE ROUTE 1 : Pour l'âge du parc matériel
     @http.route(
-        "/api/patrimoine/stats/by_age", auth="user", type="http", methods=["GET"], cors="*")
+        "/api/patrimoine/stats/by_age", auth="user", type="http", methods=["GET"], cors=ALLOWED_ORIGIN)
     def get_stats_by_age(self, **kw):
         try:
             assets = request.env["patrimoine.asset"].search(
@@ -952,7 +952,7 @@ class PatrimoineAssetController(http.Controller):
         "/api/patrimoine/stats/by_department_value",
         auth="user",
         type="http",
-        methods=["GET"], cors="*")
+        methods=["GET"], cors=ALLOWED_ORIGIN)
     def get_stats_by_department_value(self, **kw):
         try:
             # On groupe par département et on somme la valeur d'acquisition
@@ -986,7 +986,7 @@ class PatrimoineAssetController(http.Controller):
             return Response(json.dumps({"error": str(e)}), status=500)
 
     # Récupération des données de d'autres modules
-    @http.route("/api/patrimoine/locations", auth="user", type="http", methods=["GET"], cors="*")
+    @http.route("/api/patrimoine/locations", auth="user", type="http", methods=["GET"], cors=ALLOWED_ORIGIN)
     def get_locations(self, **kw):
         try:
             # Modèle stock.location d'Odoo
@@ -1005,7 +1005,7 @@ class PatrimoineAssetController(http.Controller):
             _logger.error("Error listing locations: %s", str(e))
             return Response(status=500)
 
-    @http.route("/api/patrimoine/employees", auth="user", type="http", methods=["GET"], cors="*")
+    @http.route("/api/patrimoine/employees", auth="user", type="http", methods=["GET"], cors=ALLOWED_ORIGIN)
     def get_employees(self, **kw):
         try:
             # Modèle hr.employee d'Odoo
@@ -1026,7 +1026,7 @@ class PatrimoineAssetController(http.Controller):
             return Response(status=500)
 
     @http.route(
-        "/api/patrimoine/departments", auth="user", type="http", methods=["GET"], cors="*")
+        "/api/patrimoine/departments", auth="user", type="http", methods=["GET"], cors=ALLOWED_ORIGIN)
     def get_departments(self, **kw):
         try:
             # Modèle hr.department d'Odoo
@@ -1041,7 +1041,7 @@ class PatrimoineAssetController(http.Controller):
             return Response(status=500)
 
     @http.route(
-        "/api/patrimoine/fournisseurs", auth="user", type="http", methods=["GET"], cors="*")
+        "/api/patrimoine/fournisseurs", auth="user", type="http", methods=["GET"], cors=ALLOWED_ORIGIN)
     def get_fournisseurs(self, **kw):
         try:
             # Modèle hr.department d'Odoo
@@ -1064,7 +1064,7 @@ class PatrimoineAssetController(http.Controller):
         auth="user",
         type="json",
         methods=["POST"],
-        csrf=False, cors="*")
+        csrf=False, cors=ALLOWED_ORIGIN)
     def create_field(self, subcategory_id, **post):
         try:
             field_vals = {
@@ -1084,7 +1084,7 @@ class PatrimoineAssetController(http.Controller):
         auth="user",
         type="json",
         methods=["PUT"],
-        csrf=False, cors="*")
+        csrf=False, cors=ALLOWED_ORIGIN)
     def update_field(self, field_id, **post):
         try:
             field = request.env["asset.custom.field"].browse(field_id)
@@ -1108,7 +1108,7 @@ class PatrimoineAssetController(http.Controller):
         auth="user",
         type="json",
         methods=["DELETE"],
-        csrf=False, cors="*")
+        csrf=False, cors=ALLOWED_ORIGIN)
     def delete_field(self, field_id, **kw):
         try:
             field = request.env["asset.custom.field"].browse(field_id)
@@ -1123,7 +1123,7 @@ class PatrimoineAssetController(http.Controller):
 
     # --- create_mouvement (mise à jour des champs) ---
     @http.route(
-        "/api/patrimoine/mouvements", auth="user", type="http", methods=["POST"], csrf=False, cors="*")
+        "/api/patrimoine/mouvements", auth="user", type="http", methods=["POST"], csrf=False, cors=ALLOWED_ORIGIN)
     def create_mouvement(self, **kw):
         try:
             # 1. Lire les données JSON manuellement depuis le corps de la requête
@@ -1219,7 +1219,7 @@ class PatrimoineAssetController(http.Controller):
         auth="user",
         type="http",
         methods=["POST"],
-        csrf=False, cors="*")
+        csrf=False, cors=ALLOWED_ORIGIN)
     def validate_mouvement(
         self, mouvement_id, **post
     ):  # Gardez **post si pas de body JSON
@@ -1251,7 +1251,7 @@ class PatrimoineAssetController(http.Controller):
         "/api/patrimoine/items/<int:item_id>/field-values",
         auth="user",
         type="http",
-        methods=["GET"], cors="*")
+        methods=["GET"], cors=ALLOWED_ORIGIN)
     def get_item_field_values(self, item_id, **kw):
         try:
             item = request.env["patrimoine.asset"].browse(item_id)
@@ -1271,7 +1271,7 @@ class PatrimoineAssetController(http.Controller):
         auth="user",
         type="json",
         methods=["POST"],
-        csrf=False, cors="*")
+        csrf=False, cors=ALLOWED_ORIGIN)
     def save_item_field_values(self, item_id, **post):
         try:
             item = request.env["patrimoine.asset"].browse(item_id)
@@ -1290,7 +1290,7 @@ class PatrimoineAssetController(http.Controller):
         auth="user",
         type="json",
         methods=["POST"],
-        csrf=False, cors="*")
+        csrf=False, cors=ALLOWED_ORIGIN)
     def save_default_field_values(self, subcategory_id, **post):
         try:
             subcategory = request.env["asset.subcategory"].browse(subcategory_id)
@@ -1308,7 +1308,7 @@ class PatrimoineAssetController(http.Controller):
         "/api/patrimoine/items/<int:item_id>",
         auth="user",
         type="http",
-        methods=["GET"], cors="*")
+        methods=["GET"], cors=ALLOWED_ORIGIN)
     @handle_api_errors
     def get_item(self, item_id, **kw):
         """Endpoint détaillé pour usage interne"""
@@ -1389,7 +1389,7 @@ class PatrimoineAssetController(http.Controller):
         type="http",
         methods=["GET"],
         csrf=False,
-        cors="*"
+        cors=ALLOWED_ORIGIN
     )
     @handle_api_errors
     def get_asset_simple(self, item_id, **kw):
@@ -1439,7 +1439,7 @@ class PatrimoineAssetController(http.Controller):
         auth="user",
         type="json",
         methods=["PUT"],
-        csrf=False, cors="*")
+        csrf=False, cors=ALLOWED_ORIGIN)
     def update_item(self, item_id, **post):
         try:
             item = request.env["patrimoine.asset"].browse(item_id)
@@ -1500,7 +1500,7 @@ class PatrimoineAssetController(http.Controller):
         auth="user",
         type="json",
         methods=["DELETE"],
-        csrf=False, cors="*")
+        csrf=False, cors=ALLOWED_ORIGIN)
     def delete_item(self, item_id, **kw):
         try:
             item = request.env["patrimoine.asset"].browse(item_id)
@@ -1589,7 +1589,7 @@ class PatrimoineAssetController(http.Controller):
         "/api/patrimoine/assets/<int:asset_id>/print_fiche_vie",
         auth="user",
         type="http",
-        methods=["GET"], cors="*")
+        methods=["GET"], cors=ALLOWED_ORIGIN)
     def print_fiche_vie_pdf(self, asset_id, **kw):
         _logger.info(f"print_fiche_vie_pdf: Requête reçue pour asset ID: {asset_id}")
         try:
@@ -1627,7 +1627,7 @@ class PatrimoineAssetController(http.Controller):
         "/api/patrimoine/subcategories/<int:subcategory_id>/fields",
         auth="user",
         type="http",
-        methods=["GET"], cors="*")
+        methods=["GET"], cors=ALLOWED_ORIGIN)
     def list_fields(self, subcategory_id, **kw):
         try:
             fields = request.env["asset.custom.field"].search(
@@ -1658,7 +1658,7 @@ class PatrimoineAssetController(http.Controller):
         "/api/patrimoine/items/<int:item_id>/field-values",
         auth="user",
         type="http",
-        methods=["GET"], cors="*")
+        methods=["GET"], cors=ALLOWED_ORIGIN)
     def get_item_field_values(self, item_id, **kw):
         try:
             item = request.env["patrimoine.asset"].browse(item_id)
@@ -1678,7 +1678,7 @@ class PatrimoineAssetController(http.Controller):
         auth="user",
         type="json",
         methods=["POST"],
-        csrf=False, cors="*")
+        csrf=False, cors=ALLOWED_ORIGIN)
     def save_item_field_values(self, item_id, **post):
         try:
             item = request.env["patrimoine.asset"].browse(item_id)
@@ -1697,7 +1697,7 @@ class PatrimoineAssetController(http.Controller):
         auth="user",
         type="json",
         methods=["POST"],
-        csrf=False, cors="*")
+        csrf=False, cors=ALLOWED_ORIGIN)
     def create_field(self, subcategory_id, **post):
         try:
             field_data = {
@@ -1722,7 +1722,7 @@ class PatrimoineAssetController(http.Controller):
         auth="user",
         type="json",
         methods=["PUT"],
-        csrf=False, cors="*")
+        csrf=False, cors=ALLOWED_ORIGIN)
     def update_field(self, field_id, **post):
         try:
             field = request.env["asset.custom.field"].browse(field_id)
@@ -1750,7 +1750,7 @@ class PatrimoineAssetController(http.Controller):
         auth="user",
         type="json",
         methods=["DELETE"],
-        csrf=False, cors="*")
+        csrf=False, cors=ALLOWED_ORIGIN)
     def delete_field(self, field_id, **kw):
         try:
             field = request.env["asset.custom.field"].browse(field_id)
@@ -1768,7 +1768,7 @@ class PatrimoineAssetController(http.Controller):
         auth="user",
         type="json",
         methods=["POST"],
-        csrf=False, cors="*")
+        csrf=False, cors=ALLOWED_ORIGIN)
     def save_field_values(self, subcategoryId, values, itemId=None, **kw):
         try:
             subcategory = request.env["asset.subcategory"].browse(subcategoryId)
@@ -1800,7 +1800,7 @@ class PatrimoineAssetController(http.Controller):
         ],
         auth="user",
         type="http",
-        methods=["GET"], cors="*")
+        methods=["GET"], cors=ALLOWED_ORIGIN)
 
     def get_patrimoine_stats(self, general_type=None, subcategory_code=None, **kw):
         try:
@@ -1877,7 +1877,7 @@ class PatrimoineAssetController(http.Controller):
 
     # --- NOUVELLE API : Statistiques par Département ---
     @http.route(
-        "/api/patrimoine/stats/by_department", auth="user", type="http", methods=["GET"], cors="*")
+        "/api/patrimoine/stats/by_department", auth="user", type="http", methods=["GET"], cors=ALLOWED_ORIGIN)
     def get_stats_by_department(self, **kw):
         try:
             # read_group pour compter les assets par département
@@ -1914,7 +1914,7 @@ class PatrimoineAssetController(http.Controller):
                 headers={"Content-Type": "application/json"},
             )
     # Route pour obtenir les stats détaillées d'UN SEUL département
-    @http.route('/api/patrimoine/stats/department/<int:department_id>', auth="user", type="http", methods=["GET"], cors="*")
+    @http.route('/api/patrimoine/stats/department/<int:department_id>', auth="user", type="http", methods=["GET"], cors=ALLOWED_ORIGIN)
     def get_stats_for_single_department(self, department_id, **kw):
         try:
             domain = [('department_id', '=', department_id)]
@@ -1941,7 +1941,7 @@ class PatrimoineAssetController(http.Controller):
             return Response(json.dumps({'error': str(e)}), status=500)
     # --- NOUVELLE API : Statistiques par Type Général (informatique, mobilier, vehicule) ---
     @http.route(
-        "/api/patrimoine/stats/by_type", auth="user", type="http", methods=["GET"], cors="*")
+        "/api/patrimoine/stats/by_type", auth="user", type="http", methods=["GET"], cors=ALLOWED_ORIGIN)
     def get_stats_by_type(self, **kw):
         try:
             # Utilise le champ 'type' directement sur patrimoine.asset
@@ -1975,7 +1975,7 @@ class PatrimoineAssetController(http.Controller):
         "/api/patrimoine/stats/by_detailed_category",
         auth="user",
         type="http",
-        methods=["GET"], cors="*")
+        methods=["GET"], cors=ALLOWED_ORIGIN)
     def get_stats_by_detailed_category(self, **kw):
         try:
             # read_group sur 'subcategory_id'
@@ -2010,7 +2010,7 @@ class PatrimoineAssetController(http.Controller):
             )
 
     # NOUVELLE ROUTE pour lister les matériels de l'utilisateur connecté
-    @http.route('/api/patrimoine/assets/user', auth='user', type='http', methods=['GET'], cors="*")
+    @http.route('/api/patrimoine/assets/user', auth='user', type='http', methods=['GET'], cors=ALLOWED_ORIGIN)
     def list_assets_for_user(self, **kw):
         try:
             # On cherche l'employé correspondant à l'utilisateur connecté
@@ -2047,7 +2047,7 @@ class PatrimoineAssetController(http.Controller):
             return Response(json.dumps({'error': str(e)}), status=500, headers={'Content-Type': 'application/json'})
 
     # NOUVELLE ROUTE pour les stats de l'utilisateur connecté
-    @http.route('/api/patrimoine/stats/user', auth="user", type="http", methods=["GET"], cors="*")
+    @http.route('/api/patrimoine/stats/user', auth="user", type="http", methods=["GET"], cors=ALLOWED_ORIGIN)
     def get_stats_for_user(self, **kw):
         try:
             # On cherche l'employé correspondant à l'utilisateur connecté
@@ -2080,7 +2080,7 @@ class PatrimoineAssetController(http.Controller):
             return Response(json.dumps({'error': str(e)}), status=500)
 
     # --- API pour créer une demande (utilisée par le directeur) ---
-    @http.route('/api/patrimoine/demandes', auth='user', type='http', methods=['POST'], csrf=False, cors="*")
+    @http.route('/api/patrimoine/demandes', auth='user', type='http', methods=['POST'], csrf=False, cors=ALLOWED_ORIGIN)
     @handle_api_errors
     def create_demande(self, motif_demande=None, lignes=None, **kw):
         """Créer une demande de matériel avec plusieurs lignes.
@@ -2159,7 +2159,7 @@ class PatrimoineAssetController(http.Controller):
         )
 
     # Endpoints standardisés pour les demandes de matériel
-    @http.route('/api/patrimoine/demandes/<int:demande_id>/approve', type='json', auth='user', methods=['POST'], cors="*")
+    @http.route('/api/patrimoine/demandes/<int:demande_id>/approve', type='json', auth='user', methods=['POST'], cors=ALLOWED_ORIGIN)
     def approve_demande(self, demande_id, **kw):
         try:
             if not request.env.user.has_group('gestion_patrimoine.group_patrimoine_admin'):
@@ -2175,7 +2175,7 @@ class PatrimoineAssetController(http.Controller):
             _logger.error(f"Error approving demande {demande_id}: {str(e)}")
             return {'status': 'error', 'message': str(e)}, 500
 
-    @http.route('/api/patrimoine/demandes/<int:demande_id>/reject', type='json', auth='user', methods=['POST'], cors="*")
+    @http.route('/api/patrimoine/demandes/<int:demande_id>/reject', type='json', auth='user', methods=['POST'], cors=ALLOWED_ORIGIN)
     def reject_demande(self, demande_id, **kw):
         try:
             if not request.env.user.has_group('gestion_patrimoine.group_patrimoine_admin'):
@@ -2192,7 +2192,7 @@ class PatrimoineAssetController(http.Controller):
             return {'status': 'error', 'message': str(e)}, 500
 
     # --- API pour lister les demandes de matériel (à jour avec les nouveaux champs) ---
-    @http.route("/api/patrimoine/demandes", auth="user", type="http", methods=["GET"], cors="*")
+    @http.route("/api/patrimoine/demandes", auth="user", type="http", methods=["GET"], cors=ALLOWED_ORIGIN)
     def list_demandes(self, **kw):
         try:
             current_user = request.env.user
@@ -2288,7 +2288,7 @@ class PatrimoineAssetController(http.Controller):
     # --- API pour créer une déclaration de perte (par Employé/Directeur) ---
 
     @http.route(
-        "/api/patrimoine/pertes", auth="user", type="http", methods=["POST"], csrf=False, cors="*")
+        "/api/patrimoine/pertes", auth="user", type="http", methods=["POST"], csrf=False, cors=ALLOWED_ORIGIN)
     def create_perte(self, **post):
         try:
             post = request.httprequest.form.to_dict()
@@ -2366,7 +2366,7 @@ class PatrimoineAssetController(http.Controller):
             return Response(json.dumps({'error': str(e)}), status=500, headers = CORS_HEADERS, content_type='application/json')
 
     # --- API pour lister les déclarations de perte ---
-    @http.route("/api/patrimoine/pertes", auth="user", type="http", methods=["GET"], cors="*")
+    @http.route("/api/patrimoine/pertes", auth="user", type="http", methods=["GET"], cors=ALLOWED_ORIGIN)
     def list_pertes(self, **kw):
         try:
             # Filtrer les pertes en attente ou toutes si l'admin a les droits
@@ -2415,7 +2415,7 @@ class PatrimoineAssetController(http.Controller):
 
     # NOUVELLE ROUTE pour que les managers voient les déclarations de leur équipe
 
-    @http.route("/api/patrimoine/pertes/manager", auth="user", type="http", methods=["GET"], cors="*")
+    @http.route("/api/patrimoine/pertes/manager", auth="user", type="http", methods=["GET"], cors=ALLOWED_ORIGIN)
     def list_pertes_for_manager(self, **kw):
         try:
             current_employee = request.env["hr.employee"].search(
@@ -2480,7 +2480,7 @@ class PatrimoineAssetController(http.Controller):
         "/api/patrimoine/pertes/manager_process/<int:perte_id>",
         auth="user",
         type="json",
-        methods=["POST"], cors="*")
+        methods=["POST"], cors=ALLOWED_ORIGIN)
     def manager_process_perte(self, perte_id, action, **kw):
         try:
             perte = request.env["patrimoine.perte"].browse(perte_id)
@@ -2515,7 +2515,7 @@ class PatrimoineAssetController(http.Controller):
         auth="user",
         type="json",
         methods=["POST"],
-        csrf=False, cors="*")
+        csrf=False, cors=ALLOWED_ORIGIN)
     def process_perte(
         self, perte_id, action, **kw
     ):  # 'action' sera 'approve' ou 'reject'

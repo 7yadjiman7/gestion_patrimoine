@@ -158,6 +158,7 @@ If you see the error "Couldn't bind the websocket," make sure the Odoo server is
 When the frontend and backend run on different origins, the API must return a
 specific `Access-Control-Allow-Origin` header. Set the environment variable
 `ALLOWED_ORIGIN` on the Odoo server to the URL of your frontend
-(for example `http://localhost:5174`). This avoids browsers blocking requests
-that include credentials.
+(for example `http://localhost:5174`). All API routes now use
+`cors=ALLOWED_ORIGIN` so the response matches this value and browsers
+allow requests that include credentials.
 

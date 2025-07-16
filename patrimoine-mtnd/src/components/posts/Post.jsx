@@ -100,7 +100,7 @@ export default function Post({ post }) {
                 </p>
                 {post.image && (
                     <img
-                        src={`http://localhost:8069${post.image}`}
+                        src={`http://localhost${post.image}`}
                         alt="Image du post"
                         className="w-full rounded-lg border border-slate-200 dark:border-slate-700"
                     />

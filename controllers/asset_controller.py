@@ -8,7 +8,7 @@ from odoo.osv import expression
 from werkzeug.exceptions import BadRequest
 import base64  # Pour encoder/décoder les fichiers
 import logging
-from .common import handle_api_errors, json_response, CORS_HEADERS, ALLOWED_ORIGIN
+from .common import handle_api_errors, json_response, CORS_HEADERS,
 
 
 def Response(*args, **kwargs):
@@ -20,8 +20,11 @@ _logger = logging.getLogger(__name__)
 
 
 class PatrimoineAssetController(http.Controller):
-    @http.route("/api/patrimoine/categories", auth="public", type="http", methods=["GET"], csrf=False, cors=ALLOWED_ORIGIN)
+    @http.route("/api/patrimoine/categories", auth="public", type="http", methods=["GET"], csrf=False)
     def list_categories(self, **kw):
+        # AJOUTEZ CETTE LIGNE POUR LE TEST
+        raise Exception("TEST - SI VOUS VOYEZ CECI, LE REDEMARRAGE A FONCTIONNE")
+
         try:
             domain = []
             if kw.get("type"):
@@ -53,7 +56,7 @@ class PatrimoineAssetController(http.Controller):
             _logger.error("Error listing categories: %s", str(e))
             return Response(status=500)
 
-    @http.route("/api/patrimoine/demande_materiel/<int:demande_id>", auth="user", type="json", methods=["GET"], cors=ALLOWED_ORIGIN)
+    @http.route("/api/patrimoine/demande_materiel/<int:demande_id>", auth="user", type="json", methods=["GET"])
     def get_demande_details(self, demande_id):
         try:
             demande = http.request.env['patrimoine.demande_materiel'].browse(demande_id)
@@ -73,7 +76,7 @@ class PatrimoineAssetController(http.Controller):
         except Exception as e:
             return {"error": str(e)}, 500
 
-    @http.route("/api/patrimoine/demande_materiel/<int:demande_id>", auth="user", type="http", methods=["GET"], cors=ALLOWED_ORIGIN)
+    @http.route("/api/patrimoine/demande_materiel/<int:demande_id>", auth="user", type="http", methods=["GET"])
     def get_demande_details_http(self, demande_id):
         try:
             demande = request.env['patrimoine.demande_materiel'].browse(demande_id)
@@ -108,7 +111,7 @@ class PatrimoineAssetController(http.Controller):
         auth="public",
         type="http",
         methods=["GET"],
-        csrf=False, cors=ALLOWED_ORIGIN)
+        csrf=False)
     @handle_api_errors
     def list_subcategories(self, category_id, **kw):
         domain = []
@@ -405,6 +408,9 @@ class PatrimoineAssetController(http.Controller):
         self, **kw
     ):  # Renommée pour la clarté, prend tous les params au cas où
         _logger.info(f"list_all_assets: DÉBUT REQUÊTE. Params reçus: {kw}")
+        # AJOUTEZ CETTE LIGNE POUR LE TEST
+        raise Exception("TEST - SI VOUS VOYEZ CECI, LE REDEMARRAGE A FONCTIONNE")
+
         try:
             # AUCUN FILTRE APPLIQUÉ DANS CETTE ROUTE, elle renvoie tout.
             assets = request.env["patrimoine.asset"].search([])
@@ -1388,8 +1394,7 @@ class PatrimoineAssetController(http.Controller):
         auth="user",
         type="http",
         methods=["GET"],
-        csrf=False,
-        cors=ALLOWED_ORIGIN
+        csrf=False
     )
     @handle_api_errors
     def get_asset_simple(self, item_id, **kw):

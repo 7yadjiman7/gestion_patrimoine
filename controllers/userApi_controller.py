@@ -2,7 +2,7 @@ from odoo import http
 from odoo.http import request, Response as OdooResponse
 import json
 import logging
-from .common import CORS_HEADERS, ALLOWED_ORIGIN
+from .common import CORS_HEADERS
 
 
 def Response(*args, **kwargs):

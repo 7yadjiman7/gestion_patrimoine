@@ -1,6 +1,6 @@
 from odoo import http
 from odoo.http import request, Response as OdooResponse
-from .common import json_response, CORS_HEADERS, ALLOWED_ORIGIN
+from .common import json_response, CORS_HEADERS
 
 
 def Response(*args, **kwargs):
@@ -13,7 +13,7 @@ _logger = logging.getLogger(__name__)
 
 class ChatController(http.Controller):
 
-    @http.route('/api/chat/subscribe', type='json', auth='user', methods=['POST'], csrf=False, cors=ALLOWED_ORIGIN)
+    @http.route('/api/chat/subscribe', type='json', auth='user', methods=['POST'], csrf=False)
     def subscribe_to_channel(self, **kw):
         """
         Contrôleur pour permettre à l'utilisateur authentifié de s'abonner 
@@ -78,7 +78,7 @@ class ChatController(http.Controller):
         auth="user",
         type="http",
         methods=["GET"],
-        csrf=False, cors=ALLOWED_ORIGIN)
+        csrf=False)
     def get_messages(self, conv_id, **kwargs):
         _logger.info(
             f"--- API TRACE: get_messages a été appelée pour la conv {conv_id} ---"
@@ -104,7 +104,7 @@ class ChatController(http.Controller):
         auth="user",
         type="json",
         methods=["POST"],
-        csrf=False, cors=ALLOWED_ORIGIN)
+        csrf=False)
     def post_message(self, conv_id, content=None, **kwargs):
         _logger.info(
             f"--- API TRACE: post_message a été appelée pour la conv {conv_id} avec le contenu: {content} ---"

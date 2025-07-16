@@ -5,7 +5,7 @@ from odoo import http
 from odoo.http import request, Response as OdooResponse
 from odoo.exceptions import ValidationError
 
-from .common import handle_api_errors, CORS_HEADERS, json_response, ALLOWED_ORIGIN
+from .common import handle_api_errors, CORS_HEADERS, json_response
 
 
 def Response(*args, **kwargs):

@@ -38,7 +38,7 @@ class IntranetPostController(http.Controller):
                     for att in post.attachment_ids
                 ],
                 'like_count': len(post.like_ids),
-                'comment_count': len(post.comment_ids),
+                'comment_count': len([c for c in post.comment_ids if not c.parent_id]),
                 'view_count': post.view_count,
             })
         return Response(
@@ -111,7 +111,7 @@ class IntranetPostController(http.Controller):
                 for att in record.attachment_ids
             ],
             'like_count': len(record.like_ids),
-            'comment_count': len(record.comment_ids),
+            'comment_count': len([c for c in record.comment_ids if not c.parent_id]),
         }
 
         return Response(

@@ -127,6 +127,34 @@ class PostControllerTest(unittest.TestCase):
         env['intranet.post'].sudo().search.assert_called_with([], order='create_date desc')
         self.assertIn('application/json', res.headers.get('Content-Type'))
 
+    @patch('controllers.post_controller.Response')
+    @patch('controllers.post_controller.request')
+    def test_list_posts_comment_count_excludes_children(self, mock_request, mock_response):
+        env = MagicMock()
+        root_comment = MagicMock(parent_id=False)
+        child_comment = MagicMock(parent_id=1)
+        post = MagicMock(
+            id=1,
+            name='A',
+            body='b',
+            user_id=MagicMock(name='u', id=2),
+            create_date='2024-01-01',
+            post_type='text',
+            attachment_ids=[],
+            like_ids=[],
+            comment_ids=[root_comment, child_comment],
+            view_count=0,
+            image=False,
+        )
+        env['intranet.post'].sudo().search.return_value = [post]
+        mock_request.env = env
+
+        self.controller.list_posts()
+
+        args, kwargs = mock_response.call_args
+        payload = json.loads(args[0])
+        self.assertEqual(payload['data'][0]['comment_count'], 1)
+
     @patch('controllers.post_controller.request')
     def test_toggle_like_create(self, mock_request):
         env = MagicMock()

@@ -36,6 +36,7 @@ class ChatMessage(models.Model):
         for message in messages:
             # On prépare le payload de la notification
             payload = {
+                "type": "chat_message",
                 "id": message.id,
                 "author_name": message.sender_id.name,
                 "content": message.body,
@@ -50,11 +51,12 @@ class ChatMessage(models.Model):
             # Note: Le 'bus' d'Odoo s'attend à un `partner_id`, pas un `user_id`.
             # Nous allons notifier le partenaire de chaque utilisateur.
             notifications = []
-            for user in message.conversation_id.participant_ids:
-                if user.partner_id:
-                    notifications.append((user.partner_id, "new_message", payload))
+            for partner in message.conversation_id.participant_ids.mapped("partner_id"):
+                if partner:
+                    notifications.append((partner, payload))
 
             if notifications:
-                self.env["bus.bus"]._sendmany(notifications)
+                # Use public sendmany so it can be easily patched in tests
+                self.env["bus.bus"].sendmany(notifications)
 
         return messages

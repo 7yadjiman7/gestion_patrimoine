@@ -2,12 +2,12 @@ from odoo import http
 from odoo.http import request, Response as OdooResponse
 import json
 import logging
-from .common import CORS_HEADERS
+from .common import get_cors_headers
 
 
 def Response(*args, **kwargs):
     headers = kwargs.pop("headers", {})
-    headers = {**CORS_HEADERS, **headers}
+    headers = {**get_cors_headers(), **headers}
     return OdooResponse(*args, headers=headers, **kwargs)
 
 _logger = logging.getLogger(__name__)

@@ -8,12 +8,12 @@ from odoo.osv import expression
 from werkzeug.exceptions import BadRequest
 import base64  # Pour encoder/décoder les fichiers
 import logging
-from .common import handle_api_errors, CORS_HEADERS, json_response
+from .common import handle_api_errors, json_response, get_cors_headers
 
 
 def Response(*args, **kwargs):
     headers = kwargs.pop("headers", {})
-    headers = {**CORS_HEADERS, **headers}
+    headers = {**get_cors_headers(), **headers}
     return OdooResponse(*args, headers=headers, **kwargs)
 
 _logger = logging.getLogger(__name__)
@@ -81,7 +81,7 @@ class PatrimoineAssetController(http.Controller):
                 return Response(
                     json.dumps({"error": "Demande not found"}),
                     status=404,
-                    headers=CORS_HEADERS,
+                    headers=get_cors_headers(),
                 )
 
             data = {
@@ -98,10 +98,10 @@ class PatrimoineAssetController(http.Controller):
                 ],
             }
 
-            return Response(json.dumps(data), headers=CORS_HEADERS)
+            return Response(json.dumps(data), headers=get_cors_headers())
         except Exception as e:
             _logger.error("Error getting demande details: %s", str(e))
-            return Response(status=500, headers=CORS_HEADERS)
+            return Response(status=500, headers=get_cors_headers())
 
     @http.route(
         "/api/patrimoine/subcategories/<int:category_id>",
@@ -124,7 +124,7 @@ class PatrimoineAssetController(http.Controller):
                         "message": "Category not found"
                     }),
                     status=404,
-                    headers=CORS_HEADERS
+                    headers=get_cors_headers()
                 )
             domain.append(("category_id", "=", category_id))
 
@@ -171,7 +171,7 @@ class PatrimoineAssetController(http.Controller):
                 "status": "success",
                 "data": subcategory_data
             }, default=str),
-            headers=CORS_HEADERS
+            headers=get_cors_headers()
         )
 
     @http.route(
@@ -231,7 +231,7 @@ class PatrimoineAssetController(http.Controller):
                 "status": "success",
                 "data": item_data
             }, default=str),
-            headers=CORS_HEADERS
+            headers=get_cors_headers()
         )
 
     @http.route(
@@ -825,7 +825,7 @@ class PatrimoineAssetController(http.Controller):
                     "message": "Asset not found"
                 }),
                 status=404,
-                headers=CORS_HEADERS
+                headers=get_cors_headers()
             )
 
         # Conversion de la date d'acquisition
@@ -901,7 +901,7 @@ class PatrimoineAssetController(http.Controller):
                 "status": "success",
                 "data": asset_data
             }, default=str),
-            headers=CORS_HEADERS
+            headers=get_cors_headers()
         )
 
     # NOUVELLE ROUTE 1 : Pour l'âge du parc matériel
@@ -1321,7 +1321,7 @@ class PatrimoineAssetController(http.Controller):
                     "message": "Item not found"
                 }),
                 status=404,
-                headers=CORS_HEADERS
+                headers=get_cors_headers()
             )
 
         # Conversion des dates
@@ -1380,7 +1380,7 @@ class PatrimoineAssetController(http.Controller):
                 "status": "success",
                 "data": item_data
             }, default=str),
-            headers=CORS_HEADERS
+            headers=get_cors_headers()
         )
 
     @http.route(
@@ -1401,7 +1401,7 @@ class PatrimoineAssetController(http.Controller):
                     "error": "Asset not found"
                 }),
                 status=404,
-                headers=CORS_HEADERS
+                headers=get_cors_headers()
             )
 
         # Format minimal pour le frontend
@@ -1431,7 +1431,7 @@ class PatrimoineAssetController(http.Controller):
             json.dumps(item_data, default=str),
             status=200,
             mimetype="application/json",
-            headers=CORS_HEADERS
+            headers=get_cors_headers()
         )
 
     @http.route(
@@ -2155,7 +2155,7 @@ class PatrimoineAssetController(http.Controller):
 
         return Response(
             json.dumps({'status': 'success', 'demande_id': new_demande.id}),
-            headers=CORS_HEADERS,
+            headers=get_cors_headers(),
         )
 
     # Endpoints standardisés pour les demandes de matériel
@@ -2359,11 +2359,11 @@ class PatrimoineAssetController(http.Controller):
                     },
                     default=str,
                 ),
-                headers=CORS_HEADERS,
+                headers=get_cors_headers(),
             )
         except Exception as e:
             _logger.error(f"Erreur lors de la création de la déclaration de perte : {e}")
-            return Response(json.dumps({'error': str(e)}), status=500, headers = CORS_HEADERS, content_type='application/json')
+            return Response(json.dumps({'error': str(e)}), status=500, headers = get_cors_headers(), content_type='application/json')
 
     # --- API pour lister les déclarations de perte ---
     @http.route("/api/patrimoine/pertes", auth="user", type="http", methods=["GET"], cors="*")

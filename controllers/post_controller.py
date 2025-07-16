@@ -162,6 +162,19 @@ class IntranetPostController(http.Controller):
         if not post.exists():
             return Response(json.dumps({'status': 'error', 'message': 'Post not found'}), status=404, headers=CORS_HEADERS)
 
+        comment_model = request.env['intranet.post.comment'].sudo()
+        existing = comment_model.search([
+            ('post_id', '=', post.id),
+            ('user_id', '=', request.env.user.id),
+            ('parent_id', '=', False),
+        ], limit=1)
+        if existing and not parent_id:
+            return Response(
+                json.dumps({'status': 'error', 'message': 'User already commented'}),
+                status=400,
+                headers=CORS_HEADERS,
+            )
+
         vals = {
             'post_id': post.id,
             'user_id': request.env.user.id,

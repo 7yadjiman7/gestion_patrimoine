@@ -17,13 +17,18 @@ const likePost = id =>
 const viewPost = id =>
   api.post(`/api/intranet/posts/${id}/views`).then(res => res.data)
 
-const addComment = (id, content, parentId = null) =>
-  api
+const addComment = (id, content, parentId = null) => {
+  console.debug('addComment payload', { id, content, parent_id: parentId })
+  return api
     .post(`/api/intranet/posts/${id}/comments`, { content, parent_id: parentId })
     .then(res => res.data)
+}
 
 const fetchComments = id =>
   api.get(`/api/intranet/posts/${id}/comments`).then(res => res.data.data)
+
+const deletePost = id =>
+  api.get(`/admin/posts/${id}/delete`)
 
 export default {
   fetchPosts,
@@ -31,5 +36,6 @@ export default {
   likePost,
   addComment,
   viewPost,
-  fetchComments
+  fetchComments,
+  deletePost
 }

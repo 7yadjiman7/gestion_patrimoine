@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { toast } from "react-hot-toast"
 import materialService from "@/services/materialService"
 import { Button } from "@/components/ui/button"
+import { PlusCircle } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
@@ -110,7 +111,7 @@ export default function DeclarationPerte() {
             toast.success(
                 "Déclaration de perte soumise avec succès pour validation."
             )
-            navigate("/dashboard-agent")
+            navigate("/agent")
         } catch (error) {
             toast.error(`Erreur lors de la soumission : ${error.message}`)
         } finally {
@@ -134,6 +135,22 @@ export default function DeclarationPerte() {
                             Faites une Déclaration de Perte.
                         </p>
                     </div>
+                </div>
+                <div className="flex justify-between my-4">
+                    <Button
+                        className="gap-2"
+                        onClick={() => navigate("/director/demandes")}
+                    >
+                        <PlusCircle className="h-4 w-4" />
+                        Faire une demande
+                    </Button>
+                    <Button
+                        variant="outline"
+                        onClick={() => navigate("/mes-pertes")}
+                        className="hover:bg-orange-500 hover:text-white"
+                    >
+                        Mes déclarations
+                    </Button>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="bg-white shadow-lg border border-slate-200">
@@ -297,7 +314,14 @@ export default function DeclarationPerte() {
                                 )}
                             </div>
 
-                            <div className="pt-4 flex justify-end">
+                            <div className="pt-4 flex justify-end space-x-4">
+                                <Button
+                                    type="button"
+                                    onClick={() => navigate(-1)}
+                                    variant="outline"
+                                >
+                                    Annuler
+                                </Button>
                                 <Button
                                     type="submit"
                                     disabled={isLoading}

@@ -5,8 +5,7 @@ from odoo import http
 from odoo.http import request, Response
 from odoo.exceptions import ValidationError
 
-# Assurez-vous que handle_api_errors est bien importé depuis votre autre contrôleur
-from .asset_controller import handle_api_errors, CORS_HEADERS
+from .common import handle_api_errors, CORS_HEADERS
 
 _logger = logging.getLogger(__name__)
 
@@ -116,11 +115,42 @@ class IntranetPostController(http.Controller):
             headers=CORS_HEADERS,)
 
     # Garde la version de 'main' pour ajouter des commentaires
-    @http.route('/api/intranet/posts/<int:post_id>/comments', auth='user', type='http', methods=['POST'], csrf=False)
+    @http.route('/api/intranet/posts/<int:post_id>/comments', auth='user', type='json', methods=['POST'], csrf=False)
     @handle_api_errors
     def add_comment(self, post_id, content=None, parent_id=None, **kw):
-        content = content or kw.get('content')
-        parent_id = parent_id or kw.get('parent_id')
+        _logger.info(
+            "add_comment called with json=%s kw=%s form=%s params=%s",
+            request.jsonrequest,
+            kw,
+            getattr(request.httprequest, "form", None).to_dict()
+            if getattr(getattr(request, "httprequest", None), "form", None)
+            else None,
+            getattr(request, "params", None),
+        )
+
+        data = request.jsonrequest or {}
+        if not data and not kw and content is None and parent_id is None:
+            form_data = {}
+            if (
+                getattr(request, 'httprequest', None)
+                and getattr(request.httprequest, 'form', None)
+                and callable(getattr(request.httprequest.form, 'to_dict', None))
+            ):
+                result = request.httprequest.form.to_dict()
+                if isinstance(result, dict):
+                    form_data = result
+            params = getattr(request, 'params', {})
+            if not isinstance(params, dict):
+                params = {}
+            data = form_data or params
+
+        content = content or kw.get('content') or data.get('content')
+        parent_id = parent_id or kw.get('parent_id') or data.get('parent_id')
+
+        _logger.info(
+            "Parsed comment content=%s parent_id=%s", content, parent_id
+        )
+
         if not content:
             raise ValidationError('Comment content is required')
         post = request.env['intranet.post'].sudo().browse(post_id)
@@ -136,6 +166,7 @@ class IntranetPostController(http.Controller):
             vals['parent_id'] = parent_id
 
         comment = request.env['intranet.post.comment'].sudo().create(vals)
+        _logger.info("Comment created with id=%s", comment.id)
 
         return Response(json.dumps({'status': 'success', 'data': {'id': comment.id}}, default=str), headers=CORS_HEADERS)
 

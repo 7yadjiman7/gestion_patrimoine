@@ -102,10 +102,9 @@ export default function AdminDeclarationsPerte() {
 
     const handleProcess = async (id, action) => {
         try {
-            const status = action === "confirm" ? "approved" : "rejected"
-            await materialService.processPerte(id, status)
+            await materialService.processPerte(id, action)
             toast.success(
-                `Déclaration ${status === "approved" ? "approuvée" : "rejetée"} avec succès.`
+                `Déclaration ${action === "approve" ? "approuvée" : "rejetée"} avec succès.`
             )
             loadDeclarations()
         } catch (err) {
@@ -214,7 +213,7 @@ export default function AdminDeclarationsPerte() {
                                                     onClick={() =>
                                                         handleProcess(
                                                             perte.id,
-                                                            "confirm"
+                                                            "approve"
                                                         )
                                                     }
                                                     className="bg-green-600 hover:bg-green-700"

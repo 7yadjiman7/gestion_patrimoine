@@ -8,59 +8,9 @@ from odoo.osv import expression
 from werkzeug.exceptions import BadRequest
 import base64  # Pour encoder/décoder les fichiers
 import logging
-from functools import wraps
+from .common import handle_api_errors, CORS_HEADERS
 
 _logger = logging.getLogger(__name__)
-
-# Headers CORS standard
-CORS_HEADERS = {
-    "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Origin, Content-Type, X-Auth-Token, X-Openerp-Session-Id",
-    "Access-Control-Allow-Credentials": "true"
-}
-
-def handle_api_errors(f):
-    """Decorator pour standardiser la gestion des erreurs API"""
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        try:
-            return f(*args, **kwargs)
-        except AccessError as e:
-            _logger.error("AccessError in API: %s", str(e))
-            return Response(
-                json.dumps({
-                    "status": "error",
-                    "code": 403,
-                    "message": str(e)
-                }),
-                status=403,
-                headers=CORS_HEADERS
-            )
-        except ValidationError as e:
-            _logger.error("ValidationError in API: %s", str(e))
-            return Response(
-                json.dumps({
-                    "status": "error",
-                    "code": 400,
-                    "message": str(e)
-                }),
-                status=400,
-                headers=CORS_HEADERS
-            )
-        except Exception as e:
-            _logger.error("Unexpected error in API: %s", str(e))
-            return Response(
-                json.dumps({
-                    "status": "error",
-                    "code": 500,
-                    "message": "Internal server error"
-                }),
-                status=500,
-                headers=CORS_HEADERS
-            )
-    return wrapper
 
 
 class PatrimoineAssetController(http.Controller):
@@ -2407,6 +2357,9 @@ class PatrimoineAssetController(http.Controller):
             }
 
             new_perte = request.env["patrimoine.perte"].create(perte_vals)
+            # Déplace immédiatement la déclaration à l'état "to_approve"
+            # afin qu'elle soit visible pour validation côté manager
+            new_perte.action_submit()
 
             # Gestion du document joint (procès-verbal)
             if "document" in request.httprequest.files:
@@ -2498,16 +2451,24 @@ class PatrimoineAssetController(http.Controller):
                     json.dumps([]), headers={"Content-Type": "application/json"}
                 )
 
-            # On cherche les employés qui ont ce manager (current_employee) comme supérieur
-            team_employee_ids = (
+            # Recherche des employés ayant ce manager comme supérieur hiérarchique
+            employee_ids = (
                 request.env["hr.employee"]
                 .search([("parent_id", "=", current_employee.id)])
                 .ids
             )
 
+            # S'il n'y a pas de subordonnés directs, on récupère les employés du même département
+            if not employee_ids and current_employee.department_id:
+                employee_ids = (
+                    request.env["hr.employee"]
+                    .search([("department_id", "=", current_employee.department_id.id)])
+                    .ids
+                )
+
             # On cherche les déclarations faites par ces employés et qui sont en attente de validation
             domain = [
-                ("declarer_par_id.employee_ids", "in", team_employee_ids),
+                ("declarer_par_id.employee_ids", "in", employee_ids),
                 ("state", "=", "to_approve"),
             ]
 

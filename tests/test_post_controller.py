@@ -60,7 +60,7 @@ sys.modules.setdefault('odoo.models', odoo.models)
 sys.modules.setdefault('odoo.osv', odoo.osv)
 sys.modules.setdefault('odoo.api', odoo.api)
 
-# Stub for external dependency used by asset_controller
+# Stub for external dependencies
 import types as _types
 dateutil = _types.ModuleType('dateutil')
 relativedelta_mod = _types.ModuleType('dateutil.relativedelta')
@@ -80,24 +80,25 @@ import importlib.util
 controllers_pkg = types.ModuleType('controllers')
 controllers_pkg.__path__ = []
 
-# Provide a minimal stub for asset_controller used by post_controller
-asset_controller = types.ModuleType('controllers.asset_controller')
+# Provide a minimal stub for common module used by post_controller
+common_module = types.ModuleType('controllers.common')
+
 def handle_api_errors(func):
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except Exception as e:
+        except Exception:
             resp = MagicMock()
             resp.status_code = 400
             return resp
     return wrapper
 
-asset_controller.handle_api_errors = handle_api_errors
-asset_controller.CORS_HEADERS = {}
+common_module.handle_api_errors = handle_api_errors
+common_module.CORS_HEADERS = {}
 
-controllers_pkg.asset_controller = asset_controller
+controllers_pkg.common = common_module
 sys.modules.setdefault('controllers', controllers_pkg)
-sys.modules.setdefault('controllers.asset_controller', asset_controller)
+sys.modules.setdefault('controllers.common', common_module)
 
 post_path = os.path.join(os.path.dirname(__file__), '..', 'controllers', 'post_controller.py')
 spec = importlib.util.spec_from_file_location('controllers.post_controller', post_path)
@@ -188,6 +189,7 @@ class PostControllerTest(unittest.TestCase):
         env['intranet.post'].sudo.return_value = post_model
         env['intranet.post.comment'].sudo.return_value = MagicMock()
         mock_request.env = env
+        mock_request.jsonrequest = None
 
         res = self.controller.add_comment(1)
 
@@ -208,6 +210,7 @@ class PostControllerTest(unittest.TestCase):
         comment_model.create.return_value = MagicMock(id=4)
         mock_request.env = env
         mock_request.env.user.id = 9
+        mock_request.jsonrequest = None
 
         res = self.controller.add_comment(2, content='hello')
 
@@ -266,12 +269,68 @@ class PostControllerTest(unittest.TestCase):
         env['intranet.post.comment'].sudo.return_value = comment_model
         mock_request.env = env
         mock_request.env.user.id = 9
+        mock_request.jsonrequest = None
 
         self.controller.add_comment(1, content='child', parent_id=5)
 
         comment_model.create.assert_called_once()
         args = comment_model.create.call_args[0][0]
         self.assertEqual(args.get('parent_id'), 5)
+
+    @patch('controllers.post_controller.request')
+    def test_add_comment_json_payload(self, mock_request):
+        env = MagicMock()
+        post = MagicMock()
+        post.id = 7
+        post.exists.return_value = True
+        post_model = MagicMock()
+        comment_model = MagicMock()
+        env.__getitem__.side_effect = (
+            lambda key: post_model if key == 'intranet.post' else comment_model
+        )
+        post_model.sudo.return_value.browse.return_value = post
+        comment_model.sudo.return_value = comment_model
+        mock_request.env = env
+        mock_request.env.user.id = 4
+
+        mock_request.jsonrequest = {'content': 'hello json'}
+        mock_request.httprequest = MagicMock()
+        mock_request.httprequest.data = None
+
+        res = self.controller.add_comment(7)
+
+        comment_model.create.assert_called_with({'post_id': post.id, 'user_id': 4, 'content': 'hello json'})
+        self.assertIn('application/json', res.headers.get('Content-Type'))
+
+    @patch('controllers.post_controller.request')
+    def test_add_comment_form_payload(self, mock_request):
+        env = MagicMock()
+        post = MagicMock()
+        post.id = 10
+        post.exists.return_value = True
+        post_model = MagicMock()
+        comment_model = MagicMock()
+        env.__getitem__.side_effect = (
+            lambda key: post_model if key == 'intranet.post' else comment_model
+        )
+        post_model.sudo.return_value.browse.return_value = post
+        comment_model.sudo.return_value = comment_model
+        mock_request.env = env
+        mock_request.env.user.id = 12
+
+        mock_request.jsonrequest = None
+        httprequest = MagicMock()
+        form_mock = MagicMock()
+        form_mock.to_dict.return_value = {'content': 'form hello'}
+        httprequest.form = form_mock
+        httprequest.data = None
+        mock_request.httprequest = httprequest
+        mock_request.params = {}
+
+        res = self.controller.add_comment(10)
+
+        comment_model.create.assert_called_with({'post_id': post.id, 'user_id': 12, 'content': 'form hello'})
+        self.assertIn('application/json', res.headers.get('Content-Type'))
 
     @patch('controllers.post_controller.Response')
     @patch('controllers.post_controller.request')

@@ -108,6 +108,11 @@ export default function AppSidebar({ onCollapseChange }: AppSidebarProps) {
                     label: "Déclarations de Pertes",
                     path: "/admin/pertes",
                 },
+                {
+                    icon: <FileText className="h-5 w-5" />,
+                    label: "Tableau des posts",
+                    path: "/admin/posts",
+                },
             ],
         }] : []),
         ...(hasRole('director') ? [{

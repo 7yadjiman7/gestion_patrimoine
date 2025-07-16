@@ -2,17 +2,23 @@ import json
 import base64
 import logging
 from odoo import http
-from odoo.http import request, Response
+from odoo.http import request, Response as OdooResponse
 from odoo.exceptions import ValidationError
 
-from .common import handle_api_errors, CORS_HEADERS
+from .common import handle_api_errors, CORS_HEADERS, json_response
+
+
+def Response(*args, **kwargs):
+    headers = kwargs.pop("headers", {})
+    headers = {**CORS_HEADERS, **headers}
+    return OdooResponse(*args, headers=headers, **kwargs)
 
 _logger = logging.getLogger(__name__)
 
 class IntranetPostController(http.Controller):
 
     # Garde la version de 'main' qui est plus complète
-    @http.route('/api/intranet/posts', auth='user', type='http', methods=['GET'], csrf=False)
+    @http.route('/api/intranet/posts', auth='user', type='http', methods=['GET'], csrf=False, cors="*")
     @handle_api_errors
     def list_posts(self, **kwargs):
         posts = request.env['intranet.post'].sudo().search([], order='create_date desc')
@@ -41,8 +47,7 @@ class IntranetPostController(http.Controller):
         )
 
     @http.route(
-        "/api/intranet/posts", auth="user", type="http", methods=["POST"], csrf=False
-    )
+        "/api/intranet/posts", auth="user", type="http", methods=["POST"], csrf=False, cors="*")
     @handle_api_errors
     def create_post(self, **kwargs):  # On utilise **kwargs pour être flexible
         _logger.info("--- DÉBUT DE create_post ---")
@@ -115,7 +120,7 @@ class IntranetPostController(http.Controller):
             headers=CORS_HEADERS,)
 
     # Garde la version de 'main' pour ajouter des commentaires
-    @http.route('/api/intranet/posts/<int:post_id>/comments', auth='user', type='json', methods=['POST'], csrf=False)
+    @http.route('/api/intranet/posts/<int:post_id>/comments', auth='user', type='json', methods=['POST'], csrf=False, cors="*")
     @handle_api_errors
     def add_comment(self, post_id, content=None, parent_id=None, **kw):
         _logger.info(
@@ -170,7 +175,7 @@ class IntranetPostController(http.Controller):
 
         return Response(json.dumps({'status': 'success', 'data': {'id': comment.id}}, default=str), headers=CORS_HEADERS)
 
-    @http.route('/api/intranet/posts/<int:post_id>/comments', auth='user', type='http', methods=['GET'], csrf=False)
+    @http.route('/api/intranet/posts/<int:post_id>/comments', auth='user', type='http', methods=['GET'], csrf=False, cors="*")
     @handle_api_errors
     def get_comments(self, post_id, **kw):
         post = request.env['intranet.post'].sudo().browse(post_id)
@@ -193,7 +198,7 @@ class IntranetPostController(http.Controller):
         data = [serialize(c) for c in comments]
         return Response(json.dumps({'status': 'success', 'data': data}, default=str), headers=CORS_HEADERS)
 
-    @http.route('/api/intranet/posts/<int:post_id>/likes', auth='user', type='http', methods=['POST'], csrf=False)
+    @http.route('/api/intranet/posts/<int:post_id>/likes', auth='user', type='http', methods=['POST'], csrf=False, cors="*")
     @handle_api_errors
     def toggle_like(self, post_id, **kw):
         post = request.env['intranet.post'].sudo().browse(post_id)
@@ -223,7 +228,7 @@ class IntranetPostController(http.Controller):
             headers=CORS_HEADERS,
         )
 
-    @http.route('/api/intranet/posts/<int:post_id>/views', auth='user', type='http', methods=['POST'], csrf=False)
+    @http.route('/api/intranet/posts/<int:post_id>/views', auth='user', type='http', methods=['POST'], csrf=False, cors="*")
     @handle_api_errors
     def add_view(self, post_id, **kw):
         post = request.env['intranet.post'].sudo().browse(post_id)
@@ -236,7 +241,7 @@ class IntranetPostController(http.Controller):
             headers=CORS_HEADERS,
         )
 
-    @http.route('/admin/posts', auth='user', type='http', methods=['GET'], csrf=False)
+    @http.route('/admin/posts', auth='user', type='http', methods=['GET'], csrf=False, cors="*")
     def admin_posts_page(self, **kw):
         if not request.env.user.has_group('gestion_patrimoine.group_patrimoine_admin'):
             return Response('Unauthorized', status=403, headers={'Content-Type': 'text/plain'})
@@ -256,7 +261,7 @@ class IntranetPostController(http.Controller):
         )
         return Response(html, headers={'Content-Type': 'text/html'})
 
-    @http.route('/admin/posts/<int:post_id>/delete', auth='user', type='http', methods=['GET'], csrf=False)
+    @http.route('/admin/posts/<int:post_id>/delete', auth='user', type='http', methods=['GET'], csrf=False, cors="*")
     def admin_post_delete(self, post_id, **kw):
         if not request.env.user.has_group('gestion_patrimoine.group_patrimoine_admin'):
             return Response('Unauthorized', status=403, headers={'Content-Type': 'text/plain'})

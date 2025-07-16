@@ -13,6 +13,11 @@ CORS_HEADERS = {
 }
 
 
+def json_response(data, status=200):
+    """Return a JSON Response with CORS headers."""
+    return Response(json.dumps(data, default=str), status=status, headers=CORS_HEADERS)
+
+
 def handle_api_errors(func):
     """Decorator to standardize API error handling."""
 

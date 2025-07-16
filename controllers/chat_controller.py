@@ -1,12 +1,19 @@
 from odoo import http
-from odoo.http import request, Response
+from odoo.http import request, Response as OdooResponse
+from .common import json_response, CORS_HEADERS
+
+
+def Response(*args, **kwargs):
+    headers = kwargs.pop("headers", {})
+    headers = {**CORS_HEADERS, **headers}
+    return OdooResponse(*args, headers=headers, **kwargs)
 import json
 import logging
 _logger = logging.getLogger(__name__)
 
 class ChatController(http.Controller):
 
-    @http.route('/api/chat/subscribe', type='json', auth='user', methods=['POST'], csrf=False)
+    @http.route('/api/chat/subscribe', type='json', auth='user', methods=['POST'], csrf=False, cors="*")
     def subscribe_to_channel(self, **kw):
         """
         Contrôleur pour permettre à l'utilisateur authentifié de s'abonner 
@@ -31,8 +38,7 @@ class ChatController(http.Controller):
 
         
     @http.route(
-        "/api/chat/conversations", auth="user", type="http", methods=["GET"], csrf=False
-    )
+        "/api/chat/conversations", auth="user", type="http", methods=["GET"], csrf=False, cors="*")
     def list_conversations(self, **kwargs):
         _logger.info("--- API TRACE: list_conversations a été appelée ---")
         user = request.env.user
@@ -65,28 +71,21 @@ class ChatController(http.Controller):
                 }
             )
 
-        return Response(
-            json.dumps(result, default=str), content_type="application/json"
-        )
+        return json_response(result)
 
     @http.route(
         "/api/chat/conversations/<int:conv_id>/messages",
         auth="user",
         type="http",
         methods=["GET"],
-        csrf=False,
-    )
+        csrf=False, cors="*")
     def get_messages(self, conv_id, **kwargs):
         _logger.info(
             f"--- API TRACE: get_messages a été appelée pour la conv {conv_id} ---"
         )
         conv = request.env["chat.conversation"].sudo().browse(conv_id)
         if not conv.exists() or request.env.user.id not in conv.participant_ids.ids:
-            return Response(
-                json.dumps({"error": "Conversation non trouvée ou accès refusé"}),
-                status=404,
-                content_type="application/json",
-            )
+            return json_response({"error": "Conversation non trouvée ou accès refusé"}, status=404)
 
         messages = conv.message_ids.sorted("create_date")
         result = [
@@ -98,17 +97,14 @@ class ChatController(http.Controller):
             }
             for m in messages
         ]
-        return Response(
-            json.dumps({"data": result}, default=str), content_type="application/json"
-        )
+        return json_response({"data": result})
 
     @http.route(
         "/api/chat/conversations/<int:conv_id>/messages",
         auth="user",
         type="json",
         methods=["POST"],
-        csrf=False,
-    )
+        csrf=False, cors="*")
     def post_message(self, conv_id, content=None, **kwargs):
         _logger.info(
             f"--- API TRACE: post_message a été appelée pour la conv {conv_id} avec le contenu: {content} ---"
@@ -151,8 +147,7 @@ class ChatController(http.Controller):
         auth="user",
         type="json",
         methods=["POST"],
-        csrf=False,
-    )
+        csrf=False, cors="*")
     def create_conversation(self, participants=None, **kwargs):
         user = request.env.user
         participant_ids = [user.id]

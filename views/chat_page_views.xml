@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="chat_page_template" name="Intranet Chat Page">
+        <t t-call="web.layout">
+            <t t-set="title">Chat Intranet</t>
+            <div id="gp-chat-app">
+                <div id="gp-conversations">
+                    <div class="conv-header">
+                        <h2>Conversations</h2>
+                        <button type="button" id="gp-new-conversation">Nouveau</button>
+                    </div>
+                    <div id="gp-conversation-items"></div>
+                </div>
+                <div id="gp-chat-view">
+                    <div id="gp-message-list"></div>
+                    <div id="gp-send-area">
+                        <input id="gp-message-input" type="text" placeholder="Tapez un message..."/>
+                        <button type="button" id="gp-send-button">Envoyer</button>
+                    </div>
+                </div>
+                <div id="gp-employee-list">
+                    <div class="gp-employee-wrapper">
+                        <h2>Choisir un employé</h2>
+                        <ul id="gp-employee-items"></ul>
+                        <button type="button" id="gp-employee-close">Fermer</button>
+                    </div>
+                </div>
+            </div>
+            <link rel="stylesheet" href="/gestion_patrimoine/static/src/css/chat.css"/>
+            <script type="text/javascript" src="/gestion_patrimoine/static/src/js/chat_page.js"></script>
+        </t>
+    </template>
+
+    <record id="action_chat_page" model="ir.actions.act_url">
+        <field name="name">Chat</field>
+        <field name="target">self</field>
+        <field name="url">/intranet/chat</field>
+    </record>
+
+    <menuitem id="menu_intranet_chat" name="Chat" parent="menu_patrimoine_root" sequence="45" action="action_chat_page"/>
+</odoo>

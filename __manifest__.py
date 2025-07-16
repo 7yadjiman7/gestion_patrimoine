@@ -28,10 +28,17 @@
         "views/asset_category_views.xml",
         "views/asset_custom_field_views.xml",
         "views/asset_subcategory_views.xml",
+        "views/chat_page_views.xml",
         "views/chat_test_views.xml",
         "reports/report_patrimoine_templates.xml",
         "reports/report_patrimoine.xml",
     ],
+    "assets": {
+        "web.assets_backend": [
+            "gestion_patrimoine/static/src/js/chat_page.js",
+            "gestion_patrimoine/static/src/css/chat.css",
+        ],
+    },
     "installable": True,
     "application": True,
     "license": "LGPL-3",

@@ -183,3 +183,8 @@ class ChatController(http.Controller):
             "last_date": False,
         }
         return {"status": "success", "data": result}
+
+    @http.route('/intranet/chat', auth='user', type='http', website=True)
+    def chat_page(self, **kwargs):
+        """Simple page to test the real time chat inside Odoo."""
+        return request.render('gestion_patrimoine.chat_page_template')

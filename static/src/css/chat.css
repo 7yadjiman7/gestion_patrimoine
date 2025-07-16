@@ -1,0 +1,19 @@
+#gp-chat-app {height: calc(100vh - 5rem); background:#1f2937; color:#fff; display:flex; overflow:hidden;}
+#gp-conversations {width:33%; border-right:1px solid #374151; display:flex; flex-direction:column;}
+#gp-conversations .conv-header {padding:1rem; border-bottom:1px solid #374151; display:flex; justify-content:space-between; align-items:center;}
+#gp-conversation-items {flex:1; overflow-y:auto;}
+#gp-conversation-items .conv-item {padding:0.75rem; border-bottom:1px solid #374151; cursor:pointer;}
+#gp-conversation-items .conv-item:hover {background:#374151;}
+#gp-conversation-items .conv-item.active {background:#111827;}
+#gp-chat-view {flex:1; display:flex; flex-direction:column;}
+#gp-message-list {flex:1; overflow-y:auto; padding:1rem;}
+#gp-message-list .msg-author {color:#93c5fd; font-weight:600;}
+#gp-send-area {display:flex; border-top:1px solid #374151; padding:0.5rem;}
+#gp-send-area input {flex:1; background:#1f2937; color:#fff; border:1px solid #374151; border-radius:4px; padding:0.5rem; margin-right:0.5rem;}
+#gp-send-area button {background:#3b82f6; color:#fff; border:none; padding:0.5rem 1rem; border-radius:4px;}
+#gp-employee-list {position:fixed; inset:0; background:rgba(0,0,0,0.5); display:none; align-items:center; justify-content:center; z-index:10;}
+#gp-employee-list .gp-employee-wrapper {background:#1f2937; padding:1rem; border-radius:6px; max-height:80vh; overflow-y:auto; width:20rem;}
+#gp-employee-list ul {list-style:none; padding:0; margin:0;}
+#gp-employee-list li {padding:0.5rem; cursor:pointer;}
+#gp-employee-list li:hover {background:#374151;}
+#gp-employee-list button {margin-top:0.5rem; color:#d1d5db; background:none; border:none; cursor:pointer;}

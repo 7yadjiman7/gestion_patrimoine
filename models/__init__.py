@@ -10,3 +10,4 @@ from . import demande_materiel_ligne
 from . import pertes
 from . import chat
 from . import post
+from . import chat_test

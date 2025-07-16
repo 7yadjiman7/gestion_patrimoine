@@ -54,3 +54,4 @@ access_post_like_agent,access.post.like.agent,model_intranet_post_like,gestion_p
 access_post_share_admin,access.post.share.admin,model_intranet_post_share,gestion_patrimoine.group_patrimoine_admin,1,1,1,1
 access_post_share_director,access.post.share.director,model_intranet_post_share,gestion_patrimoine.group_patrimoine_director,1,1,1,0
 access_post_share_agent,access.post.share.agent,model_intranet_post_share,gestion_patrimoine.group_patrimoine_agent,1,1,1,0
+access_chat_test,access.chat.test,model_chat_test,base.group_user,1,1,1,1

@@ -1,14 +1,40 @@
 from odoo import http
 from odoo.http import request, Response
 import json
-
+import logging
+_logger = logging.getLogger(__name__)
 
 class ChatController(http.Controller):
 
+    @http.route('/api/chat/subscribe', type='json', auth='user', methods=['POST'], csrf=False)
+    def subscribe_to_channel(self, **kw):
+        """
+        Contrôleur pour permettre à l'utilisateur authentifié de s'abonner 
+        à des canaux de discussion via des requêtes HTTP.
+        """
+        # Récupère les canaux depuis la requête JSON
+        channels = kw.get('channels', [])
+        if not channels:
+            _logger.warning("Tentative d'abonnement sans spécifier de canal.")
+            return {'error': 'No channels specified'}
+
+        # Logique pour vérifier les permissions et s'abonner
+        # Exemple : s'assurer que l'utilisateur a le droit de voir ces canaux
+        # ... votre logique métier ici ...
+
+        _logger.info(f"Utilisateur {request.env.user.name} abonné aux canaux : {channels}")
+        
+        # Odoo gère l'abonnement via le bus automatiquement si le client est connecté
+        # au WebSocket avec une session valide. Ce contrôleur est plus pour la validation.
+        
+        return {'status': 'subscribed', 'channels': channels}
+
+        
     @http.route(
         "/api/chat/conversations", auth="user", type="http", methods=["GET"], csrf=False
     )
     def list_conversations(self, **kwargs):
+        _logger.info("--- API TRACE: list_conversations a été appelée ---")
         user = request.env.user
         conversations = (
             request.env["chat.conversation"]
@@ -22,6 +48,9 @@ class ChatController(http.Controller):
             other_partners = conv.participant_ids.filtered(
                 lambda u: u.id != user.id
             )
+
+            # CORRECTION : On calcule un nom de conversation plus propre
+            other_participants = conv.participant_ids.filtered(lambda p: p.id != user.id)
             conv_name = conv.name or ", ".join(other_partners.mapped("name"))
             result.append(
                 {
@@ -48,10 +77,13 @@ class ChatController(http.Controller):
         csrf=False,
     )
     def get_messages(self, conv_id, **kwargs):
+        _logger.info(
+            f"--- API TRACE: get_messages a été appelée pour la conv {conv_id} ---"
+        )
         conv = request.env["chat.conversation"].sudo().browse(conv_id)
         if not conv.exists() or request.env.user.id not in conv.participant_ids.ids:
             return Response(
-                json.dumps({"error": "Conversation not found or access denied"}),
+                json.dumps({"error": "Conversation non trouvée ou accès refusé"}),
                 status=404,
                 content_type="application/json",
             )
@@ -78,6 +110,9 @@ class ChatController(http.Controller):
         csrf=False,
     )
     def post_message(self, conv_id, content=None, **kwargs):
+        _logger.info(
+            f"--- API TRACE: post_message a été appelée pour la conv {conv_id} avec le contenu: {content} ---"
+        )
         if not content:
             return {"error": "Le contenu du message est vide."}
 
@@ -91,24 +126,24 @@ class ChatController(http.Controller):
             .create(
                 {
                     "conversation_id": conv.id,
-                    "sender_id": request.env.user.id,
                     "body": content,
                 }
             )
         )
 
-        channel = f"chat_channel_{conv_id}"
-        message_data = {
-            "type": "chat_message",
-            "id": msg.id,
-            "sender_id": msg.sender_id.id,
-            "sender_name": msg.sender_id.name,
-            "body": msg.body,
-            "date": msg.create_date,
-            "conversation_id": conv.id,
-        }
-        request.env["bus.bus"]._sendone(channel, message_data)
+        # channel = f"chat_channel_{conv_id}"
+        # message_data = {
+        #     "type": "chat_message",
+        #     "id": msg.id,
+        #     "sender_id": msg.sender_id.id,
+        #     "sender_name": msg.sender_id.name,
+        #     "body": msg.body,
+        #     "date": msg.create_date,
+        #     "conversation_id": conv.id,
+        # }
+        # request.env["bus.bus"]._sendone(channel, 'new_message', message_data)
 
+        # On retourne le message complet à l'envoyeur
         return {"status": "success", "message_id": msg.id}
 
     @http.route(

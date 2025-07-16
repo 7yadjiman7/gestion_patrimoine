@@ -13,6 +13,7 @@ class IntranetPost(models.Model):
         required=True,
         default=lambda self: self.env.user,
     )
+    date_posted = fields.Datetime(string="Date de publication", default=fields.Datetime.now)
     author_id = fields.Many2one(
         "res.users",
         string="Auteur",

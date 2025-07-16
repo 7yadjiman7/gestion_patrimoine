@@ -635,7 +635,7 @@ class PatrimoineAssetController(http.Controller):
 
             _logger.info(f"Domaine de recherche final: {domain}")
             assets = request.env['patrimoine.asset'].search(domain)
-            
+
             details = {}
             asset_data = []
             for asset in assets:
@@ -1302,7 +1302,6 @@ class PatrimoineAssetController(http.Controller):
                 status=500,
                 headers={"Content-Type": "application/json"},
             )
-
 
     @http.route(
         "/api/patrimoine/items/<int:item_id>/field-values",
@@ -1986,7 +1985,7 @@ class PatrimoineAssetController(http.Controller):
                 status=500,
                 headers={"Content-Type": "application/json"},
             )
-# Route pour obtenir les stats détaillées d'UN SEUL département
+    # Route pour obtenir les stats détaillées d'UN SEUL département
     @http.route('/api/patrimoine/stats/department/<int:department_id>', auth="user", type="http", methods=["GET"])
     def get_stats_for_single_department(self, department_id, **kw):
         try:
@@ -2007,7 +2006,7 @@ class PatrimoineAssetController(http.Controller):
                     stats['inStock'] = count
                 elif group['etat'] in ('hs', 'reforme'):
                     stats['outOfService'] += count
-            
+
             return Response(json.dumps(stats), headers={"Content-Type": "application/json"})
         except Exception as e:
             _logger.error(f"Error getting stats for department {department_id}: {e}")
@@ -2404,6 +2403,7 @@ class PatrimoineAssetController(http.Controller):
                 "actions_entreprises": actions_entreprises,
                 "rapport_police": rapport_police,
                 "declarer_par_id": current_user.id,
+                'state': 'to_approve'
             }
 
             new_perte = request.env["patrimoine.perte"].create(perte_vals)
@@ -2433,27 +2433,9 @@ class PatrimoineAssetController(http.Controller):
                 ),
                 headers=CORS_HEADERS,
             )
-        except AccessError as e:
-            _logger.error("Access denied creating perte: %s", str(e))
-            return Response(
-                json.dumps({"status": "error", "message": str(e)}),
-                status=403,
-                headers=CORS_HEADERS,
-            )
-        except ValidationError as e:
-            _logger.error("Validation error creating perte: %s", str(e))
-            return Response(
-                json.dumps({"status": "error", "message": str(e)}),
-                status=400,
-                headers=CORS_HEADERS,
-            )
         except Exception as e:
-            _logger.error("Error creating perte: %s", str(e))
-            return Response(
-                json.dumps({"status": "error", "message": str(e)}),
-                status=500,
-                headers=CORS_HEADERS,
-            )
+            _logger.error(f"Erreur lors de la création de la déclaration de perte : {e}")
+            return Response(json.dumps({'error': str(e)}), status=500, headers = CORS_HEADERS, content_type='application/json')
 
     # --- API pour lister les déclarations de perte ---
     @http.route("/api/patrimoine/pertes", auth="user", type="http", methods=["GET"])
@@ -2636,5 +2618,3 @@ class PatrimoineAssetController(http.Controller):
         except Exception as e:
             _logger.error("Error processing perte %s: %s", perte_id, str(e))
             return {"status": "error", "message": str(e)}
-
-

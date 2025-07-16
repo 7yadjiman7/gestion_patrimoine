@@ -16,7 +16,7 @@ class ChatConversation(models.Model):
 class ChatMessage(models.Model):
     _name = "chat.message"
     _description = "Message"
-    _order = "date asc"
+    _order = "create_date asc"
 
     conversation_id = fields.Many2one(
         "chat.conversation",
@@ -28,30 +28,33 @@ class ChatMessage(models.Model):
         "res.users", string="Exp\xC3\xA9diteur", required=True, default=lambda self: self.env.user
     )
     body = fields.Text(string="Contenu", required=True)
-    date = fields.Datetime(string="Date", default=fields.Datetime.now)
+
 
     @api.model_create_multi
     def create(self, vals_list):
-        """Create messages and notify participants on the bus."""
         messages = super().create(vals_list)
-
-        Bus = self.env['bus.bus']
-        notifications = []
-
         for message in messages:
-            participants = message.conversation_id.participant_ids
+            # On prépare le payload de la notification
             payload = {
-                'type': 'chat_message',
-                'id': message.id,
-                'author_name': message.sender_id.name,
-                'content': message.body,
-                'conversation_id': message.conversation_id.id,
+                "id": message.id,
+                "author_name": message.sender_id.name,
+                "content": message.body,
+                "date": message.create_date.strftime("%Y-%m-%d %H:%M:%S"),
+                "conversation_id": message.conversation_id.id,
             }
-            for partner in participants.mapped('partner_id'):  # unique partners
-                channel = (self._cr.dbname, 'mail.channel', partner.id)
-                notifications.append((channel, payload))
 
-        if notifications:
-            Bus.sendmany(notifications)
+            # On définit un canal unique pour cette conversation
+            channel_name = f"chat_channel_{message.conversation_id.id}"
+
+            # On envoie la notification sur ce canal pour tous les participants
+            # Note: Le 'bus' d'Odoo s'attend à un `partner_id`, pas un `user_id`.
+            # Nous allons notifier le partenaire de chaque utilisateur.
+            notifications = []
+            for user in message.conversation_id.participant_ids:
+                if user.partner_id:
+                    notifications.append((user.partner_id, "new_message", payload))
+
+            if notifications:
+                self.env["bus.bus"]._sendmany(notifications)
 
         return messages

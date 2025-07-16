@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_chat_test"
+        model="ir.actions.act_window">
+        <field name="name">Test du Chat Intranet</field>
+        <field name="res_model">chat.test</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+    </record>
+
+    <record id="view_chat_test_form"
+        model="ir.ui.view">
+        <field name="name">chat.test.form</field>
+        <field name="model">chat.test</field>
+        <field name="arch"
+            type="xml">
+            <form string="Test du Chat">
+                <sheet>
+                    <h1>Page de Test du Chat</h1>
+                    <p>Cette page a pour but de vérifier si le bus de messagerie d'Odoo fonctionne correctement.</p>
+
+                    <div class="o_thread_container">
+                        <div class="o_mail_thread">
+                            <field name="message_ids"
+                                widget="mail_thread"/>
+                        </div>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <menuitem id="menu_chat_test"
+        name="Test du Chat"
+        parent="menu_patrimoine_config"
+        action="action_chat_test"
+        sequence="200"/>
+
+</odoo>

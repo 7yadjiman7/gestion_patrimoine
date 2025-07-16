@@ -38,7 +38,7 @@ class ChatController(http.Controller):
 
         
     @http.route(
-        "/api/chat/conversations", auth="user", type="http", methods=["GET"], csrf=False, cors=ALLOWED_ORIGIN)
+        "/api/chat/conversations", auth="user", type="http", methods=["GET"], csrf=False)
     def list_conversations(self, **kwargs):
         _logger.info("--- API TRACE: list_conversations a été appelée ---")
         user = request.env.user
@@ -147,7 +147,7 @@ class ChatController(http.Controller):
         auth="user",
         type="json",
         methods=["POST"],
-        csrf=False, cors=ALLOWED_ORIGIN)
+        csrf=False)
     def create_conversation(self, participants=None, **kwargs):
         user = request.env.user
         participant_ids = [user.id]

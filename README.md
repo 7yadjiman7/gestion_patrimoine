@@ -155,9 +155,10 @@ curl -X POST \
 If you see the error "Couldn't bind the websocket," make sure the Odoo server is started with longpolling enabled. Run it with `--longpolling-port=8072` or via the `gevent` service so the chat features work properly.
 
 ### CORS configuration
-When the frontend and backend run on different origins, each API route exposes
-the `Access-Control-Allow-Origin` header. Set the environment variable
-`ALLOWED_ORIGIN` on the Odoo server to the URL of your frontend (for example
-`http://localhost:5174`). All controller routes will then respond with that
-origin, ensuring browsers accept requests that include credentials.
+When the frontend and backend run on different origins, the API must return a
+specific `Access-Control-Allow-Origin` header. Set the environment variable
+`ALLOWED_ORIGIN` on the Odoo server to the URL of your frontend
+(for example `http://localhost:5174`). All API routes now use
+`cors=ALLOWED_ORIGIN` so the response matches this value and browsers
+allow requests that include credentials.
 

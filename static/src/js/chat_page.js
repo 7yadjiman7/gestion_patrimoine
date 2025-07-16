@@ -15,8 +15,11 @@
   }
 
   async function loadConversations() {
-    conversations = await fetchJson('/api/chat/conversations');
     const container = document.getElementById('gp-conversation-items');
+    if (!container) {
+      return;
+    }
+    conversations = await fetchJson('/api/chat/conversations');
     container.innerHTML = '';
     conversations.forEach((c) => {
       const div = document.createElement('div');
@@ -133,6 +136,9 @@
   }
 
   async function init() {
+    if (!document.getElementById('gp-chat-app')) {
+      return;
+    }
     await loadConversations();
     if (conversations.length) {
       selectConversation(conversations[0]);

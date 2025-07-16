@@ -3,6 +3,7 @@ import postsService from "../../services/postsService"
 import { ThumbsUp, MessageCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import ApiImage from "@/components/ui/ApiImage"
 
 // Fonction pour formater la date
 const formatDate = dateString => {
@@ -99,7 +100,7 @@ export default function Post({ post }) {
                     {post.body}
                 </p>
                 {post.image && (
-                    <img
+                    <ApiImage
                         src={`http://localhost${post.image}`}
                         alt="Image du post"
                         className="w-full rounded-lg border border-slate-200 dark:border-slate-700"

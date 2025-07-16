@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "react-hot-toast"
 import { Search, PlusCircle, Calendar, MapPin, Euro } from "lucide-react";
-import materialService from "@/services/materialService"; 
+import materialService from "@/services/materialService";
+import ApiImage from "@/components/ui/ApiImage";
 
 // Nouveaux styles pour les cartes (inspirés de AdminMaterialTypes.jsx)
 const cardClasses = {
@@ -279,7 +280,7 @@ export default function CategoryItemsPage() {
                                 onClick={() => handleMaterialClick(material.id)}
                             >
                                 <div className={cardClasses.imageContainer}>
-                                    <img
+                                    <ApiImage
                                         src={
                                             material.image ||
                                             "/images/default-material.jpg"

@@ -5,6 +5,8 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Printer } from "lucide-react"
 import { toast } from "react-hot-toast"
 
+const ODOO_URL = import.meta.env.VITE_ODOO_URL || "http://localhost:8069"
+
 export default function AdminPostsPage() {
     const [posts, setPosts] = useState([])
     const [loading, setLoading] = useState(true)
@@ -96,7 +98,13 @@ export default function AdminPostsPage() {
                                     <TableCell>{new Date(p.create_date).toLocaleDateString()}</TableCell>
                                     <TableCell className="text-right space-x-2 no-print">
                                         <Button variant="outline" size="sm" asChild>
-                                            <a href={`/web#id=${p.id}&model=intranet.post&view_type=form`} target="_blank" rel="noopener noreferrer">Voir</a>
+                                            <a
+                                                href={`${ODOO_URL}/web#id=${p.id}&model=intranet.post&view_type=form`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                Voir
+                                            </a>
                                         </Button>
                                         <Button variant="destructive" size="sm" onClick={() => handleDelete(p.id)}>
                                             Supprimer

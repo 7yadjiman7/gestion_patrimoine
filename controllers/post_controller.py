@@ -23,7 +23,9 @@ class IntranetPostController(http.Controller):
     def list_posts(self, **kwargs):
         posts = request.env['intranet.post'].sudo().search([], order='create_date desc')
         result = []
+        user_id = request.env.user.id
         for post in posts:
+            liked = any(l.user_id.id == user_id for l in post.like_ids)
             result.append({
                 'id': post.id,
                 'title': post.name,
@@ -40,6 +42,7 @@ class IntranetPostController(http.Controller):
                 'like_count': len(post.like_ids),
                 'comment_count': len([c for c in post.comment_ids if not c.parent_id]),
                 'view_count': post.view_count,
+                'liked': liked,
             })
         return Response(
             json.dumps({'status': 'success', 'data': result}, default=str),

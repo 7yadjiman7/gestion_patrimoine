@@ -24,7 +24,7 @@ export default function Post({ post }) {
     // On suppose que ces données viennent de l'API
     const { currentUser } = useAuth()
     const [likes, setLikes] = useState(post.like_count || 0)
-    const [hasLiked, setHasLiked] = useState(false) // Idéalement, l'API devrait nous dire si l'utilisateur actuel a déjà liké
+    const [hasLiked, setHasLiked] = useState(post.liked || false)
     const [comments, setComments] = useState([])
     const [commentCount, setCommentCount] = useState(post.comment_count || 0)
     const [replyTo, setReplyTo] = useState(null)

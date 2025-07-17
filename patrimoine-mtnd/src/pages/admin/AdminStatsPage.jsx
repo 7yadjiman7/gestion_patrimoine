@@ -104,6 +104,22 @@ export default function AdminStatsPage() {
         }
     }
 
+    const handleAgeClick = data => {
+        if (data?.activeLabel) {
+            navigate(
+                `/admin/materiels/filtres?age=${encodeURIComponent(data.activeLabel)}`
+            )
+        }
+    }
+
+    const handleDepartmentValueClick = data => {
+        if (data?.activePayload?.[0]?.payload?.id) {
+            navigate(
+                `/admin/materiels/filtres?departmentId=${data.activePayload[0].payload.id}`
+            )
+        }
+    }
+
     if (isLoading) return <div className="p-8 text-center">Chargement...</div>
     if (error)
         return <div className="p-8 text-center text-red-500">{error}</div>
@@ -223,7 +239,11 @@ export default function AdminStatsPage() {
                         style={{ height: "300px" }}
                     >
                         <ResponsiveContainer>
-                            <BarChart data={statsByAge}>
+                            <BarChart
+                                data={statsByAge}
+                                onClick={handleAgeClick}
+                                style={{ cursor: "pointer" }}
+                            >
                                 <XAxis
                                     dataKey="name"
                                     angle={-20}
@@ -254,7 +274,11 @@ export default function AdminStatsPage() {
                         style={{ height: "300px" }}
                     >
                         <ResponsiveContainer>
-                            <BarChart data={statsByDepartmentValue}>
+                            <BarChart
+                                data={statsByDepartmentValue}
+                                onClick={handleDepartmentValueClick}
+                                style={{ cursor: "pointer" }}
+                            >
                                 <XAxis dataKey="name" />
                                 <YAxis tickFormatter={toCfa} width={90} />
                                 <Tooltip formatter={toCfa} />

@@ -155,6 +155,34 @@ class PostControllerTest(unittest.TestCase):
         payload = json.loads(args[0])
         self.assertEqual(payload['data'][0]['comment_count'], 1)
 
+    @patch('controllers.post_controller.Response')
+    @patch('controllers.post_controller.request')
+    def test_list_posts_includes_liked_flag(self, mock_request, mock_response):
+        env = MagicMock()
+        like_user = MagicMock(id=3)
+        post = MagicMock(
+            id=1,
+            name='A',
+            body='b',
+            user_id=MagicMock(name='u', id=2),
+            create_date='2024-01-01',
+            post_type='text',
+            attachment_ids=[],
+            like_ids=[MagicMock(user_id=like_user)],
+            comment_ids=[],
+            view_count=0,
+            image=False,
+        )
+        env['intranet.post'].sudo().search.return_value = [post]
+        mock_request.env = env
+        mock_request.env.user.id = 3
+
+        self.controller.list_posts()
+
+        args, kwargs = mock_response.call_args
+        payload = json.loads(args[0])
+        self.assertTrue(payload['data'][0]['liked'])
+
     @patch('controllers.post_controller.request')
     def test_toggle_like_create(self, mock_request):
         env = MagicMock()

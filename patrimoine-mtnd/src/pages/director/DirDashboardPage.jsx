@@ -7,8 +7,6 @@ import { StatCard } from "@/components/ui/stat-card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { API_BASE_URL } from "@/config/api"
-import ApiImage from "@/components/ui/ApiImage"
 import {
     Search,
     PlusCircle,
@@ -201,17 +199,17 @@ export default function DirDashboardPage() {
                             onClick={() => handleMaterialClick(material.id)}
                         >
                             <div className={cardClasses.imageContainer}>
-                                <ApiImage
+                                <img
                                     src={
                                         material.image
-                                            ? `${API_BASE_URL}${material.image}`
-                                            : "/images/default-material.jpg"
+                                            ? `${import.meta.env.VITE_ODOO_URL || 'http://localhost:8069'}${material.image}`
+                                            : '/images/default-material.jpg'
                                     }
                                     alt={material.name}
                                     className={cardClasses.image}
                                     onError={e => {
                                         e.target.src =
-                                            "/images/default-material.jpg"
+                                            '/images/default-material.jpg'
                                     }}
                                 />
                                 <div className={cardClasses.imageOverlay} />

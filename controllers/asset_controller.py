@@ -968,14 +968,15 @@ class PatrimoineAssetController(http.Controller):
 
             value_stats = []
             for stat in stats_raw:
-                dept_name = (
-                    stat.get("department_id")[1]
+                dept_id, dept_name = (
+                    stat.get("department_id")
                     if stat.get("department_id")
-                    else "Non défini"
+                    else (None, "Non défini")
                 )
                 total_value = stat.get("valeur_acquisition", 0)
                 value_stats.append(
                     {
+                        "id": dept_id,
                         "name": dept_name,
                         "value": total_value,
                     }

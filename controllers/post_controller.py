@@ -23,7 +23,9 @@ class IntranetPostController(http.Controller):
     def list_posts(self, **kwargs):
         posts = request.env['intranet.post'].sudo().search([], order='create_date desc')
         result = []
+        user_id = request.env.user.id
         for post in posts:
+            liked = any(l.user_id.id == user_id for l in post.like_ids)
             result.append({
                 'id': post.id,
                 'title': post.name,
@@ -38,8 +40,9 @@ class IntranetPostController(http.Controller):
                     for att in post.attachment_ids
                 ],
                 'like_count': len(post.like_ids),
-                'comment_count': len(post.comment_ids),
+                'comment_count': len([c for c in post.comment_ids if not c.parent_id]),
                 'view_count': post.view_count,
+                'liked': liked,
             })
         return Response(
             json.dumps({'status': 'success', 'data': result}, default=str),
@@ -111,7 +114,7 @@ class IntranetPostController(http.Controller):
                 for att in record.attachment_ids
             ],
             'like_count': len(record.like_ids),
-            'comment_count': len(record.comment_ids),
+            'comment_count': len([c for c in record.comment_ids if not c.parent_id]),
         }
 
         return Response(
@@ -162,6 +165,19 @@ class IntranetPostController(http.Controller):
         if not post.exists():
             return Response(json.dumps({'status': 'error', 'message': 'Post not found'}), status=404, headers=CORS_HEADERS)
 
+        comment_model = request.env['intranet.post.comment'].sudo()
+        existing = comment_model.search([
+            ('post_id', '=', post.id),
+            ('user_id', '=', request.env.user.id),
+            ('parent_id', '=', False),
+        ], limit=1)
+        if existing and not parent_id:
+            return Response(
+                json.dumps({'status': 'error', 'message': 'User already commented'}),
+                status=400,
+                headers=CORS_HEADERS,
+            )
+
         vals = {
             'post_id': post.id,
             'user_id': request.env.user.id,
@@ -191,6 +207,7 @@ class IntranetPostController(http.Controller):
                 'user_id': comment.user_id.id,
                 'user_name': comment.user_id.name,
                 'content': comment.content,
+                'parent_id': comment.parent_id.id if comment.parent_id else None,
                 'create_date': comment.create_date,
                 'children': [serialize(c) for c in comment.child_ids],
             }

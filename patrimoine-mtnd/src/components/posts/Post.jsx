@@ -3,6 +3,9 @@ import postsService from "../../services/postsService"
 import { ThumbsUp, MessageCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import ApiImage from "@/components/ui/ApiImage"
+import { API_BASE_URL } from "@/config/api"
+import { useAuth } from "@/context/AuthContext"
 
 // Fonction pour formater la date
 const formatDate = dateString => {
@@ -19,11 +22,13 @@ const formatDate = dateString => {
 
 export default function Post({ post }) {
     // On suppose que ces données viennent de l'API
+    const { currentUser } = useAuth()
     const [likes, setLikes] = useState(post.like_count || 0)
-    const [hasLiked, setHasLiked] = useState(false) // Idéalement, l'API devrait nous dire si l'utilisateur actuel a déjà liké
+    const [hasLiked, setHasLiked] = useState(post.liked || false)
     const [comments, setComments] = useState([])
     const [commentCount, setCommentCount] = useState(post.comment_count || 0)
     const [replyTo, setReplyTo] = useState(null)
+    const [hasCommented, setHasCommented] = useState(false)
     useEffect(() => {
         postsService.viewPost(post.id).catch(() => {})
     }, [post.id])
@@ -36,10 +41,16 @@ export default function Post({ post }) {
                 .then(data => {
                     setComments(data)
                     setCommentCount(Array.isArray(data) ? data.length : 0)
+                    setHasCommented(
+                        Array.isArray(data) &&
+                            data.some(
+                                c => c.user_id === currentUser.id && !c.parent_id
+                            )
+                    )
                 })
                 .catch(() => {})
         }
-    }, [showComment, post.id])
+    }, [showComment, post.id, currentUser.id])
     const [newComment, setNewComment] = useState("")
 
     const handleLike = async () => {
@@ -59,11 +70,13 @@ export default function Post({ post }) {
             setComments(prev => [...prev, {
                 content: newComment,
                 author: 'Vous',
+                user_id: currentUser.id,
                 create_date: new Date().toISOString(),
                 id: Date.now(),
                 parent_id: replyTo,
             }])
             setCommentCount(prev => prev + 1)
+            if (!replyTo) setHasCommented(true)
             setNewComment("")
             setReplyTo(null)
         } catch (e) {
@@ -99,8 +112,8 @@ export default function Post({ post }) {
                     {post.body}
                 </p>
                 {post.image && (
-                    <img
-                        src={`http://localhost${post.image}`}
+                    <ApiImage
+                        src={`${API_BASE_URL}${post.image}`}
                         alt="Image du post"
                         className="w-full rounded-lg border border-slate-200 dark:border-slate-700"
                     />
@@ -142,18 +155,24 @@ export default function Post({ post }) {
                         className="bg-white dark:bg-slate-800 p-4 rounded-lg w-full max-w-md"
                         onClick={e => e.stopPropagation()}
                     >
+                        {hasCommented && !replyTo && (
+                            <p className="text-sm text-red-500 mb-2">
+                                Vous avez déjà commenté ce post.
+                            </p>
+                        )}
                         <Textarea
                             className="w-full mb-2 text-base border rounded-md bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 focus-visible:ring-blue-500"
                             value={newComment}
                             onChange={e => setNewComment(e.target.value)}
                             placeholder={replyTo ? 'Votre réponse...' : 'Votre commentaire...'}
                             rows="3"
+                            disabled={hasCommented && !replyTo}
                         />
                         <div className="flex justify-end gap-2 mb-4">
                             <Button variant="outline" onClick={() => setShowComment(false)}>
                                 Annuler
                             </Button>
-                            <Button onClick={handleSendComment} className="bg-blue-600 hover:bg-blue-700">
+                            <Button onClick={handleSendComment} disabled={hasCommented && !replyTo} className="bg-blue-600 hover:bg-blue-700">
                                 Envoyer
                             </Button>
                         </div>

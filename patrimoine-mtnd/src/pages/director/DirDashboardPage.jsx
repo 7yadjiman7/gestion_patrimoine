@@ -7,6 +7,7 @@ import { StatCard } from "@/components/ui/stat-card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { API_BASE_URL } from "@/config/api"
 import {
     Search,
     PlusCircle,

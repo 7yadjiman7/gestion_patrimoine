@@ -6,8 +6,6 @@ import materialService from "@/services/materialService"
 import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "react-hot-toast"
-// On importe uniquement le composant ApiImage
-import ApiImage from "@/components/ui/ApiImage"
 
 export default function SubCategoriesPage() {
     const { type } = useParams()
@@ -102,8 +100,7 @@ export default function SubCategoriesPage() {
                         }
                         className="relative rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 cursor-pointer group"
                     >
-                        {/* ON UTILISE LE COMPOSANT ApiImage EN LUI PASSANT DIRECTEMENT L'URL RELATIVE */}
-                        <ApiImage
+                        <img
                             src={category.image_url}
                             alt={category.name}
                             className="w-full h-80 object-cover brightness-110 contrast-110 saturate-125 transition-transform duration-700 group-hover:scale-105"

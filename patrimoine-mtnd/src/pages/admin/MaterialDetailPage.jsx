@@ -15,7 +15,7 @@ import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import materialService from "@/services/materialService"
 import AppSidebar from "@/components/app-sidebar"
-
+import { API_BASE_URL } from "@/config/api"
 import {
     Edit,
     FileText,

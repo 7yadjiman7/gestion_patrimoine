@@ -3,7 +3,6 @@ import postsService from "../../services/postsService"
 import { ThumbsUp, MessageCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import ApiImage from "@/components/ui/ApiImage"
 import { API_BASE_URL } from "@/config/api"
 import { useAuth } from "@/context/AuthContext"
 
@@ -127,7 +126,7 @@ export default function Post({ post }) {
                     {post.body}
                 </p>
                 {post.image && (
-                    <ApiImage
+                    <img
                         src={`${API_BASE_URL}${post.image}`}
                         alt="Image du post"
                         className="w-full rounded-lg border border-slate-200 dark:border-slate-700"

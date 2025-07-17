@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom"
-import ApiImage from "@/components/ui/ApiImage"
 
 export default function AdminMaterialTypes() {
     const navigate = useNavigate()
@@ -43,7 +42,7 @@ export default function AdminMaterialTypes() {
                         onClick={() => navigate(type.route)}
                         className="relative rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 cursor-pointer"
                     >
-                        <ApiImage
+                        <img
                             src={type.image}
                             alt={type.name}
                             className="w-full h-80 object-cover brightness-110 contrast-110 saturate-125 transition-transform duration-700 group-hover:scale-105"

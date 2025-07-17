@@ -9,7 +9,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "react-hot-toast"
 import { Search, PlusCircle, Calendar, MapPin, Euro } from "lucide-react";
 import materialService from "@/services/materialService";
-import ApiImage from "@/components/ui/ApiImage";
 import { API_BASE_URL } from "@/config/api";
 
 // Nouveaux styles pour les cartes (inspirés de AdminMaterialTypes.jsx)
@@ -281,7 +280,7 @@ export default function CategoryItemsPage() {
                                 onClick={() => handleMaterialClick(material.id)}
                             >
                                 <div className={cardClasses.imageContainer}>
-                                    <ApiImage
+                                    <img
                                         src={
                                             material.image
                                                 ? `${import.meta.env.VITE_ODOO_URL || "http://localhost:8069"}${material.image}`

@@ -1,115 +1,101 @@
 // src/pages/chat/ChatPage.jsx
-import React, { useEffect, useState, useCallback, useRef } from "react"
+import React, { useEffect, useState, useCallback } from "react"
 import {
     fetchConversations,
     fetchMessages,
-    sendMessage,
     createConversation,
-    connectWebSocket,
-    subscribeToChannels,
-    setOnBusMessage,
-} from "../../services/chatService"
-import ConversationList from "../../components/chat/ConversationList"
-import ConversationView from "../../components/chat/ConversationView"
-import EmployeeList from "../../components/chat/EmployeeList"
+} from "@/services/chatService"
+import { useOdooChat } from "@/hooks/useOdooChat" // On importe notre nouveau hook
+import ConversationList from "@/components/chat/ConversationList"
+import ConversationView from "@/components/chat/ConversationView"
+import EmployeeList from "@/components/chat/EmployeeList"
 import { toast } from "react-hot-toast"
-import { useAuth } from "../../context/AuthContext"
+import { useAuth } from "@/context/AuthContext"
 
 export default function ChatPage() {
-    const { currentUser } = useAuth()
     const [conversations, setConversations] = useState([])
     const [currentConversation, setCurrentConversation] = useState(null)
-    const [messages, setMessages] = useState([])
     const [showEmployees, setShowEmployees] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
-    const activeConvRef = useRef(currentConversation)
 
-    useEffect(() => {
-        activeConvRef.current = currentConversation
-    }, [currentConversation])
+    // On initialise les canaux à null pour le moment
+    const [chatChannels, setChatChannels] = useState(null)
 
+    // On n'active le hook que si `chatChannels` n'est pas null
+    const { messages, isConnected, sendMessage, setMessages } = useOdooChat(
+        chatChannels ?? []
+    )
+
+    // Ce useEffect charge les données et DÉCLENCHE l'activation du hook
     useEffect(() => {
-        const initializeChat = async () => {
+        const loadInitialData = async () => {
+            setIsLoading(true)
             try {
-                // Étape 1: On charge les conversations via HTTP
                 const initialConvs = await fetchConversations()
-                setConversations(initialConvs)
 
-                // Étape 2: On définit notre gestionnaire de messages
-                setOnBusMessage(busMessage => {
-                    if (
-                        busMessage.type === "new_message" &&
-                        busMessage.payload
-                    ) {
-                        const msg = busMessage.payload
-                        if (
-                            activeConvRef.current &&
-                            msg.conversation_id === activeConvRef.current.id
-                        ) {
-                            setMessages(prev => [...prev, msg])
-                        }
-                        setConversations(prev =>
-                            prev.map(c =>
-                                c.id === msg.conversation_id
-                                    ? {
-                                          ...c,
-                                          last_message: msg.content,
-                                          last_date: msg.date,
-                                      }
-                                    : c
-                            )
-                        )
-                    }
-                })
+                // --- LOG 1 : Voir les données brutes de l'API ---
+                console.log(
+                    "Données BRUTES reçues de fetchConversations:",
+                    initialConvs
+                )
 
-                // --- CORRECTION ANTI-RACE CONDITION ---
-                // On attend un court instant (200ms) pour être sûr que la session HTTP
-                // est bien prise en compte par le serveur avant de lancer le WebSocket.
-                setTimeout(() => {
-                    // Étape 3: On se connecte au WebSocket
-                    connectWebSocket(currentUser.id)
+                // Assurons-nous que c'est bien un tableau
+                if (Array.isArray(initialConvs)) {
+                    setConversations(initialConvs)
 
-                    // Étape 4: On s'abonne aux canaux
-                    if (initialConvs?.length > 0) {
+                    if (initialConvs.length > 0) {
                         const channels = initialConvs.map(
                             conv => `chat_channel_${conv.id}`
                         )
-                        subscribeToChannels(channels)
+
+                        // --- LOG 2 : Voir les canaux générés ---
+                        console.log("Canaux générés pour le hook:", channels)
+
+                        setChatChannels(channels)
+                        handleSelectConversation(initialConvs[0])
+                    } else {
+                        console.warn(
+                            "Aucune conversation initiale trouvée. Le WebSocket ne démarrera pas."
+                        )
                     }
-                }, 200) // <-- Léger délai de 200 millisecondes
+                } else {
+                    console.error(
+                        "Les données reçues ne sont pas un tableau ! Reçu :",
+                        initialConvs
+                    )
+                }
             } catch (error) {
-                toast.error("Erreur lors de l'initialisation du chat.")
-                console.error(error)
+                toast.error("Erreur au chargement des conversations.")
             } finally {
                 setIsLoading(false)
             }
         }
-
-        initializeChat()
-    }, [currentUser.id])
-
-    const handleSelectConversation = useCallback(conversation => {
-        if (!conversation) return
-        setCurrentConversation(conversation)
-        fetchMessages(conversation.id)
-            .then(setMessages)
-            .catch(() => setMessages([]))
+        loadInitialData()
     }, [])
+
+    
+    const handleSelectConversation = useCallback(
+        async conversation => {
+            if (!conversation) return
+            setCurrentConversation(conversation)
+            try {
+                const initialMessages = await fetchMessages(conversation.id)
+                setMessages(initialMessages) // On initialise les messages dans le hook
+            } catch (error) {
+                toast.error("Erreur au chargement des messages.")
+                setMessages([])
+            }
+        },
+        [setMessages]
+    )
 
     const handleSend = useCallback(
         async content => {
             if (!currentConversation) return
-            try {
-                await sendMessage(currentConversation.id, content)
-                const updatedMessages = await fetchMessages(
-                    currentConversation.id
-                )
-                setMessages(updatedMessages)
-            } catch (error) {
-                toast.error("L'envoi a échoué.")
-            }
+            // On utilise la fonction sendMessage de notre hook
+            await sendMessage(currentConversation.id, content)
         },
-        [currentConversation]
+        [currentConversation, sendMessage]
     )
 
     const startConversation = useCallback(async employee => {
@@ -169,6 +155,9 @@ export default function ChatPage() {
                     onClose={() => setShowEmployees(false)}
                 />
             )}
+            <div className="absolute top-2 right-2 text-xs p-1 rounded bg-gray-700">
+                {isConnected ? "🟢 Connecté" : "🔴 Déconnecté"}
+            </div>
         </div>
     )
 }

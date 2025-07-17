@@ -1,34 +1,38 @@
 // src/services/chatService.js
 import api from "./apiConfig"
 
-const subscribedChannels = new Set()
 const unwrap = res => (res.data?.data ? res.data.data : res.data)
 
+// --- Fonctions HTTP (inchangées) ---
 export const fetchConversations = () =>
     api.get("/api/chat/conversations").then(res => res.data)
-
 export const fetchMessages = conversationId =>
     api.get(`/api/chat/conversations/${conversationId}/messages`).then(unwrap)
-
 export const sendMessage = (conversationId, content) =>
     api
         .post(`/api/chat/conversations/${conversationId}/messages`, { content })
         .then(unwrap)
-
 export const createConversation = participants =>
     api.post("/api/chat/conversations", { participants }).then(unwrap)
 
-// --- WebSocket config ---
-// CORRECTION DÉFINITIVE : L'URL doit être propre, sans port et sans paramètres.
-// Nginx se chargera de la redirection.
-const ODOO_WS_URL = "ws://localhost/websocket"
+// --- Logique WebSocket Corrigée ---
+const ODOO_WS_URL = `ws://${window.location.hostname}/websocket`
 
 let socket = null
 let reconnectAttempts = 0
 let onMessageCallback = null
 
-export function connectWebSocket(userId) {
-    if (socket && socket.readyState === WebSocket.OPEN) return
+export function connectWebSocket(channelsToSubscribe = []) {
+    if (
+        socket &&
+        (socket.readyState === WebSocket.OPEN ||
+            socket.readyState === WebSocket.CONNECTING)
+    ) {
+        console.warn(
+            "🔌 Le WebSocket est déjà connecté ou en cours de connexion."
+        )
+        return
+    }
 
     console.log(`🔌 Tentative de connexion WebSocket #${reconnectAttempts}...`)
     socket = new WebSocket(ODOO_WS_URL)
@@ -38,6 +42,23 @@ export function connectWebSocket(userId) {
             `✅ WebSocket connecté à Odoo (Tentative #${reconnectAttempts})`
         )
         reconnectAttempts = 0
+
+        if (channelsToSubscribe.length > 0) {
+            console.log(
+                "📡 Envoi de l'abonnement aux canaux :",
+                channelsToSubscribe
+            )
+            const message = {
+                jsonrpc: "2.0",
+                method: "call",
+                params: {
+                    channels: channelsToSubscribe,
+                    last: 0,
+                },
+                id: Math.floor(Math.random() * 1000000000),
+            }
+            socket.send(JSON.stringify(message))
+        }
     }
 
     socket.onmessage = event => {
@@ -59,34 +80,35 @@ export function connectWebSocket(userId) {
         console.warn(
             `❗ WebSocket fermé (code=${event.code}, reason=${event.reason || "aucune raison"}).`
         )
-        reconnectAttempts++
-        setTimeout(() => {
-            connectWebSocket(userId)
-        }, 5000)
+        if (reconnectAttempts < 5) {
+            reconnectAttempts++
+            setTimeout(() => connectWebSocket(channelsToSubscribe), 5000)
+        } else {
+            console.error(
+                "🚫 Nombre maximum de tentatives de reconnexion atteint."
+            )
+        }
     }
 
     socket.onerror = error => {
         console.error("🔥 Erreur WebSocket:", error)
-        socket.close()
+        if (
+            socket &&
+            socket.readyState !== WebSocket.CLOSING &&
+            socket.readyState !== WebSocket.CLOSED
+        ) {
+            socket.close()
+        }
     }
 }
 
-export function subscribeToChannels(channel) {
-    if (!socket || socket.readyState !== WebSocket.OPEN) {
-        console.warn("🚫 WebSocket non connecté. Impossible de s'abonner.")
-        return
+export function disconnectWebSocket() {
+    reconnectAttempts = 10 // Empêche les futures tentatives de reconnexion
+    if (socket) {
+        socket.close()
+        socket = null
     }
-    if (subscribedChannels.has(channel)) {
-        return
-    }
-    const message = {
-        event_name: "subscribe",
-        channels: [channel],
-        last: 0,
-    }
-    socket.send(JSON.stringify(message))
-    subscribedChannels.add(channel)
-    console.log("📡 Abonnement envoyé:", message)
+    console.log("🔌 Connexion WebSocket fermée manuellement.")
 }
 
 export const setOnBusMessage = callback => {

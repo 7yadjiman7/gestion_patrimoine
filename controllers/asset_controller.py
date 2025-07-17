@@ -8,7 +8,7 @@ from odoo.osv import expression
 from werkzeug.exceptions import BadRequest
 import base64  # Pour encoder/décoder les fichiers
 import logging
-from .common import handle_api_errors, json_response, CORS_HEADERS,
+from .common import handle_api_errors, json_response, CORS_HEADERS
 
 
 def Response(*args, **kwargs):
@@ -22,7 +22,6 @@ _logger = logging.getLogger(__name__)
 class PatrimoineAssetController(http.Controller):
     @http.route("/api/patrimoine/categories", auth="public", type="http", methods=["GET"], csrf=False)
     def list_categories(self, **kw):
-        # AJOUTEZ CETTE LIGNE POUR LE TEST
 
         try:
             domain = []
@@ -2416,8 +2415,7 @@ class PatrimoineAssetController(http.Controller):
                 headers={"Content-Type": "application/json"},
             )
 
-    # NOUVELLE ROUTE pour que les managers voient les déclarations de leur équipe
-
+    # Dans asset_controller.py
     @http.route("/api/patrimoine/pertes/manager", auth="user", type="http", methods=["GET"])
     def list_pertes_for_manager(self, **kw):
         try:
@@ -2425,9 +2423,7 @@ class PatrimoineAssetController(http.Controller):
                 [("user_id", "=", request.env.user.id)], limit=1
             )
             if not current_employee:
-                return Response(
-                    json.dumps([]), headers={"Content-Type": "application/json"}
-                )
+                return Response(json.dumps([]), headers={"Content-Type": "application/json"})
 
             # Recherche des employés ayant ce manager comme supérieur hiérarchique
             employee_ids = (
@@ -2444,22 +2440,31 @@ class PatrimoineAssetController(http.Controller):
                     .ids
                 )
 
-            # On cherche les déclarations faites par ces employés et qui sont en attente de validation
+            # --- DÉBUT DE LA CORRECTION ---
+
+            # 1. On récupère les enregistrements complets des employés trouvés
+            employees_in_team = request.env["hr.employee"].browse(employee_ids)
+            # 2. On extrait les IDs de leurs comptes utilisateurs (res.users)
+            user_ids_of_team = employees_in_team.mapped('user_id').ids
+
+            # 3. Le domaine de recherche correct
             domain = [
-                ("declarer_par_id.employee_ids", "in", employee_ids),
+                ("declarer_par_id", "in", user_ids_of_team),
                 ("state", "=", "to_approve"),
             ]
 
-            pertes = request.env["patrimoine.perte"].search(domain)
+            # --- FIN DE LA CORRECTION ---
 
-            # La logique pour formater les données est la même que pour list_pertes
+            pertes = request.env["patrimoine.perte"].search(domain, order="date_perte desc")
+
+            # La logique pour formater les données reste la même
             perte_data = []
             for perte in pertes:
                 perte_data.append(
                     {
                         "id": perte.id,
                         "name": perte.name,
-                        "asset_name": perte.asset_id.name,
+                        "asset_name": perte.asset_id.sudo().name,
                         "declarer_par_name": perte.declarer_par_id.name,
                         "date_perte": (
                             perte.date_perte.strftime("%Y-%m-%d")
@@ -2476,7 +2481,7 @@ class PatrimoineAssetController(http.Controller):
 
         except Exception as e:
             _logger.error(f"Error listing pertes for manager {request.env.user.name}: {e}")
-            return Response(json.dumps({"error": str(e)}), status=500)
+            return Response(json.dumps({'error': str(e)}), status=500, headers={'Content-Type': 'application/json'})
 
     # NOUVELLE ROUTE pour que le manager traite une déclaration
     @http.route(

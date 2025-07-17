@@ -30,13 +30,12 @@ class ChatController(http.Controller):
         # ... votre logique métier ici ...
 
         _logger.info(f"Utilisateur {request.env.user.name} abonné aux canaux : {channels}")
-        
+
         # Odoo gère l'abonnement via le bus automatiquement si le client est connecté
         # au WebSocket avec une session valide. Ce contrôleur est plus pour la validation.
-        
+
         return {'status': 'subscribed', 'channels': channels}
 
-        
     @http.route(
         "/api/chat/conversations", auth="user", type="http", methods=["GET"], csrf=False)
     def list_conversations(self, **kwargs):
@@ -57,7 +56,7 @@ class ChatController(http.Controller):
 
             # CORRECTION : On calcule un nom de conversation plus propre
             other_participants = conv.participant_ids.filtered(lambda p: p.id != user.id)
-            conv_name = conv.name or ", ".join(other_partners.mapped("name"))
+            conv_name = conv.name or ", ".join(other_participants.mapped("name"))
             result.append(
                 {
                     "id": conv.id,
@@ -70,6 +69,9 @@ class ChatController(http.Controller):
                     ),
                 }
             )
+
+        # LA LIGNE CRUCIALE : On force l'écriture de la session en base de données
+        request.env.cr.commit()
 
         return json_response(result)
 

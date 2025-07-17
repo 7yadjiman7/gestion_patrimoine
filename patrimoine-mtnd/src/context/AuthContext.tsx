@@ -1,12 +1,8 @@
 import axios from "axios"
 import React, { createContext, useContext, useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import api from "@/services/apiConfig"
 
-const API_PREFIX = "/web"
-
-// Nom de la base de données Odoo pour l'authentification. Peut être défini via
-// la variable d'environnement VITE_ODOO_DB; "odoo17_2" est utilisé par défaut
-// si elle est absente.
 const ODOO_DB = import.meta.env.VITE_ODOO_DB || "odoo17_2"
 
 // On ajoute les champs optionnels pour le département à l'interface User
@@ -52,8 +48,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const login = async (email: string, password: string): Promise<User> => {
         try {
-            const authResponse = await axios.post(
-                `${API_PREFIX}/session/authenticate`,
+            const authResponse = await api.post(
+                "/web/session/authenticate",
                 {
                     jsonrpc: "2.0",
                     params: {
@@ -77,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 authResponse.data.result.session_id
             )
 
-            const userInfoResponse = await axios.post(
+            const userInfoResponse = await api.post(
                 "/api/users/me",
                 {},
                 { withCredentials: true }

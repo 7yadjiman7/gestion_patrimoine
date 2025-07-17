@@ -281,8 +281,9 @@ export default function CategoryItemsPage() {
                                 <div className={cardClasses.imageContainer}>
                                     <img
                                         src={
-                                            material.image ||
-                                            "/images/default-material.jpg"
+                                            material.image
+                                                ? `${import.meta.env.VITE_ODOO_URL || "http://localhost:8069"}${material.image}`
+                                                : "/images/default-material.jpg"
                                         }
                                         alt={material.name}
                                         className={cardClasses.image}

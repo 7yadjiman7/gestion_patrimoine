@@ -35,6 +35,21 @@ export default function Post({ post }) {
     const [showComment, setShowComment] = useState(false)
 
     useEffect(() => {
+        postsService
+            .fetchComments(post.id)
+            .then(data => {
+                setCommentCount(Array.isArray(data) ? data.length : 0)
+                setHasCommented(
+                    Array.isArray(data) &&
+                        data.some(
+                            c => c.user_id === currentUser.id && !c.parent_id
+                        )
+                )
+            })
+            .catch(() => {})
+    }, [post.id, currentUser.id])
+
+    useEffect(() => {
         if (showComment) {
             postsService
                 .fetchComments(post.id)

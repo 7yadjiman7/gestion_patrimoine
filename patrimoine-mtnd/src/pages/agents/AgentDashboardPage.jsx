@@ -7,7 +7,6 @@ import { useAuth } from "@/context/AuthContext"
 import { StatCard } from "@/components/ui/stat-card"
 import { API_BASE_URL } from "@/config/api"
 import { Input } from "@/components/ui/input"
-import ApiImage from "@/components/ui/ApiImage"
 import {
     Search,
     Package,
@@ -188,7 +187,7 @@ export default function AgentDashboardPage() {
                             }
                         >
                             <div className={cardClasses.imageContainer}>
-                                <ApiImage
+                                <img
                                     src={
                                         material.image
                                             ? `${API_BASE_URL}${material.image}`

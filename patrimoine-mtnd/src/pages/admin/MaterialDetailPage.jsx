@@ -277,15 +277,20 @@ export default function MaterialDetailPage() {
                                 <CardContent className="pt-6">
                                     <div className="flex flex-col md:flex-row gap-8">
                                         {/* Image à gauche */}
-                                        {material.image && (
-                                            <div className="w-full md:w-1/3 flex justify-center">
-                                                <img
-                                                    src={`${API_BASE_URL}${material.image}`}
-                                                    alt={material.name}
-                                                    className="rounded-lg border shadow-sm max-h-96 w-full object-contain"
-                                                />
-                                            </div>
-                                        )}
+                                        <div className="w-full md:w-1/3 flex justify-center">
+                                            <img
+                                                src={
+                                                    material.image
+                                                        ? `${import.meta.env.VITE_ODOO_URL || 'http://localhost:8069'}${material.image}`
+                                                        : '/images/default-material.jpg'
+                                                }
+                                                alt={material.name}
+                                                className="rounded-lg border shadow-sm max-h-96 w-full object-contain"
+                                                onError={e => {
+                                                    e.target.src = '/images/default-material.jpg'
+                                                }}
+                                            />
+                                        </div>
 
                                         {/* Informations à droite */}
                                         <div className="w-full md:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-8">

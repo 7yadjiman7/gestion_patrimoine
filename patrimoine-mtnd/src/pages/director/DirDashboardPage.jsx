@@ -203,14 +203,14 @@ export default function DirDashboardPage() {
                                 <img
                                     src={
                                         material.image
-                                            ? `${API_BASE_URL}${material.image}`
-                                            : "/images/default-material.jpg"
+                                            ? `${import.meta.env.VITE_ODOO_URL || 'http://localhost:8069'}${material.image}`
+                                            : '/images/default-material.jpg'
                                     }
                                     alt={material.name}
                                     className={cardClasses.image}
                                     onError={e => {
                                         e.target.src =
-                                            "/images/default-material.jpg"
+                                            '/images/default-material.jpg'
                                     }}
                                 />
                                 <div className={cardClasses.imageOverlay} />

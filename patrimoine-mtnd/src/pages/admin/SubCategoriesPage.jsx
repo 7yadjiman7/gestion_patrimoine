@@ -104,10 +104,13 @@ export default function SubCategoriesPage() {
                     >
                         {/* ON UTILISE LE COMPOSANT ApiImage EN LUI PASSANT DIRECTEMENT L'URL RELATIVE */}
                         <ApiImage
-                            src={category.image_url}
+                            src={
+                                category.image_url
+                                    ? `${import.meta.env.VITE_ODOO_URL || 'http://localhost:8069'}${category.image_url}`
+                                    : '/placeholder.jpeg'
+                            }
                             alt={category.name}
                             className="w-full h-80 object-cover brightness-110 contrast-110 saturate-125 transition-transform duration-700 group-hover:scale-105"
-                            placeholder="/placeholder.jpeg" // On peut définir une image par défaut
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
                         <div className="absolute bottom-0 left-0 p-5">

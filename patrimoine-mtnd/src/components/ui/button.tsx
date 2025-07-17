@@ -1,4 +1,5 @@
 import React from "react"
+import { Slot } from "@radix-ui/react-slot"
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     variant?:
@@ -46,9 +47,10 @@ const Button = React.forwardRef(
             icon: "w-9 h-9",
         }
 
+        const Comp = asChild ? Slot : "button"
         return (
-            <button
-                ref={ref}
+            <Comp
+                ref={ref as any}
                 className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
                 {...props}
             />

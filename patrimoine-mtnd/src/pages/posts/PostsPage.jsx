@@ -3,6 +3,10 @@ import postsService from "../../services/postsService"
 import CreatePost from "../../components/posts/CreatePost"
 import PostsList from "../../components/posts/PostsList"
 import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
+import { Card, CardContent } from "@/components/ui/card"
+import { Inbox } from "lucide-react"
+import { toast } from "react-hot-toast"
 import { useAuth } from "@/context/AuthContext"
 
 export default function PostsPage() {
@@ -13,13 +17,16 @@ export default function PostsPage() {
     const [posts, setPosts] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [showCreate, setShowCreate] = useState(false)
+    const [error, setError] = useState(null)
 
     const fetchAndSetPosts = useCallback(async () => {
         try {
             const fetchedPosts = await postsService.fetchPosts()
             setPosts(Array.isArray(fetchedPosts) ? fetchedPosts : [])
-        } catch (error) {
-            console.error("Failed to fetch posts", error)
+        } catch (err) {
+            console.error("Failed to fetch posts", err)
+            setError("Erreur lors du chargement des posts.")
+            toast.error("Impossible de récupérer les posts")
         } finally {
             setIsLoading(false)
         }
@@ -28,6 +35,14 @@ export default function PostsPage() {
     useEffect(() => {
         fetchAndSetPosts()
     }, [fetchAndSetPosts])
+
+    const updatePostInList = useCallback((postId, updatedData) => {
+        setPosts(currentPosts =>
+            currentPosts.map(post =>
+                post.id === postId ? { ...post, ...updatedData } : post
+            )
+        )
+    }, [])
 
     const handlePostCreated = () => {
         // Simplement rafraîchir toute la liste pour voir le nouveau post en haut
@@ -49,11 +64,12 @@ export default function PostsPage() {
                     </Button>
                 ))}
             {isLoading ? (
-                <p className="text-center text-slate-400">
-                    Chargement des posts...
-                </p>
+                <div className="flex justify-center py-10">
+                    <Spinner />
+                </div>
             ) : (
-                <PostsList posts={posts} />
+                // On passe la nouvelle fonction aux enfants
+                <PostsList posts={posts} onPostUpdate={updatePostInList} />
             )}
         </div>
     )

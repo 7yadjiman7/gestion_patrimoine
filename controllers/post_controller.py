@@ -123,73 +123,63 @@ class IntranetPostController(http.Controller):
             headers=CORS_HEADERS,)
 
     # Garde la version de 'main' pour ajouter des commentaires
-    @http.route('/api/intranet/posts/<int:post_id>/comments', auth='user', type='json', methods=['POST'], csrf=False)
+    @http.route('/api/intranet/posts/<int:post_id>/comments', auth='user', type='http', methods=['POST'], csrf=False)
     @handle_api_errors
-    def add_comment(self, post_id, content=None, parent_id=None, **kw):
-        _logger.info(
-            "add_comment called with json=%s kw=%s form=%s params=%s",
-            request.jsonrequest,
-            kw,
-            getattr(request.httprequest, "form", None).to_dict()
-            if getattr(getattr(request, "httprequest", None), "form", None)
-            else None,
-            getattr(request, "params", None),
-        )
+    def add_comment(self, post_id, **kw):
+        # 1. On lit les données JSON envoyées par le client React (axios)
+        try:
+            data = json.loads(request.httprequest.data)
+            content = data.get('content')
+            parent_id = data.get('parent_id')
+        except Exception as e:
+            _logger.error("Could not parse JSON body: %s", e)
+            raise ValidationError("Format de requête invalide.")
 
-        data = request.jsonrequest or {}
-        if not data and not kw and content is None and parent_id is None:
-            form_data = {}
-            if (
-                getattr(request, 'httprequest', None)
-                and getattr(request.httprequest, 'form', None)
-                and callable(getattr(request.httprequest.form, 'to_dict', None))
-            ):
-                result = request.httprequest.form.to_dict()
-                if isinstance(result, dict):
-                    form_data = result
-            params = getattr(request, 'params', {})
-            if not isinstance(params, dict):
-                params = {}
-            data = form_data or params
-
-        content = content or kw.get('content') or data.get('content')
-        parent_id = parent_id or kw.get('parent_id') or data.get('parent_id')
-
-        _logger.info(
-            "Parsed comment content=%s parent_id=%s", content, parent_id
-        )
-
+        # 2. On garde votre logique de validation métier
         if not content:
-            raise ValidationError('Comment content is required')
+            raise ValidationError('Le contenu du commentaire est requis')
+
         post = request.env['intranet.post'].sudo().browse(post_id)
         if not post.exists():
-            return Response(json.dumps({'status': 'error', 'message': 'Post not found'}), status=404, headers=CORS_HEADERS)
+            return json_response({'status': 'error', 'message': 'Post not found'}, status=404)
 
         comment_model = request.env['intranet.post.comment'].sudo()
+
+        # 3. On garde votre logique pour empêcher de commenter deux fois
         existing = comment_model.search([
             ('post_id', '=', post.id),
             ('user_id', '=', request.env.user.id),
             ('parent_id', '=', False),
         ], limit=1)
         if existing and not parent_id:
-            return Response(
-                json.dumps({'status': 'error', 'message': 'User already commented'}),
-                status=400,
-                headers=CORS_HEADERS,
-            )
+            return json_response({'status': 'error', 'message': 'Vous avez déjà commenté ce post.'}, status=400)
 
+        # 4. On crée le commentaire
         vals = {
             'post_id': post.id,
             'user_id': request.env.user.id,
             'content': content,
         }
         if parent_id:
-            vals['parent_id'] = parent_id
+            vals['parent_id'] = int(parent_id)
 
-        comment = request.env['intranet.post.comment'].sudo().create(vals)
+        comment = comment_model.create(vals)
         _logger.info("Comment created with id=%s", comment.id)
 
-        return Response(json.dumps({'status': 'success', 'data': {'id': comment.id}}, default=str), headers=CORS_HEADERS)
+        # 5. On recalcule et on renvoie une réponse complète et correcte
+        comment_count = comment_model.search_count([
+            ('post_id', '=', post.id),
+            ('parent_id', '=', False)
+        ])
+
+        return json_response({
+            'status': 'success',
+            'data': {
+                'id': comment.id,
+                'comment_count': comment_count
+            }
+        })
+
 
     @http.route('/api/intranet/posts/<int:post_id>/comments', auth='user', type='http', methods=['GET'], csrf=False)
     @handle_api_errors

@@ -4,6 +4,11 @@ import ReactDOM from 'react-dom/client'
 import postsService from '../../services/postsService'
 import PostsPage from '../../pages/posts/PostsPage'
 
+jest.mock('../../context/AuthContext', () => ({
+  __esModule: true,
+  useAuth: () => ({ currentUser: { id: 1, role: 'admin_patrimoine' }, loading: false })
+}))
+
 jest.mock('../../services/postsService', () => ({
   __esModule: true,
   default: {
@@ -48,6 +53,13 @@ describe('PostsPage behaviour', () => {
 
     await act(async () => {
       ReactDOM.createRoot(container).render(<PostsPage />)
+    })
+    await act(() => Promise.resolve())
+
+    const openButton = container.querySelector('button')
+
+    await act(async () => {
+      openButton.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     })
     await act(() => Promise.resolve())
 

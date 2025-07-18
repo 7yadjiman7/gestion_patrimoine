@@ -2,16 +2,10 @@ import json
 import base64
 import logging
 from odoo import http
-from odoo.http import request, Response as OdooResponse
+from odoo.http import request
 from odoo.exceptions import ValidationError
 
-from .common import handle_api_errors, CORS_HEADERS, json_response
-
-
-def Response(*args, **kwargs):
-    headers = kwargs.pop("headers", {})
-    headers = {**CORS_HEADERS, **headers}
-    return OdooResponse(*args, headers=headers, **kwargs)
+from .common import Response, handle_api_errors, CORS_HEADERS, json_response
 
 _logger = logging.getLogger(__name__)
 

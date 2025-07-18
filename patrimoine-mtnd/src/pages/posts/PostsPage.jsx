@@ -3,22 +3,30 @@ import postsService from "../../services/postsService"
 import CreatePost from "../../components/posts/CreatePost"
 import PostsList from "../../components/posts/PostsList"
 import { Button } from "@/components/ui/button"
+import {
+    Pagination,
+    PaginationContent,
+    PaginationItem,
+    PaginationLink,
+} from "@/components/ui/pagination"
 
 export default function PostsPage() {
     const [posts, setPosts] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [showCreate, setShowCreate] = useState(false)
+    const [page, setPage] = useState(1)
+    const PAGE_SIZE = 10
 
     const fetchAndSetPosts = useCallback(async () => {
         try {
-            const fetchedPosts = await postsService.fetchPosts()
+            const fetchedPosts = await postsService.fetchPosts(page, PAGE_SIZE)
             setPosts(Array.isArray(fetchedPosts) ? fetchedPosts : [])
         } catch (error) {
             console.error("Failed to fetch posts", error)
         } finally {
             setIsLoading(false)
         }
-    }, [])
+    }, [page])
 
     useEffect(() => {
         fetchAndSetPosts()
@@ -49,6 +57,29 @@ export default function PostsPage() {
             ) : (
                 <PostsList posts={posts} />
             )}
+            <Pagination className="mt-4">
+                <PaginationContent>
+                    <PaginationItem>
+                        <PaginationLink
+                            href="#"
+                            size="default"
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            className={page === 1 ? "pointer-events-none opacity-50" : ""}
+                        >
+                            Précédent
+                        </PaginationLink>
+                    </PaginationItem>
+                    <PaginationItem>
+                        <PaginationLink
+                            href="#"
+                            size="default"
+                            onClick={() => setPage(p => p + 1)}
+                        >
+                            Suivant
+                        </PaginationLink>
+                    </PaginationItem>
+                </PaginationContent>
+            </Pagination>
         </div>
     )
 }

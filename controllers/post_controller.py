@@ -120,9 +120,20 @@ class IntranetPostController(http.Controller):
     @http.route('/api/intranet/posts/<int:post_id>/comments', auth='user', type='http', methods=['POST'], csrf=False)
     @handle_api_errors
     def add_comment(self, post_id, **kw):
-        # 1. On lit les données JSON envoyées par le client React (axios)
         try:
-            data = json.loads(request.httprequest.data)
+            raw = getattr(request.httprequest, 'data', None)
+            if isinstance(raw, (str, bytes)) and raw:
+                data = json.loads(raw)
+            elif request.jsonrequest:
+                data = request.jsonrequest
+            elif getattr(request.httprequest, 'form', None) and hasattr(request.httprequest.form, 'to_dict'):
+                form_data = request.httprequest.form.to_dict()
+                if isinstance(form_data, dict) and form_data:
+                    data = form_data
+                else:
+                    data = kw
+            else:
+                data = kw
             content = data.get('content')
             parent_id = data.get('parent_id')
         except Exception as e:
@@ -239,6 +250,17 @@ class IntranetPostController(http.Controller):
         post.write({'viewer_ids': [(4, request.env.user.id)]})
         return Response(
             json.dumps({'status': 'success', 'data': {'view_count': post.view_count}}, default=str),
+            headers=CORS_HEADERS,
+        )
+
+    @http.route('/api/intranet/posts/unread_count', auth='user', type='http', methods=['GET'], csrf=False)
+    @handle_api_errors
+    def unread_count(self, **kw):
+        count = request.env['intranet.post'].sudo().search_count([
+            ('viewer_ids', 'not in', request.env.user.id)
+        ])
+        return Response(
+            json.dumps({'status': 'success', 'data': {'count': count}}, default=str),
             headers=CORS_HEADERS,
         )
 

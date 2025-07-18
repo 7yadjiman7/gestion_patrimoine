@@ -68,6 +68,23 @@ class IntranetPost(models.Model):
         for post in self:
             post.view_count = len(post.viewer_ids)
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        posts = super().create(vals_list)
+        partners = self.env['res.users'].search([]).mapped('partner_id')
+        for post in posts:
+            payload = {
+                'type': 'new_post',
+                'id': post.id,
+                'title': post.name,
+                'author_name': post.user_id.name,
+                'date': post.create_date.strftime('%Y-%m-%d %H:%M:%S'),
+            }
+            notifications = [(p, payload) for p in partners if p]
+            if notifications:
+                self.env['bus.bus'].sendmany(notifications)
+        return posts
+
 
 class IntranetPostComment(models.Model):
     _name = "intranet.post.comment"

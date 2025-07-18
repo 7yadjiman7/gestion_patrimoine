@@ -90,4 +90,13 @@ describe('postsService', () => {
 
     expect(api.get).toHaveBeenCalledWith('/admin/posts/12/delete')
   })
+
+  test('fetchUnreadCount returns number', async () => {
+    api.get.mockResolvedValue({ data: { status: 'success', data: { count: 3 } } })
+
+    const count = await postsService.fetchUnreadCount()
+
+    expect(api.get).toHaveBeenCalledWith('/api/intranet/posts/unread_count')
+    expect(count).toBe(3)
+  })
 })

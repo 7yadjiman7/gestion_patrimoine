@@ -13,9 +13,11 @@ import {
 import { Spinner } from "@/components/ui/spinner"
 import { toast } from "react-hot-toast"
 import { useAuth } from "@/context/AuthContext"
+import { usePostNotifications } from "@/context/PostNotificationContext"
 
 export default function PostsPage() {
     const { currentUser } = useAuth()
+    const { setCount } = usePostNotifications()
     const canCreate = ["admin_patrimoine", "admin", "agent"].includes(
         currentUser?.role
     )
@@ -43,7 +45,7 @@ export default function PostsPage() {
     }, [page])
 
     useEffect(() => {
-        fetchAndSetPosts()
+        fetchAndSetPosts().then(() => setCount(0))
     }, [fetchAndSetPosts])
 
     const handlePostCreated = () => {

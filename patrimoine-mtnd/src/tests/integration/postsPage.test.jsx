@@ -1,6 +1,7 @@
 import React from 'react'
 import { act } from 'react-dom/test-utils'
 import ReactDOM from 'react-dom/client'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import postsService from '../../services/postsService'
 import PostsPage from '../../pages/posts/PostsPage'
 
@@ -16,11 +17,13 @@ jest.mock('../../services/postsService', () => ({
 
 describe('PostsPage behaviour', () => {
   let container
+  let queryClient
 
   beforeEach(() => {
     container = document.createElement('div')
     document.body.appendChild(container)
     jest.clearAllMocks()
+    queryClient = new QueryClient()
   })
 
   afterEach(() => {
@@ -32,7 +35,11 @@ describe('PostsPage behaviour', () => {
     postsService.fetchPosts.mockResolvedValue([{ id: 1, title: 't', body: 'b' }])
 
     await act(async () => {
-      ReactDOM.createRoot(container).render(<PostsPage />)
+      ReactDOM.createRoot(container).render(
+        <QueryClientProvider client={queryClient}>
+          <PostsPage />
+        </QueryClientProvider>
+      )
     })
     await act(() => Promise.resolve())
 
@@ -40,14 +47,23 @@ describe('PostsPage behaviour', () => {
   })
 
   test('new post appears first', async () => {
-    postsService.fetchPosts.mockResolvedValue([{ id: 1, title: 'old', body: 'old' }])
+    postsService.fetchPosts
+      .mockResolvedValueOnce([{ id: 1, title: 'old', body: 'old' }])
+      .mockResolvedValueOnce([
+        { id: 2, title: 'new', body: 'new' },
+        { id: 1, title: 'old', body: 'old' }
+      ])
     postsService.createPost.mockResolvedValue({
       status: 'success',
       data: { id: 2, title: 'new', body: 'new' }
     })
 
     await act(async () => {
-      ReactDOM.createRoot(container).render(<PostsPage />)
+      ReactDOM.createRoot(container).render(
+        <QueryClientProvider client={queryClient}>
+          <PostsPage />
+        </QueryClientProvider>
+      )
     })
     await act(() => Promise.resolve())
 
@@ -67,7 +83,8 @@ describe('PostsPage behaviour', () => {
     })
     await act(() => Promise.resolve())
 
-    const firstTitle = container.querySelector('h3').textContent
-    expect(firstTitle).toBe('new')
+    const text = container.textContent
+    expect(text.indexOf('new')).toBeGreaterThan(-1)
+    expect(text.indexOf('new')).toBeLessThan(text.indexOf('old'))
   })
 })

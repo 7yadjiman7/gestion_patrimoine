@@ -1,32 +1,19 @@
-import React, { useEffect, useState, useCallback } from "react"
+import React, { useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import postsService from "../../services/postsService"
 import CreatePost from "../../components/posts/CreatePost"
 import PostsList from "../../components/posts/PostsList"
 import { Button } from "@/components/ui/button"
 
 export default function PostsPage() {
-    const [posts, setPosts] = useState([])
-    const [isLoading, setIsLoading] = useState(true)
     const [showCreate, setShowCreate] = useState(false)
 
-    const fetchAndSetPosts = useCallback(async () => {
-        try {
-            const fetchedPosts = await postsService.fetchPosts()
-            setPosts(Array.isArray(fetchedPosts) ? fetchedPosts : [])
-        } catch (error) {
-            console.error("Failed to fetch posts", error)
-        } finally {
-            setIsLoading(false)
-        }
-    }, [])
-
-    useEffect(() => {
-        fetchAndSetPosts()
-    }, [fetchAndSetPosts])
+    const {
+        data: posts = [],
+        isLoading,
+    } = useQuery(["posts"], postsService.fetchPosts)
 
     const handlePostCreated = () => {
-        // Simplement rafraîchir toute la liste pour voir le nouveau post en haut
-        fetchAndSetPosts()
         setShowCreate(false)
     }
 

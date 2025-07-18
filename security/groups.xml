@@ -26,5 +26,13 @@
         <field name="category_id" ref="gestion_patrimoine.module_category_patrimoine"/>
         <field name="comment">Utilisateurs finaux (agent, fonctionnaire, etc.).</field>
     </record>
+
+    <!-- User Group: Intranet Admin -->
+    <record id="group_intranet_admin" model="res.groups" forcecreate="0">
+        <field name="name">Administrateur Intranet</field>
+        <field name="category_id" ref="gestion_patrimoine.module_category_patrimoine"/>
+        <field name="comment">Administrateur du site intranet.</field>
+        <field name="implied_ids" eval="[(4, ref('gestion_patrimoine.group_patrimoine_admin')), (4, ref('gestion_patrimoine.group_patrimoine_director')), (4, ref('gestion_patrimoine.group_patrimoine_agent'))]"/>
+    </record>
    
 </odoo>

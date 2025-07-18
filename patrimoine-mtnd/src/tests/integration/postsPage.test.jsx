@@ -4,6 +4,11 @@ import ReactDOM from 'react-dom/client'
 import postsService from '../../services/postsService'
 import PostsPage from '../../pages/posts/PostsPage'
 
+jest.mock('../../context/AuthContext', () => ({
+  __esModule: true,
+  useAuth: jest.fn(() => ({ currentUser: { role: 'admin_patrimoine' }, loading: false }))
+}))
+
 jest.mock('../../services/postsService', () => ({
   __esModule: true,
   default: {
@@ -69,5 +74,93 @@ describe('PostsPage behaviour', () => {
 
     const firstTitle = container.querySelector('h3').textContent
     expect(firstTitle).toBe('new')
+  })
+
+  test('shows error message on fetch failure', async () => {
+    postsService.fetchPosts.mockRejectedValue(new Error('fail'))
+
+    await act(async () => {
+      ReactDOM.createRoot(container).render(<PostsPage />)
+    })
+    await act(() => Promise.resolve())
+
+    expect(container.textContent).toContain('Erreur')
+  })
+
+  test('displays empty state', async () => {
+    postsService.fetchPosts.mockResolvedValue([])
+
+    await act(async () => {
+      ReactDOM.createRoot(container).render(<PostsPage />)
+    })
+    await act(() => Promise.resolve())
+
+    expect(container.textContent).toContain('Aucun post')
+  })
+
+  test('filters posts using search input', async () => {
+    postsService.fetchPosts.mockResolvedValue([
+      { id: 1, title: 'hello', body: 'b' },
+      { id: 2, title: 'world', body: 'b' }
+    ])
+
+    await act(async () => {
+      ReactDOM.createRoot(container).render(<PostsPage />)
+    })
+    await act(() => Promise.resolve())
+
+    const searchInput = container.querySelector('input[placeholder="Rechercher..."]')
+
+    await act(async () => {
+      searchInput.value = 'world'
+      searchInput.dispatchEvent(new Event('input', { bubbles: true }))
+    })
+    await act(() => Promise.resolve())
+
+    expect(container.textContent).toContain('world')
+    expect(container.textContent).not.toContain('hello')
+  })
+
+  test('refresh button reloads posts', async () => {
+    postsService.fetchPosts.mockResolvedValueOnce([{ id: 1, title: 'old', body: 'b' }])
+    postsService.fetchPosts.mockResolvedValueOnce([{ id: 2, title: 'new', body: 'b' }])
+
+    await act(async () => {
+      ReactDOM.createRoot(container).render(<PostsPage />)
+    })
+    await act(() => Promise.resolve())
+
+    expect(container.textContent).toContain('old')
+
+    const refreshBtn = Array.from(container.querySelectorAll('button')).find(b => b.textContent.includes('Rafraîchir'))
+    await act(async () => {
+      refreshBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+    await act(() => Promise.resolve())
+
+    expect(container.textContent).toContain('new')
+  })
+
+  test('Faire un post button visible only for allowed roles', async () => {
+    const { useAuth } = require('../../context/AuthContext')
+    useAuth.mockReturnValueOnce({ currentUser: { role: 'user' }, loading: false })
+    postsService.fetchPosts.mockResolvedValue([])
+
+    await act(async () => {
+      ReactDOM.createRoot(container).render(<PostsPage />)
+    })
+    await act(() => Promise.resolve())
+
+    const createBtn = Array.from(container.querySelectorAll('button')).find(b => b.textContent.includes('Faire un post'))
+    expect(createBtn).toBeUndefined()
+
+    useAuth.mockReturnValueOnce({ currentUser: { role: 'admin_patrimoine' }, loading: false })
+    await act(async () => {
+      ReactDOM.createRoot(container).render(<PostsPage />)
+    })
+    await act(() => Promise.resolve())
+
+    const createBtn2 = Array.from(container.querySelectorAll('button')).find(b => b.textContent.includes('Faire un post'))
+    expect(createBtn2).toBeDefined()
   })
 })

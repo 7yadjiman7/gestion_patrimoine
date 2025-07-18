@@ -3,8 +3,14 @@ import api from './apiConfig'
 const fetchPosts = () =>
   api.get('/api/intranet/posts').then(res => res.data.data)
 
-const fetchPostById = id =>
-  api.get(`/api/intranet/posts/${id}`).then(res => res.data.data)
+const fetchPostById = async (id) => {
+  const allPosts = await fetchPosts()
+  const post = allPosts.find(p => p.id === parseInt(id, 10))
+  if (!post) {
+    throw new Error("Post not found")
+  }
+  return post
+}
 
 // CORRECTION FINALE : On ajoute l'option des headers ici
 const createPost = (formData) =>

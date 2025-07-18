@@ -98,7 +98,7 @@ function AppContent() {
               <Route
                   path="/admin/demandes"
                   element={
-                      <ProtectedRoute roles={[ROLES.ADMIN, ROLES.ADMIN_INTRANET]}>
+                      <ProtectedRoute roles={[ROLES.ADMIN]}>
                           <AdminDemandeMateriel />
                       </ProtectedRoute>
                   }
@@ -114,7 +114,7 @@ function AppContent() {
               <Route
                   path="/admin/pertes"
                   element={
-                      <ProtectedRoute roles={[ROLES.ADMIN, ROLES.ADMIN_INTRANET]}>
+                      <ProtectedRoute roles={[ROLES.ADMIN]}>
                           <AdminDeclarationsPerte />
                       </ProtectedRoute>
                   }

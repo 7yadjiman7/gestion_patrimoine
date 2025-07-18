@@ -83,8 +83,12 @@ export default function Post({ post, onPostUpdate }) {
     const handleSendComment = async () => {
         if (!newComment.trim()) return
         try {
-            // 1. On appelle l'API. Elle renvoie le nouveau total de commentaires.
-            const response = await postsService.addComment(post.id, newComment)
+            // 1. On appelle l'API avec l'ID du commentaire parent s'il existe
+            const response = await postsService.addComment(
+                post.id,
+                newComment,
+                replyTo
+            )
 
             // 2. On utilise la fonction du parent pour mettre à jour l'état global
             onPostUpdate(post.id, {
@@ -99,11 +103,14 @@ export default function Post({ post, onPostUpdate }) {
                     user_name: currentUser.name,
                     create_date: new Date().toISOString(),
                     id: response.data.id, // On utilise l'ID renvoyé par l'API
+                    // On inclut l'ID du parent pour un affichage immédiat
+                    parent_id: replyTo,
                 },
             ])
 
-            // 4. On réinitialise le champ de saisie
+            // 4. On réinitialise le champ de saisie et la cible de la réponse
             setNewComment("")
+            setReplyTo(null)
         } catch (e) {
             console.error(e)
         }

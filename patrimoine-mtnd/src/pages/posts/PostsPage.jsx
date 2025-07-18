@@ -3,6 +3,12 @@ import postsService from "../../services/postsService"
 import CreatePost from "../../components/posts/CreatePost"
 import PostsList from "../../components/posts/PostsList"
 import { Button } from "@/components/ui/button"
+import {
+    Pagination,
+    PaginationContent,
+    PaginationItem,
+    PaginationLink,
+} from "@/components/ui/pagination"
 import { Spinner } from "@/components/ui/spinner"
 import { Card, CardContent } from "@/components/ui/card"
 import { Inbox } from "lucide-react"
@@ -17,12 +23,14 @@ export default function PostsPage() {
     const [posts, setPosts] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [showCreate, setShowCreate] = useState(false)
+    const [page, setPage] = useState(1)
+    const PAGE_SIZE = 10
     const [query, setQuery] = useState("")
     const [debouncedQuery, setDebouncedQuery] = useState("")
 
     const fetchAndSetPosts = useCallback(async () => {
         try {
-            const fetchedPosts = await postsService.fetchPosts()
+            const fetchedPosts = await postsService.fetchPosts(page, PAGE_SIZE)
             setPosts(Array.isArray(fetchedPosts) ? fetchedPosts : [])
         } catch (err) {
             console.error("Failed to fetch posts", err)
@@ -31,7 +39,7 @@ export default function PostsPage() {
         } finally {
             setIsLoading(false)
         }
-    }, [])
+    }, [page])
 
     useEffect(() => {
         fetchAndSetPosts()
@@ -95,6 +103,29 @@ export default function PostsPage() {
               // On passe la nouvelle fonction aux enfants
                 <PostsList posts={posts} onPostUpdate={updatePostInList} />
             )}
+            <Pagination className="mt-4">
+                <PaginationContent>
+                    <PaginationItem>
+                        <PaginationLink
+                            href="#"
+                            size="default"
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            className={page === 1 ? "pointer-events-none opacity-50" : ""}
+                        >
+                            Précédent
+                        </PaginationLink>
+                    </PaginationItem>
+                    <PaginationItem>
+                        <PaginationLink
+                            href="#"
+                            size="default"
+                            onClick={() => setPage(p => p + 1)}
+                        >
+                            Suivant
+                        </PaginationLink>
+                    </PaginationItem>
+                </PaginationContent>
+            </Pagination>
         </div>
     )
 }

@@ -97,6 +97,14 @@ common_module.handle_api_errors = handle_api_errors
 common_module.CORS_HEADERS = {}
 common_module.ALLOWED_ORIGIN = "http://testserver"
 common_module.json_response = lambda data, status=200: data
+def _common_response_side_effect(*args, **kwargs):
+    resp = MagicMock()
+    headers = {"Content-Type": "application/json"}
+    headers.update(kwargs.get("headers", {}))
+    resp.headers = headers
+    resp.status_code = kwargs.get("status")
+    return resp
+common_module.Response = MagicMock(side_effect=_common_response_side_effect)
 
 controllers_pkg.common = common_module
 sys.modules.setdefault('controllers', controllers_pkg)
@@ -448,6 +456,20 @@ class PostControllerTest(unittest.TestCase):
         self.assertIn('parent_id', parent_payload)
         self.assertIsNone(parent_payload['parent_id'])
         self.assertEqual(child_payload['parent_id'], parent_payload['id'])
+
+    @patch('controllers.post_controller.request')
+    def test_unread_count(self, mock_request):
+        env = MagicMock()
+        post_model = MagicMock()
+        env.__getitem__.return_value = post_model
+        post_model.sudo.return_value.search_count.return_value = 5
+        mock_request.env = env
+        mock_request.env.user.id = 9
+
+        res = self.controller.unread_count()
+
+        post_model.sudo.return_value.search_count.assert_called_with([('viewer_ids', 'not in', 9)])
+        self.assertIn('application/json', res.headers.get('Content-Type'))
 
 
 if __name__ == '__main__':

@@ -3,6 +3,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AppLayout from './components/AppLayout';
 import LoginPage from './pages/auth/LoginPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { PostNotificationProvider } from './context/PostNotificationContext';
 
 // Importez vos pages...
 import AdminMaterialTypes from './pages/admin/AdminMaterialTypes';
@@ -313,7 +314,9 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <AppContent />
+        <PostNotificationProvider>
+          <AppContent />
+        </PostNotificationProvider>
       </AuthProvider>
     </Router>
   );

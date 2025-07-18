@@ -148,6 +148,9 @@ curl -X POST \
   http://localhost:8069/api/intranet/posts/1/comments?db=<DB>
 ```
 
+### `/api/intranet/posts/unread_count`
+* **GET** : renvoie le nombre de publications non lues par l'utilisateur connecté.
+
 
 ## Troubleshooting
 

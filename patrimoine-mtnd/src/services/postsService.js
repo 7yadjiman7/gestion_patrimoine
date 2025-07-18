@@ -33,6 +33,9 @@ const likePost = id =>
 const viewPost = id =>
   api.post(`/api/intranet/posts/${id}/views`).then(res => res.data)
 
+const fetchUnreadCount = () =>
+  api.get('/api/intranet/posts/unread_count').then(res => res.data.data.count)
+
 const addComment = (id, content, parentId = null) => {
   console.debug('addComment payload', { id, content, parent_id: parentId })
   return api
@@ -54,5 +57,6 @@ export default {
   addComment,
   viewPost,
   fetchComments,
-  deletePost
+  deletePost,
+  fetchUnreadCount
 }

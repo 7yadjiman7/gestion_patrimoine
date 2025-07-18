@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react"
-import { useQuery } from "@tanstack/react-query"
 import postsService from "../../services/postsService"
 import CreatePost from "../../components/posts/CreatePost"
 import PostsList from "../../components/posts/PostsList"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
     Pagination,
     PaginationContent,
@@ -11,8 +11,6 @@ import {
     PaginationLink,
 } from "@/components/ui/pagination"
 import { Spinner } from "@/components/ui/spinner"
-import { Card, CardContent } from "@/components/ui/card"
-import { Inbox } from "lucide-react"
 import { toast } from "react-hot-toast"
 import { useAuth } from "@/context/AuthContext"
 
@@ -26,8 +24,8 @@ export default function PostsPage() {
     const [showCreate, setShowCreate] = useState(false)
     const [page, setPage] = useState(1)
     const PAGE_SIZE = 10
-    const [query, setQuery] = useState("")
-    const [debouncedQuery, setDebouncedQuery] = useState("")
+    const [search, setSearch] = useState("")
+    const [error, setError] = useState(null)
 
     const fetchAndSetPosts = useCallback(async () => {
         setIsLoading(true)
@@ -48,43 +46,27 @@ export default function PostsPage() {
         fetchAndSetPosts()
     }, [fetchAndSetPosts])
 
-    useEffect(() => {
-        const id = setTimeout(() => setDebouncedQuery(query), 300)
-        return () => clearTimeout(id)
-    }, [query])
-
     const handlePostCreated = () => {
+        fetchAndSetPosts()
         setShowCreate(false)
     }
+
+    const updatePostInList = useCallback((id, data) => {
+        setPosts(prev => prev.map(p => (p.id === id ? { ...p, ...data } : p)))
+    }, [])
+
     const filteredPosts = useMemo(() => {
-        if (!debouncedQuery) return posts
-        const q = debouncedQuery.toLowerCase()
+        if (!search) return posts
+        const q = search.toLowerCase()
         return posts.filter(p =>
             ((p.title || p.name || "").toLowerCase().includes(q)) ||
             ((p.author || "").toLowerCase().includes(q))
         )
-    }, [posts, debouncedQuery])
-
-    const filteredPosts = posts.filter(p =>
-        p.title?.toLowerCase().includes(search.toLowerCase()) ||
-        p.body?.toLowerCase().includes(search.toLowerCase())
-    )
+    }, [posts, search])
 
     const canPost = currentUser && currentUser.role !== 'user'
 
-    return (
-        <div className="w-full max-w-2xl mx-auto py-8">
-            <h1 className="text-3xl font-bold mb-6 text-white">
-                Fil d'Actualités
-            </h1>
-          <Input
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-                placeholder="Rechercher un post..."
-                className="mb-4"
-            />
-
-      const handleRefresh = async () => {
+    const handleRefresh = async () => {
         await fetchAndSetPosts()
         toast.success("Posts mis à jour")
     }
@@ -95,6 +77,12 @@ export default function PostsPage() {
                 <h1 className="text-3xl font-bold text-white">Fil d'Actualités</h1>
                 <Button onClick={handleRefresh}>Rafraîchir</Button>
             </div>
+            <Input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Rechercher..."
+                className="mb-4"
+            />
             {showCreate ? (
                 <CreatePost onCreated={handlePostCreated} />
             ) : (
@@ -105,13 +93,14 @@ export default function PostsPage() {
                 )
             )}
             {isLoading ? (
-              <div className="flex justify-center py-10">
+                <div className="flex justify-center py-10">
                     <Spinner />
                 </div>
             ) : (
-              <PostsList posts={filteredPosts} />
-              // On passe la nouvelle fonction aux enfants
-                <PostsList posts={posts} onPostUpdate={updatePostInList} />
+                <PostsList
+                    posts={filteredPosts}
+                    onPostUpdate={updatePostInList}
+                />
             )}
             <Pagination className="mt-4">
                 <PaginationContent>

@@ -34,6 +34,24 @@ class UserApiControllerTest(unittest.TestCase):
         self.controller = user_api_controller.UserApiController()
 
     @patch('controllers.userApi_controller.request')
+    def test_get_user_info_intranet_admin(self, mock_request):
+        env = MagicMock()
+        employee_model = MagicMock()
+        env.__getitem__.return_value = employee_model
+        mock_request.env = env
+
+        user = MagicMock(id=30, name='IntrAdmin', login='intra')
+        user.has_group.side_effect = lambda g: g == 'gestion_patrimoine.group_intranet_admin'
+        env.user = user
+
+        employee_model.search.return_value = False
+
+        result = self.controller.get_user_info()
+
+        employee_model.search.assert_called_with([('user_id', '=', user.id)], limit=1)
+        self.assertEqual(result['roles'], ['admin_intranet'])
+
+    @patch('controllers.userApi_controller.request')
     def test_get_user_info_with_employee(self, mock_request):
         env = MagicMock()
         employee_model = MagicMock()

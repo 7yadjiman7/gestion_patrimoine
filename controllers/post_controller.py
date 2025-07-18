@@ -272,7 +272,7 @@ class IntranetPostController(http.Controller):
 
     @http.route('/admin/posts', auth='user', type='http', methods=['GET'], csrf=False)
     def admin_posts_page(self, **kw):
-        if not request.env.user.has_group('gestion_patrimoine.group_patrimoine_admin'):
+        if not request.env.user.has_group('gestion_patrimoine.group_intranet_admin'):
             return Response('Unauthorized', status=403, headers={'Content-Type': 'text/plain'})
 
         posts = request.env['intranet.post'].sudo().search([], order='create_date desc')
@@ -292,7 +292,7 @@ class IntranetPostController(http.Controller):
 
     @http.route('/admin/posts/<int:post_id>/delete', auth='user', type='http', methods=['GET'], csrf=False)
     def admin_post_delete(self, post_id, **kw):
-        if not request.env.user.has_group('gestion_patrimoine.group_patrimoine_admin'):
+        if not request.env.user.has_group('gestion_patrimoine.group_intranet_admin'):
             return Response('Unauthorized', status=403, headers={'Content-Type': 'text/plain'})
         post = request.env['intranet.post'].sudo().browse(post_id)
         if post.exists():

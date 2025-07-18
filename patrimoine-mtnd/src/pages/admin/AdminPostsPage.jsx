@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react"
 import postsService from "@/services/postsService"
 import { useParams, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table"
 import { Printer } from "lucide-react"
 import { toast } from "react-hot-toast"
@@ -13,6 +14,9 @@ export default function AdminPostsPage() {
     const [posts, setPosts] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
+    const [search, setSearch] = useState("")
+    const [startDate, setStartDate] = useState("")
+    const [endDate, setEndDate] = useState("")
     const tableRef = useRef()
 
     const loadPosts = () => {
@@ -69,6 +73,17 @@ export default function AdminPostsPage() {
         }, 500)
     }
 
+    const filteredPosts = posts.filter(p => {
+        const q = search.toLowerCase()
+        const titleMatch = (p.title || "").toLowerCase().includes(q)
+        const authorMatch = (p.author || "").toLowerCase().includes(q)
+        const date = p.create_date ? new Date(p.create_date) : null
+        const afterStart = startDate ? date >= new Date(startDate) : true
+        const beforeEnd = endDate ? date <= new Date(endDate) : true
+        const searchMatch = !search || titleMatch || authorMatch
+        return searchMatch && afterStart && beforeEnd
+    })
+
     if (loading) return <div className="p-8 text-center">Chargement...</div>
     if (error) return <div className="p-8 text-center text-red-500">{error}</div>
 
@@ -85,6 +100,24 @@ export default function AdminPostsPage() {
                 <Printer className="h-4 w-4 mr-2" />
                 Imprimer le tableau
             </Button>
+            <div className="flex flex-col sm:flex-row gap-4 mt-4">
+                <Input
+                    placeholder="Rechercher par titre ou auteur"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    className="sm:w-1/3"
+                />
+                <Input
+                    type="date"
+                    value={startDate}
+                    onChange={e => setStartDate(e.target.value)}
+                />
+                <Input
+                    type="date"
+                    value={endDate}
+                    onChange={e => setEndDate(e.target.value)}
+                />
+            </div>
             <div ref={tableRef} className="rounded-md border mt-4">
                 <Table>
                     <TableHeader>
@@ -98,8 +131,8 @@ export default function AdminPostsPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {posts.length > 0 ? (
-                            posts.map(p => (
+                        {filteredPosts.length > 0 ? (
+                            filteredPosts.map(p => (
                                 <TableRow key={p.id}>
                                     <TableCell className="font-medium">
                                         {p.title}

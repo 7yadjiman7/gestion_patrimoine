@@ -3,7 +3,7 @@ import logging
 import os
 from functools import wraps
 from odoo.exceptions import AccessError, ValidationError
-from odoo.http import Response
+from odoo.http import Response as OdooResponse
 
 # Allow overriding the CORS origin via an environment variable so deployments
 # can specify their frontend URL.  Using a specific origin is required when the
@@ -13,6 +13,13 @@ ALLOWED_ORIGIN = os.environ.get("ALLOWED_ORIGIN", "http://localhost:5174")
 CORS_HEADERS = {
     "Content-Type": "application/json",
 }
+
+
+def Response(*args, **kwargs):
+    """Return an Odoo HTTP Response with default CORS headers."""
+    headers = kwargs.pop("headers", {})
+    headers = {**CORS_HEADERS, **headers}
+    return OdooResponse(*args, headers=headers, **kwargs)
 
 
 def json_response(data, status=200):

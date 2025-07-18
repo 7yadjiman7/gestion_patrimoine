@@ -1,20 +1,14 @@
 from odoo import http, _
 from odoo.fields import Date
 from dateutil.relativedelta import relativedelta
-from odoo.http import request, Response as OdooResponse
+from odoo.http import request
 from odoo.exceptions import AccessError, ValidationError
 import json
 from odoo.osv import expression
 from werkzeug.exceptions import BadRequest
 import base64  # Pour encoder/décoder les fichiers
 import logging
-from .common import handle_api_errors, json_response, CORS_HEADERS
-
-
-def Response(*args, **kwargs):
-    headers = kwargs.pop("headers", {})
-    headers = {**CORS_HEADERS, **headers}
-    return OdooResponse(*args, headers=headers, **kwargs)
+from .common import Response, handle_api_errors, json_response, CORS_HEADERS
 
 _logger = logging.getLogger(__name__)
 

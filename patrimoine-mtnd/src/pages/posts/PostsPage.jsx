@@ -74,28 +74,30 @@ export default function PostsPage() {
 
     return (
         <div className="w-full max-w-2xl mx-auto py-8">
-            <div className="flex items-center justify-between mb-6">
-                <h1 className="text-3xl font-bold text-white">Fil d'Actualités</h1>
-                <Button onClick={handleRefresh}>Rafraîchir</Button>
-            </div>
-            <Input
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Rechercher..."
-                className="mb-4"
-            />
-            {showCreate ? (
-                <CreatePost
-                    onCreated={handlePostCreated}
-                    onClose={() => setShowCreate(false)}
+            <div className="sticky top-0 z-10 bg-gray-900 pb-4">
+                <div className="flex items-center justify-between mb-6">
+                    <h1 className="text-3xl font-bold text-white">Fil d'Actualités</h1>
+                    <Button onClick={handleRefresh}>Rafraîchir</Button>
+                </div>
+                <Input
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder="Rechercher..."
+                    className="mb-4"
                 />
-            ) : (
-                canPost && (
-                    <Button className="mb-4" onClick={() => setShowCreate(true)}>
-                        Faire un post
-                    </Button>
-                )
-            )}
+                {showCreate ? (
+                    <CreatePost
+                        onCreated={handlePostCreated}
+                        onClose={() => setShowCreate(false)}
+                    />
+                ) : (
+                    canPost && (
+                        <Button className="mb-4" onClick={() => setShowCreate(true)}>
+                            Faire un post
+                        </Button>
+                    )
+                )}
+            </div>
             {isLoading ? (
                 <div className="flex justify-center py-10">
                     <Spinner />

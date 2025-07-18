@@ -6,12 +6,15 @@
                 t-as="o">
                 <t t-call="web.external_layout">
                     <div class="page"
-                        style="font-family: Arial, sans-serif; font-size: 12px;">
+                        style="font-family: Arial, sans-serif; font-size: 12px; position: relative;">
+
+                        <img src="/gestion_patrimoine/patrimoine-mtnd/public/images/logos/logo.png"
+                            style="position: absolute; top: 0; left: 0; height: 60px;"/>
 
                         <h1 style="text-align: center; font-size: 22px; margin-bottom: 25px;">Fiche de Vie du Matériel</h1>
 
-                        <table class="table table-sm table-bordered"
-                            style="margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 20px; gap: 15px;">
+                            <table class="table table-sm table-bordered" style="flex: 1;">
                             <tr>
                                 <th style="width: 25%; background-color: #f2f2f2;">Nom du Matériel</th>
                                 <td>
@@ -76,10 +79,10 @@
                             </tr>
                         </table>
 
-                        <div t-if="o.image"
-                            class="text-center mb32">
-                            <img t-att-src="'data:image/png;base64,%s' % o.image.decode('utf-8')"
-                                style="max-height: 200px; border: 1px solid #ddd;"/>
+                            <div t-if="o.image" style="text-align: right;">
+                                <img t-att-src="'data:image/png;base64,%s' % o.image.decode('utf-8')"
+                                    style="max-height: 200px; border: 1px solid #ddd;"/>
+                            </div>
                         </div>
 
                         <h2 style="font-size: 18px; margin-top: 20px; border-bottom: 1px solid #ddd;">Historique des Mouvements</h2>

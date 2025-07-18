@@ -3,9 +3,17 @@ import postsService from "../../services/postsService"
 import CreatePost from "../../components/posts/CreatePost"
 import PostsList from "../../components/posts/PostsList"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Spinner } from "@/components/ui/spinner"
+import { Card, CardContent } from "@/components/ui/card"
+import { Inbox } from "lucide-react"
+import { toast } from "react-hot-toast"
+import { useAuth } from "@/context/AuthContext"
 
 export default function PostsPage() {
+    const { currentUser } = useAuth()
+    const canCreate = ["admin_patrimoine", "admin", "agent"].includes(
+        currentUser?.role
+    )
     const [posts, setPosts] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [showCreate, setShowCreate] = useState(false)
@@ -16,8 +24,10 @@ export default function PostsPage() {
         try {
             const fetchedPosts = await postsService.fetchPosts()
             setPosts(Array.isArray(fetchedPosts) ? fetchedPosts : [])
-        } catch (error) {
-            console.error("Failed to fetch posts", error)
+        } catch (err) {
+            console.error("Failed to fetch posts", err)
+            setError("Erreur lors du chargement des posts.")
+            toast.error("Impossible de récupérer les posts")
         } finally {
             setIsLoading(false)
         }
@@ -37,7 +47,6 @@ export default function PostsPage() {
         fetchAndSetPosts()
         setShowCreate(false)
     }
-
     const filteredPosts = useMemo(() => {
         if (!debouncedQuery) return posts
         const q = debouncedQuery.toLowerCase()
@@ -58,6 +67,18 @@ export default function PostsPage() {
                 placeholder="Rechercher un post..."
                 className="mb-4"
             />
+
+      const handleRefresh = async () => {
+        await fetchAndSetPosts()
+        toast.success("Posts mis à jour")
+    }
+
+    return (
+        <div className="w-full max-w-2xl mx-auto py-8">
+            <div className="flex items-center justify-between mb-6">
+                <h1 className="text-3xl font-bold text-white">Fil d'Actualités</h1>
+                <Button onClick={handleRefresh}>Rafraîchir</Button>
+            </div>
             {showCreate ? (
                 <CreatePost onCreated={handlePostCreated} />
             ) : (
@@ -66,11 +87,13 @@ export default function PostsPage() {
                 </Button>
             )}
             {isLoading ? (
-                <p className="text-center text-slate-400">
-                    Chargement des posts...
-                </p>
+                <div className="flex justify-center py-10">
+                    <Spinner />
+                </div>
             ) : (
-                <PostsList posts={filteredPosts} />
+              <PostsList posts={filteredPosts} />
+              // On passe la nouvelle fonction aux enfants
+                <PostsList posts={posts} onPostUpdate={updatePostInList} />
             )}
         </div>
     )

@@ -3,6 +3,7 @@ import postsService from "../../services/postsService"
 import CreatePost from "../../components/posts/CreatePost"
 import PostsList from "../../components/posts/PostsList"
 import { Button } from "@/components/ui/button"
+import { toast } from "react-hot-toast"
 
 export default function PostsPage() {
     const [posts, setPosts] = useState([])
@@ -30,11 +31,17 @@ export default function PostsPage() {
         setShowCreate(false)
     }
 
+    const handleRefresh = async () => {
+        await fetchAndSetPosts()
+        toast.success("Posts mis à jour")
+    }
+
     return (
         <div className="w-full max-w-2xl mx-auto py-8">
-            <h1 className="text-3xl font-bold mb-6 text-white">
-                Fil d'Actualités
-            </h1>
+            <div className="flex items-center justify-between mb-6">
+                <h1 className="text-3xl font-bold text-white">Fil d'Actualités</h1>
+                <Button onClick={handleRefresh}>Rafraîchir</Button>
+            </div>
             {showCreate ? (
                 <CreatePost onCreated={handlePostCreated} />
             ) : (

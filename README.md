@@ -56,9 +56,9 @@ un espace de chat interne et un mur de posts pour partager les annonces du minis
 - Agent : consultation et déclaration limitée
 
 ## Installation
-1. Copier le dossier `gestion_patrimoine` dans le répertoire `custom-addons`
-2. Redémarrer Odoo
-3. Installer le module via l'interface administrateur
+1. Copier le dossier `gestion_patrimoine` dans le répertoire `custom-addons` de votre instance.
+2. Lancer Odoo en s'assurant que ce dossier est présent dans l'option `--addons-path`.
+3. Mettre à jour la base de données avec `-u gestion_patrimoine` (ou via le menu **Apps**) afin que les modèles comme `patrimoine.asset` soient chargés.
 4. Dans le menu **Gestion du Patrimoine**, ouvrez l'élément **Posts** pour gérer les annonces internes.
 
 ## Dépendances

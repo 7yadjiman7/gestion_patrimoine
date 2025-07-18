@@ -19,7 +19,7 @@ const formatDate = dateString => {
     })
 }
 
-export default function Post({ post }) {
+export default function Post({ post, onPostUpdate }) {
     // On suppose que ces données viennent de l'API
     const { currentUser } = useAuth()
     const [likes, setLikes] = useState(post.like_count || 0)
@@ -28,10 +28,11 @@ export default function Post({ post }) {
     const [commentCount, setCommentCount] = useState(post.comment_count || 0)
     const [replyTo, setReplyTo] = useState(null)
     const [hasCommented, setHasCommented] = useState(false)
+    const [showComment, setShowComment] = useState(false)
+
     useEffect(() => {
         postsService.viewPost(post.id).catch(() => {})
     }, [post.id])
-    const [showComment, setShowComment] = useState(false)
 
     useEffect(() => {
         postsService
@@ -58,7 +59,8 @@ export default function Post({ post }) {
                     setHasCommented(
                         Array.isArray(data) &&
                             data.some(
-                                c => c.user_id === currentUser.id && !c.parent_id
+                                c =>
+                                    c.user_id === currentUser.id && !c.parent_id
                             )
                     )
                 })
@@ -77,22 +79,31 @@ export default function Post({ post }) {
         }
     }
 
+    // --- CORRECTION DE LA LOGIQUE D'ENVOI DE COMMENTAIRE ---
     const handleSendComment = async () => {
         if (!newComment.trim()) return
         try {
-            await postsService.addComment(post.id, newComment, replyTo)
-            setComments(prev => [...prev, {
-                content: newComment,
-                author: 'Vous',
-                user_id: currentUser.id,
-                create_date: new Date().toISOString(),
-                id: Date.now(),
-                parent_id: replyTo,
-            }])
-            setCommentCount(prev => prev + 1)
-            if (!replyTo) setHasCommented(true)
+            // 1. On appelle l'API. Elle renvoie le nouveau total de commentaires.
+            const response = await postsService.addComment(post.id, newComment)
+
+            // 2. On utilise la fonction du parent pour mettre à jour l'état global
+            onPostUpdate(post.id, {
+                comment_count: response.data.comment_count,
+            })
+
+            // 3. On met à jour la liste des commentaires affichés localement pour un effet instantané
+            setComments(prev => [
+                ...prev,
+                {
+                    content: newComment,
+                    user_name: currentUser.name,
+                    create_date: new Date().toISOString(),
+                    id: response.data.id, // On utilise l'ID renvoyé par l'API
+                },
+            ])
+
+            // 4. On réinitialise le champ de saisie
             setNewComment("")
-            setReplyTo(null)
         } catch (e) {
             console.error(e)
         }
@@ -117,7 +128,6 @@ export default function Post({ post }) {
                         </p>
                     </div>
                 </div>
-
             </div>
 
             {/* Contenu du post */}
@@ -137,8 +147,8 @@ export default function Post({ post }) {
             {/* Stats (Likes/Commentaires/Vues) */}
             <div className="px-4 py-2 flex justify-between items-center text-sm text-slate-500 dark:text-slate-400 border-t border-b border-slate-200 dark:border-slate-700">
                 <span>{likes} J'aime</span>
-                <span>{commentCount} Commentaires</span>
-                <span>{post.view_count} Vues</span>
+                <span>{post.comment_count || 0} Commentaires</span>
+                <span>{post.view_count || 0} Vues</span>
             </div>
 
             {/* Barre d'actions */}
@@ -157,7 +167,6 @@ export default function Post({ post }) {
                 >
                     <MessageCircle size={18} /> Commenter
                 </Button>
-
             </div>
 
             {showComment && (
@@ -178,26 +187,46 @@ export default function Post({ post }) {
                             className="w-full mb-2 text-base border rounded-md bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 focus-visible:ring-blue-500"
                             value={newComment}
                             onChange={e => setNewComment(e.target.value)}
-                            placeholder={replyTo ? 'Votre réponse...' : 'Votre commentaire...'}
+                            placeholder={
+                                replyTo
+                                    ? "Votre réponse..."
+                                    : "Votre commentaire..."
+                            }
                             rows="3"
                             disabled={hasCommented && !replyTo}
                         />
                         <div className="flex justify-end gap-2 mb-4">
-                            <Button variant="outline" onClick={() => setShowComment(false)}>
+                            <Button
+                                variant="outline"
+                                onClick={() => setShowComment(false)}
+                            >
                                 Annuler
                             </Button>
-                            <Button onClick={handleSendComment} disabled={hasCommented && !replyTo} className="bg-blue-600 hover:bg-blue-700">
+                            <Button
+                                onClick={handleSendComment}
+                                disabled={hasCommented && !replyTo}
+                                className="bg-blue-600 hover:bg-blue-700"
+                            >
                                 Envoyer
                             </Button>
                         </div>
                         <div className="space-y-4 max-h-60 overflow-y-auto">
                             {comments.map(c => (
-                                <div key={c.id} className="border-t pt-2 text-sm">
+                                <div
+                                    key={c.id}
+                                    className="border-t pt-2 text-sm"
+                                >
                                     <div className="flex justify-between">
-                                        <span className="font-semibold text-slate-800 dark:text-slate-300">{c.author || c.user_name}</span>
-                                        <span className="text-xs text-slate-500">{formatDate(c.create_date)}</span>
+                                        <span className="font-semibold text-slate-800 dark:text-slate-300">
+                                            {c.author || c.user_name}
+                                        </span>
+                                        <span className="text-xs text-slate-500">
+                                            {formatDate(c.create_date)}
+                                        </span>
                                     </div>
-                                    <p className="mt-1 mb-1 text-slate-800 dark:text-slate-300">{c.content}</p>
+                                    <p className="mt-1 mb-1 text-slate-800 dark:text-slate-300">
+                                        {c.content}
+                                    </p>
                                     <Button
                                         variant="ghost"
                                         size="sm"

@@ -50,19 +50,24 @@ export default function PostsPage() {
         setShowCreate(false)
     }
 
+    const handleRefresh = async () => {
+        await fetchAndSetPosts()
+        toast.success("Posts mis à jour")
+    }
+
     return (
         <div className="w-full max-w-2xl mx-auto py-8">
-            <h1 className="text-3xl font-bold mb-6 text-white">
-                Fil d'Actualités
-            </h1>
-            {canCreate &&
-                (showCreate ? (
-                    <CreatePost onCreated={handlePostCreated} />
-                ) : (
-                    <Button className="mb-4" onClick={() => setShowCreate(true)}>
-                        Faire un post
-                    </Button>
-                ))}
+            <div className="flex items-center justify-between mb-6">
+                <h1 className="text-3xl font-bold text-white">Fil d'Actualités</h1>
+                <Button onClick={handleRefresh}>Rafraîchir</Button>
+            </div>
+            {showCreate ? (
+                <CreatePost onCreated={handlePostCreated} />
+            ) : (
+                <Button className="mb-4" onClick={() => setShowCreate(true)}>
+                    Faire un post
+                </Button>
+            )}
             {isLoading ? (
                 <div className="flex justify-center py-10">
                     <Spinner />

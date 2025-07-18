@@ -1,4 +1,5 @@
 import React, { useState } from "react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import postsService from "../../services/postsService"
 import { toast } from "react-hot-toast"
 import { Button } from "@/components/ui/button"
@@ -12,7 +13,19 @@ export default function CreatePost({ onCreated }) {
     const [text, setText] = useState("")
     const [imageFile, setImageFile] = useState(null)
     const [imagePreview, setImagePreview] = useState(null)
-    const [loading, setLoading] = useState(false)
+
+    const queryClient = useQueryClient()
+    const { mutateAsync, isPending } = useMutation({
+        mutationFn: postsService.createPost,
+        onSuccess: () => {
+            queryClient.invalidateQueries(["posts"])
+            toast.success("Publication créée avec succès !")
+            onCreated?.()
+        },
+        onError: () => {
+            toast.error("Échec de la création de la publication.")
+        },
+    })
 
     const handleFileChange = e => {
         const file = e.target.files[0]
@@ -41,23 +54,16 @@ export default function CreatePost({ onCreated }) {
             formData.append("image", imageFile)
         }
 
-        setLoading(true)
         try {
-            const newPost = await postsService.createPost(formData)
-            onCreated(newPost) // Rafraîchit la liste des posts dans la page parente
-
+            await mutateAsync(formData)
             // On réinitialise le formulaire
             setTitle("")
             setText("")
             setImageFile(null)
             setImagePreview(null)
             e.target.reset() // Pour vider l'input de type file
-            toast.success("Publication créée avec succès !")
         } catch (err) {
             console.error(err)
-            toast.error("Échec de la création de la publication.")
-        } finally {
-            setLoading(false)
         }
     }
 
@@ -117,9 +123,9 @@ export default function CreatePost({ onCreated }) {
                     <Button
                         type="submit"
                         className="bg-blue-600 hover:bg-blue-700"
-                        disabled={loading}
+                        disabled={isPending}
                     >
-                        {loading ? "Publication..." : "Publier"}
+                        {isPending ? "Publication..." : "Publier"}
                     </Button>
                 </div>
             </form>

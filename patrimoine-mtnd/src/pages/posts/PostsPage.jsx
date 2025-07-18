@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react"
+import { useQuery } from "@tanstack/react-query"
 import postsService from "../../services/postsService"
 import CreatePost from "../../components/posts/CreatePost"
 import PostsList from "../../components/posts/PostsList"
@@ -51,8 +52,6 @@ export default function PostsPage() {
     }, [query])
 
     const handlePostCreated = () => {
-        // Simplement rafraîchir toute la liste pour voir le nouveau post en haut
-        fetchAndSetPosts()
         setShowCreate(false)
     }
     const filteredPosts = useMemo(() => {

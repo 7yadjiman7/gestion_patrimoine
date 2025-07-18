@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input" // On importe le composant Input
 import { File } from "lucide-react"
 
-export default function CreatePost({ onCreated }) {
+export default function CreatePost({ onCreated, onClose }) {
     // On garde les états séparés pour le titre et le texte
     const [title, setTitle] = useState("")
     const [text, setText] = useState("")
@@ -68,7 +68,16 @@ export default function CreatePost({ onCreated }) {
     }
 
     return (
-        <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-md mb-8">
+        <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-md mb-8 relative">
+            {onClose && (
+                <button
+                    type="button"
+                    onClick={onClose}
+                    className="absolute top-2 right-2 text-slate-500 hover:text-slate-700"
+                >
+                    <X size={18} />
+                </button>
+            )}
             <form onSubmit={handleSubmit}>
                 {/* Champ pour le titre */}
                 <Input

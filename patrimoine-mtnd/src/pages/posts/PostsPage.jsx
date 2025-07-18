@@ -4,12 +4,7 @@ import CreatePost from "../../components/posts/CreatePost"
 import PostsList from "../../components/posts/PostsList"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {
-    Pagination,
-    PaginationContent,
-    PaginationItem,
-    PaginationLink,
-} from "@/components/ui/pagination"
+// Pagination removed as navigation buttons duplicated refresh
 import { Spinner } from "@/components/ui/spinner"
 import { toast } from "react-hot-toast"
 import { useAuth } from "@/context/AuthContext"
@@ -24,7 +19,6 @@ export default function PostsPage() {
     const [posts, setPosts] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [showCreate, setShowCreate] = useState(false)
-    const [page, setPage] = useState(1)
     const PAGE_SIZE = 10
     const [search, setSearch] = useState("")
     const [error, setError] = useState(null)
@@ -33,7 +27,7 @@ export default function PostsPage() {
         setIsLoading(true)
         setError(null)
         try {
-            const fetchedPosts = await postsService.fetchPosts(page, PAGE_SIZE)
+            const fetchedPosts = await postsService.fetchPosts(undefined, PAGE_SIZE)
             setPosts(Array.isArray(fetchedPosts) ? fetchedPosts : [])
          } catch (error) {
             console.error("Failed to fetch posts", error)
@@ -42,7 +36,7 @@ export default function PostsPage() {
         } finally {
             setIsLoading(false)
         }
-    }, [page])
+    }, [])
 
     useEffect(() => {
         fetchAndSetPosts().then(() => setCount(0))
@@ -91,7 +85,10 @@ export default function PostsPage() {
                 className="mb-4"
             />
             {showCreate ? (
-                <CreatePost onCreated={handlePostCreated} />
+                <CreatePost
+                    onCreated={handlePostCreated}
+                    onClose={() => setShowCreate(false)}
+                />
             ) : (
                 canPost && (
                     <Button className="mb-4" onClick={() => setShowCreate(true)}>
@@ -109,29 +106,7 @@ export default function PostsPage() {
                     onPostUpdate={updatePostInList}
                 />
             )}
-            <Pagination className="mt-4">
-                <PaginationContent>
-                    <PaginationItem>
-                        <PaginationLink
-                            href="#"
-                            size="default"
-                            onClick={() => setPage(p => Math.max(1, p - 1))}
-                            className={page === 1 ? "pointer-events-none opacity-50" : ""}
-                        >
-                            Précédent
-                        </PaginationLink>
-                    </PaginationItem>
-                    <PaginationItem>
-                        <PaginationLink
-                            href="#"
-                            size="default"
-                            onClick={() => setPage(p => p + 1)}
-                        >
-                            Suivant
-                        </PaginationLink>
-                    </PaginationItem>
-                </PaginationContent>
-            </Pagination>
+            {/* Pagination removed */}
         </div>
     )
 }

@@ -55,7 +55,7 @@ class IntranetPostController(http.Controller):
         files = request.httprequest.files
 
         _logger.info(f"Données de formulaire reçues : {post_data}")
-        _logger.info(f"Fichiers reçus : {files.getlist('image')}")
+        _logger.info(f"Fichiers reçus : {files.getlist('file')}")
 
         title = post_data.get("name")
         if not title:
@@ -77,11 +77,11 @@ class IntranetPostController(http.Controller):
             "user_id": request.env.user.id,
         }
 
-        # Gestion de l'image
-        image_file = files.get("image")
-        if image_file:
-            _logger.info("Image détectée, traitement en cours...")
-            vals["image"] = base64.b64encode(image_file.read())
+        # Gestion du fichier
+        upload_file = files.get("file")
+        if upload_file:
+            _logger.info("Fichier détecté, traitement en cours...")
+            vals["image"] = base64.b64encode(upload_file.read())
 
         _logger.info(
             f"Création du post avec les valeurs pour les champs : {list(vals.keys())}"
@@ -120,20 +120,26 @@ class IntranetPostController(http.Controller):
     @http.route('/api/intranet/posts/<int:post_id>/comments', auth='user', type='http', methods=['POST'], csrf=False)
     @handle_api_errors
     def add_comment(self, post_id, **kw):
+        # 1. On lit les données envoyées par le client React
         try:
-            raw = getattr(request.httprequest, 'data', None)
-            if isinstance(raw, (str, bytes)) and raw:
-                data = json.loads(raw)
-            elif request.jsonrequest:
+            if request.jsonrequest:
                 data = request.jsonrequest
-            elif getattr(request.httprequest, 'form', None) and hasattr(request.httprequest.form, 'to_dict'):
-                form_data = request.httprequest.form.to_dict()
-                if isinstance(form_data, dict) and form_data:
-                    data = form_data
-                else:
-                    data = kw
-            else:
+            elif kw:
                 data = kw
+            elif getattr(request, 'httprequest', None) and getattr(request.httprequest, 'form', None):
+                try:
+                    data = request.httprequest.form.to_dict()
+                except Exception:
+                    data = {}
+            elif getattr(request, 'httprequest', None) and getattr(request.httprequest, 'data', None):
+                try:
+                    data = json.loads(request.httprequest.data)
+                except Exception:
+                    data = {}
+            else:
+                data = {}
+            if not isinstance(data, dict):
+                data = {}
             content = data.get('content')
             parent_id = data.get('parent_id')
         except Exception as e:

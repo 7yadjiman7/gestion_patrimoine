@@ -5,7 +5,7 @@ import { toast } from "react-hot-toast"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input" // On importe le composant Input
-import { File } from "lucide-react"
+import { File, X } from "lucide-react"
 
 export default function CreatePost({ onCreated, onClose }) {
     // On garde les états séparés pour le titre et le texte

@@ -30,6 +30,8 @@ export default function AppSidebar({ onCollapseChange }: AppSidebarProps) {
     const { currentUser, logout } = useAuth()
     const { count, setCount } = usePostNotifications()
 
+    const isAdminIntranet = currentUser.role === 'admin_intranet'
+
     if (!currentUser) {
         console.error('No current user - redirecting to login')
         return <div>Chargement...</div>
@@ -105,23 +107,41 @@ export default function AppSidebar({ onCollapseChange }: AppSidebarProps) {
                     label: "Ajouter Matériel",
                     path: "/admin/ajouter",
                 },
-                {
-                    icon: <List className="h-5 w-5" />,
-                    label: "Demandes de Matériels",
-                    path: "/admin/demandes",
-                },
+                ...(!isAdminIntranet
+                    ? [
+                          {
+                              icon: <List className="h-5 w-5" />,
+                              label: "Demandes de Matériels",
+                              path: "/admin/demandes",
+                          },
+                      ]
+                    : []),
                 {
                     icon: <Move className="h-5 w-5" />,
                     label: "Mouvement",
                     path: "/admin/mouvement",
                 },
-                {
-                    icon: <AlertCircle className="h-5 w-5" />,
-                    label: "Déclarations de Pertes",
-                    path: "/admin/pertes",
-                },
-                ...(currentUser.role === 'admin_intranet'
+                ...(!isAdminIntranet
                     ? [
+                          {
+                              icon: <AlertCircle className="h-5 w-5" />,
+                              label: "Déclarations de Pertes",
+                              path: "/admin/pertes",
+                          },
+                      ]
+                    : []),
+                ...(isAdminIntranet
+                    ? [
+                          {
+                              icon: <List className="h-5 w-5" />,
+                              label: "Faire Demande",
+                              path: "/director/demandes",
+                          },
+                          {
+                              icon: <AlertCircle className="h-5 w-5" />,
+                              label: "Déclarer Perte",
+                              path: "/declaration-pertes",
+                          },
                           {
                               icon: <FileText className="h-5 w-5" />,
                               label: "Tableau des posts",

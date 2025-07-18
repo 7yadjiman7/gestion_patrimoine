@@ -40,7 +40,13 @@ export default function AppSidebar({ onCollapseChange }: AppSidebarProps) {
     }
 
     // Enhanced role checking with admin_patrimoine support
-    type UserRole = 'admin' | 'admin_patrimoine' | 'director' | 'agent' | 'user'
+    type UserRole =
+        | 'admin'
+        | 'admin_patrimoine'
+        | 'admin_intranet'
+        | 'director'
+        | 'agent'
+        | 'user'
     const hasRole = (role: UserRole) => {
         if (!currentUser) {
             console.warn('No current user found')
@@ -53,9 +59,12 @@ export default function AppSidebar({ onCollapseChange }: AppSidebarProps) {
         
         // Special case for admin roles
         if (checkRole === 'admin') {
-            return userRole === 'admin' ||
-                   userRole === 'admin_patrimoine' ||
-                   currentUser.is_admin
+            return (
+                userRole === 'admin' ||
+                userRole === 'admin_patrimoine' ||
+                userRole === 'admin_intranet' ||
+                currentUser.is_admin
+            )
         }
         
         return userRole === checkRole
@@ -111,11 +120,15 @@ export default function AppSidebar({ onCollapseChange }: AppSidebarProps) {
                     label: "Déclarations de Pertes",
                     path: "/admin/pertes",
                 },
-                {
-                    icon: <FileText className="h-5 w-5" />,
-                    label: "Tableau des posts",
-                    path: "/admin/posts",
-                },
+                ...(currentUser.role === 'admin_intranet'
+                    ? [
+                          {
+                              icon: <FileText className="h-5 w-5" />,
+                              label: "Tableau des posts",
+                              path: "/admin/posts",
+                          },
+                      ]
+                    : []),
             ],
         }] : []),
         ...(hasRole('director') ? [{

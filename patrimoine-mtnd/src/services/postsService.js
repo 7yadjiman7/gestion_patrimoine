@@ -3,6 +3,15 @@ import api from './apiConfig'
 const fetchPosts = () =>
   api.get('/api/intranet/posts').then(res => res.data.data)
 
+const fetchPostById = async (id) => {
+  const allPosts = await fetchPosts()
+  const post = allPosts.find(p => p.id === parseInt(id, 10))
+  if (!post) {
+    throw new Error("Post not found")
+  }
+  return post
+}
+
 // CORRECTION FINALE : On ajoute l'option des headers ici
 const createPost = (formData) =>
     api.post('/api/intranet/posts', formData, {
@@ -32,6 +41,7 @@ const deletePost = id =>
 
 export default {
   fetchPosts,
+  fetchPostById,
   createPost,
   likePost,
   addComment,

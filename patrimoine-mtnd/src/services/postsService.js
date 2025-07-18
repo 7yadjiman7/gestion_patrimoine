@@ -1,7 +1,14 @@
 import api from './apiConfig'
 
-const fetchPosts = () =>
-  api.get('/api/intranet/posts').then(res => res.data.data)
+const fetchPosts = (page, pageSize) => {
+  const params = {}
+  if (page !== undefined) params.page = page
+  if (pageSize !== undefined) params.page_size = pageSize
+  const options = Object.keys(params).length ? { params } : undefined
+  return api
+    .get('/api/intranet/posts', options)
+    .then(res => res.data.data)
+}
 
 const fetchPostById = async (id) => {
   const allPosts = await fetchPosts()

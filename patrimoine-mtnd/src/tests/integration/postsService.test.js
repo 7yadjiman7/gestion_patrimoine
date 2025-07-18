@@ -23,6 +23,17 @@ describe('postsService', () => {
     expect(posts).toEqual([{ id: 1 }])
   })
 
+  test('fetchPosts forwards pagination params', async () => {
+    api.get.mockResolvedValue({ data: { status: 'success', data: [] } })
+
+    await postsService.fetchPosts(2, 5)
+
+    expect(api.get).toHaveBeenCalledWith(
+      '/api/intranet/posts',
+      { params: { page: 2, page_size: 5 } }
+    )
+  })
+
   test('createPost sends form data', async () => {
     const fd = new FormData()
     api.post.mockResolvedValue({ data: { status: 'success', data: { id: 2 } } })

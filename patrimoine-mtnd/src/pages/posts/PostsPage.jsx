@@ -30,13 +30,15 @@ export default function PostsPage() {
     const [debouncedQuery, setDebouncedQuery] = useState("")
 
     const fetchAndSetPosts = useCallback(async () => {
+        setIsLoading(true)
+        setError(null)
         try {
             const fetchedPosts = await postsService.fetchPosts(page, PAGE_SIZE)
             setPosts(Array.isArray(fetchedPosts) ? fetchedPosts : [])
-        } catch (err) {
-            console.error("Failed to fetch posts", err)
-            setError("Erreur lors du chargement des posts.")
-            toast.error("Impossible de récupérer les posts")
+         } catch (error) {
+            console.error("Failed to fetch posts", error)
+            setError("Erreur de chargement des posts")
+            toast.error("Erreur lors du chargement des posts.")
         } finally {
             setIsLoading(false)
         }
@@ -63,12 +65,19 @@ export default function PostsPage() {
         )
     }, [posts, debouncedQuery])
 
+    const filteredPosts = posts.filter(p =>
+        p.title?.toLowerCase().includes(search.toLowerCase()) ||
+        p.body?.toLowerCase().includes(search.toLowerCase())
+    )
+
+    const canPost = currentUser && currentUser.role !== 'user'
+
     return (
         <div className="w-full max-w-2xl mx-auto py-8">
             <h1 className="text-3xl font-bold mb-6 text-white">
                 Fil d'Actualités
             </h1>
-            <Input
+          <Input
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 placeholder="Rechercher un post..."
@@ -89,12 +98,14 @@ export default function PostsPage() {
             {showCreate ? (
                 <CreatePost onCreated={handlePostCreated} />
             ) : (
-                <Button className="mb-4" onClick={() => setShowCreate(true)}>
-                    Faire un post
-                </Button>
+                canPost && (
+                    <Button className="mb-4" onClick={() => setShowCreate(true)}>
+                        Faire un post
+                    </Button>
+                )
             )}
             {isLoading ? (
-                <div className="flex justify-center py-10">
+              <div className="flex justify-center py-10">
                     <Spinner />
                 </div>
             ) : (

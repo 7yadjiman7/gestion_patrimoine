@@ -84,7 +84,10 @@ export default function PostsPage() {
                 className="mb-4"
             />
             {showCreate ? (
-                <CreatePost onCreated={handlePostCreated} />
+                <CreatePost
+                    onCreated={handlePostCreated}
+                    onClose={() => setShowCreate(false)}
+                />
             ) : (
                 canPost && (
                     <Button className="mb-4" onClick={() => setShowCreate(true)}>

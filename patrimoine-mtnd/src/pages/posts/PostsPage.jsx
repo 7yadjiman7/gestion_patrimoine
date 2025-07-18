@@ -13,7 +13,7 @@ import { usePostNotifications } from "@/context/PostNotificationContext"
 export default function PostsPage() {
     const { currentUser } = useAuth()
     const { setCount } = usePostNotifications()
-    const canCreate = ["admin_patrimoine", "admin", "agent"].includes(
+    const canCreate = ["admin_patrimoine", "admin_intranet", "admin", "agent"].includes(
         currentUser?.role
     )
     const [posts, setPosts] = useState([])

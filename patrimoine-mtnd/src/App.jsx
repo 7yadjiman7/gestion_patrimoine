@@ -30,6 +30,7 @@ import PostsPage from './pages/posts/PostsPage';
 // Définir les rôles pour une meilleure lisibilité
 const ROLES = {
     ADMIN: "admin_patrimoine",
+    ADMIN_INTRANET: "admin_intranet",
     DIRECTOR: "director",
     MANAGER: "manager",
     AGENT: "agent",
@@ -55,7 +56,7 @@ function AppContent() {
               <Route
                   path="/admin"
                   element={
-                      <ProtectedRoute roles={[ROLES.ADMIN]}>
+                      <ProtectedRoute roles={[ROLES.ADMIN, ROLES.ADMIN_INTRANET]}>
                           <AdminMaterialTypes />
                       </ProtectedRoute>
                   }
@@ -63,7 +64,7 @@ function AppContent() {
               <Route
                   path="/admin/statistiques"
                   element={
-                      <ProtectedRoute roles={[ROLES.ADMIN]}>
+                      <ProtectedRoute roles={[ROLES.ADMIN, ROLES.ADMIN_INTRANET]}>
                           <AdminStatsPage />
                       </ProtectedRoute>
                   }
@@ -72,7 +73,7 @@ function AppContent() {
               <Route
                   path="/admin/materiels/filtres"
                   element={
-                      <ProtectedRoute roles={[ROLES.ADMIN]}>
+                      <ProtectedRoute roles={[ROLES.ADMIN, ROLES.ADMIN_INTRANET]}>
                           <CategoryItemsPage />
                       </ProtectedRoute>
                   }
@@ -81,7 +82,7 @@ function AppContent() {
               <Route
                   path="/admin/ajouter"
                   element={
-                      <ProtectedRoute roles={[ROLES.ADMIN]}>
+                      <ProtectedRoute roles={[ROLES.ADMIN, ROLES.ADMIN_INTRANET]}>
                           <AdminAjouterMateriel />
                       </ProtectedRoute>
                   }
@@ -89,7 +90,7 @@ function AppContent() {
               <Route
                   path="/admin/materiel/:id"
                   element={
-                      <ProtectedRoute roles={[ROLES.ADMIN]}>
+                      <ProtectedRoute roles={[ROLES.ADMIN, ROLES.ADMIN_INTRANET]}>
                           <MaterialDetailPage />
                       </ProtectedRoute>
                   }
@@ -97,7 +98,7 @@ function AppContent() {
               <Route
                   path="/admin/demandes"
                   element={
-                      <ProtectedRoute roles={[ROLES.ADMIN]}>
+                      <ProtectedRoute roles={[ROLES.ADMIN, ROLES.ADMIN_INTRANET]}>
                           <AdminDemandeMateriel />
                       </ProtectedRoute>
                   }
@@ -105,7 +106,7 @@ function AppContent() {
               <Route
                   path="/admin/mouvement"
                   element={
-                      <ProtectedRoute roles={[ROLES.ADMIN]}>
+                      <ProtectedRoute roles={[ROLES.ADMIN, ROLES.ADMIN_INTRANET]}>
                           <AdminMouvement />
                       </ProtectedRoute>
                   }
@@ -113,7 +114,7 @@ function AppContent() {
               <Route
                   path="/admin/pertes"
                   element={
-                      <ProtectedRoute roles={[ROLES.ADMIN]}>
+                      <ProtectedRoute roles={[ROLES.ADMIN, ROLES.ADMIN_INTRANET]}>
                           <AdminDeclarationsPerte />
                       </ProtectedRoute>
                   }
@@ -121,7 +122,7 @@ function AppContent() {
               <Route
                   path="/admin/posts"
                   element={
-                      <ProtectedRoute roles={[ROLES.ADMIN]}>
+                      <ProtectedRoute roles={[ROLES.ADMIN_INTRANET]}>
                           <AdminPostsPage />
                       </ProtectedRoute>
                   }
@@ -129,7 +130,7 @@ function AppContent() {
               <Route
                   path="/admin/posts/:id"
                   element={
-                      <ProtectedRoute roles={[ROLES.ADMIN]}>
+                      <ProtectedRoute roles={[ROLES.ADMIN, ROLES.ADMIN_INTRANET]}>
                           <PostDetailPage />
                       </ProtectedRoute>
                   }
@@ -138,7 +139,7 @@ function AppContent() {
               <Route
                   path="/subCategoriesPage/:type"
                   element={
-                      <ProtectedRoute roles={[ROLES.ADMIN]}>
+                      <ProtectedRoute roles={[ROLES.ADMIN, ROLES.ADMIN_INTRANET]}>
                           <SubCategoriesPage />
                       </ProtectedRoute>
                   }
@@ -146,7 +147,7 @@ function AppContent() {
               <Route
                   path="/admin/:type/:category"
                   element={
-                      <ProtectedRoute roles={[ROLES.ADMIN]}>
+                      <ProtectedRoute roles={[ROLES.ADMIN, ROLES.ADMIN_INTRANET]}>
                           <CategoryItemsPage />
                       </ProtectedRoute>
                   }
@@ -154,7 +155,7 @@ function AppContent() {
               <Route
                   path="/admin/:type"
                   element={
-                      <ProtectedRoute roles={[ROLES.ADMIN]}>
+                      <ProtectedRoute roles={[ROLES.ADMIN, ROLES.ADMIN_INTRANET]}>
                           <SubCategoriesPage />
                       </ProtectedRoute>
                   }
@@ -165,7 +166,7 @@ function AppContent() {
               <Route
                   path="/director/demandes"
                   element={
-                      <ProtectedRoute roles={[ROLES.DIRECTOR, ROLES.ADMIN]}>
+                      <ProtectedRoute roles={[ROLES.DIRECTOR, ROLES.ADMIN, ROLES.ADMIN_INTRANET]}>
                           <DirDemandeMateriel />
                       </ProtectedRoute>
                   }
@@ -173,7 +174,7 @@ function AppContent() {
               <Route
                   path="/director/dashboard"
                   element={
-                      <ProtectedRoute roles={[ROLES.DIRECTOR, ROLES.ADMIN]}>
+                      <ProtectedRoute roles={[ROLES.DIRECTOR, ROLES.ADMIN, ROLES.ADMIN_INTRANET]}>
                           <DirDashboardPage />
                       </ProtectedRoute>
                   }
@@ -181,7 +182,7 @@ function AppContent() {
               <Route
                   path="/director/validation-pertes"
                   element={
-                      <ProtectedRoute roles={[ROLES.DIRECTOR, ROLES.ADMIN]}>
+                      <ProtectedRoute roles={[ROLES.DIRECTOR, ROLES.ADMIN, ROLES.ADMIN_INTRANET]}>
                           <DirValidationPerte />
                       </ProtectedRoute>
                   }
@@ -198,6 +199,7 @@ function AppContent() {
                               ROLES.MANAGER,
                               ROLES.DIRECTOR,
                               ROLES.ADMIN,
+                              ROLES.ADMIN_INTRANET,
                           ]}
                       >
                           <AgentDashboardPage />
@@ -216,6 +218,7 @@ function AppContent() {
                               ROLES.MANAGER,
                               ROLES.DIRECTOR,
                               ROLES.ADMIN,
+                              ROLES.ADMIN_INTRANET,
                           ]}
                       >
                           <DeclarationPerte />
@@ -231,6 +234,7 @@ function AppContent() {
                               ROLES.MANAGER,
                               ROLES.DIRECTOR,
                               ROLES.ADMIN,
+                              ROLES.ADMIN_INTRANET,
                           ]}
                       >
                           <MyDeclarationsPage />
@@ -248,6 +252,7 @@ function AppContent() {
                               ROLES.MANAGER,
                               ROLES.DIRECTOR,
                               ROLES.ADMIN,
+                              ROLES.ADMIN_INTRANET,
                           ]}
                       >
                           <ChatPage />
@@ -263,6 +268,7 @@ function AppContent() {
                               ROLES.MANAGER,
                               ROLES.DIRECTOR,
                               ROLES.ADMIN,
+                              ROLES.ADMIN_INTRANET,
                           ]}
                       >
                           <PostsPage />
@@ -281,6 +287,7 @@ function AppContent() {
                       <ProtectedRoute
                           roles={[
                               ROLES.ADMIN,
+                              ROLES.ADMIN_INTRANET,
                               ROLES.DIRECTOR,
                               ROLES.MANAGER,
                               ROLES.AGENT,

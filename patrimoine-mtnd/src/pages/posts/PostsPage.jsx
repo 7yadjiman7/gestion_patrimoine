@@ -1,13 +1,16 @@
-import React, { useEffect, useState, useCallback } from "react"
+import React, { useEffect, useState, useCallback, useMemo } from "react"
 import postsService from "../../services/postsService"
 import CreatePost from "../../components/posts/CreatePost"
 import PostsList from "../../components/posts/PostsList"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 
 export default function PostsPage() {
     const [posts, setPosts] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [showCreate, setShowCreate] = useState(false)
+    const [query, setQuery] = useState("")
+    const [debouncedQuery, setDebouncedQuery] = useState("")
 
     const fetchAndSetPosts = useCallback(async () => {
         try {
@@ -24,17 +27,37 @@ export default function PostsPage() {
         fetchAndSetPosts()
     }, [fetchAndSetPosts])
 
+    useEffect(() => {
+        const id = setTimeout(() => setDebouncedQuery(query), 300)
+        return () => clearTimeout(id)
+    }, [query])
+
     const handlePostCreated = () => {
         // Simplement rafraîchir toute la liste pour voir le nouveau post en haut
         fetchAndSetPosts()
         setShowCreate(false)
     }
 
+    const filteredPosts = useMemo(() => {
+        if (!debouncedQuery) return posts
+        const q = debouncedQuery.toLowerCase()
+        return posts.filter(p =>
+            ((p.title || p.name || "").toLowerCase().includes(q)) ||
+            ((p.author || "").toLowerCase().includes(q))
+        )
+    }, [posts, debouncedQuery])
+
     return (
         <div className="w-full max-w-2xl mx-auto py-8">
             <h1 className="text-3xl font-bold mb-6 text-white">
                 Fil d'Actualités
             </h1>
+            <Input
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder="Rechercher un post..."
+                className="mb-4"
+            />
             {showCreate ? (
                 <CreatePost onCreated={handlePostCreated} />
             ) : (
@@ -47,7 +70,7 @@ export default function PostsPage() {
                     Chargement des posts...
                 </p>
             ) : (
-                <PostsList posts={posts} />
+                <PostsList posts={filteredPosts} />
             )}
         </div>
     )

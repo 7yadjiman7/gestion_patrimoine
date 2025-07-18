@@ -186,5 +186,14 @@ describe('PostsPage behaviour', () => {
 
     const createBtn2 = Array.from(container.querySelectorAll('button')).find(b => b.textContent.includes('Faire un post'))
     expect(createBtn2).toBeDefined()
+
+    useAuth.mockReturnValueOnce({ currentUser: { role: 'admin_intranet' }, loading: false })
+    await act(async () => {
+      ReactDOM.createRoot(container).render(<PostsPage />)
+    })
+    await act(() => Promise.resolve())
+
+    const createBtn3 = Array.from(container.querySelectorAll('button')).find(b => b.textContent.includes('Faire un post'))
+    expect(createBtn3).toBeDefined()
   })
 })

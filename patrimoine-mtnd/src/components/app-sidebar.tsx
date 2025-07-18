@@ -15,6 +15,8 @@ import React from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { useAuth, type User } from "../context/AuthContext"
 import { Button } from "./ui/button"
+import { Badge } from "./ui/badge"
+import { usePostNotifications } from "../context/PostNotificationContext"
 
 interface AppSidebarProps {
     onCollapseChange?: (collapsed: boolean) => void
@@ -26,6 +28,7 @@ export default function AppSidebar({ onCollapseChange }: AppSidebarProps) {
     const [collapsed, setCollapsed] = React.useState(false)
 
     const { currentUser, logout } = useAuth()
+    const { count, setCount } = usePostNotifications()
 
     if (!currentUser) {
         console.error('No current user - redirecting to login')
@@ -203,14 +206,22 @@ export default function AppSidebar({ onCollapseChange }: AppSidebarProps) {
                             ? "bg-slate-700 text-white"
                             : "text-slate-400 hover:bg-slate-700/50 hover:text-white"
                     }`}
-                                    onClick={() => navigate(item.path)}
+                                    onClick={() => {
+                                        if (item.path === '/posts') {
+                                            setCount(0)
+                                        }
+                                        navigate(item.path)
+                                    }}
                                 >
                                     <div className="flex-shrink-0">
                                         {item.icon}
                                     </div>
                                     {!collapsed && (
-                                        <span className="flex-grow text-left">
-                                            {item.label}
+                                        <span className="flex-grow text-left flex items-center justify-between">
+                                            <span>{item.label}</span>
+                                            {item.path === '/posts' && count > 0 && (
+                                                <Badge variant="secondary" className="ml-2">{count}</Badge>
+                                            )}
                                         </span>
                                     )}
                                 </Button>

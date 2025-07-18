@@ -259,6 +259,17 @@ class IntranetPostController(http.Controller):
             headers=CORS_HEADERS,
         )
 
+    @http.route('/api/intranet/posts/unread_count', auth='user', type='http', methods=['GET'], csrf=False)
+    @handle_api_errors
+    def unread_count(self, **kw):
+        count = request.env['intranet.post'].sudo().search_count([
+            ('viewer_ids', 'not in', request.env.user.id)
+        ])
+        return Response(
+            json.dumps({'status': 'success', 'data': {'count': count}}, default=str),
+            headers=CORS_HEADERS,
+        )
+
     @http.route('/admin/posts', auth='user', type='http', methods=['GET'], csrf=False)
     def admin_posts_page(self, **kw):
         if not request.env.user.has_group('gestion_patrimoine.group_patrimoine_admin'):

@@ -7,8 +7,13 @@ import { Spinner } from "@/components/ui/spinner"
 import { Card, CardContent } from "@/components/ui/card"
 import { Inbox } from "lucide-react"
 import { toast } from "react-hot-toast"
+import { useAuth } from "@/context/AuthContext"
 
 export default function PostsPage() {
+    const { currentUser } = useAuth()
+    const canCreate = ["admin_patrimoine", "admin", "agent"].includes(
+        currentUser?.role
+    )
     const [posts, setPosts] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [showCreate, setShowCreate] = useState(false)
@@ -50,16 +55,14 @@ export default function PostsPage() {
             <h1 className="text-3xl font-bold mb-6 text-white">
                 Fil d'Actualités
             </h1>
-            {error && (
-                <p className="text-red-500 text-center mb-4">{error}</p>
-            )}
-            {showCreate ? (
-                <CreatePost onCreated={handlePostCreated} />
-            ) : (
-                <Button className="mb-4" onClick={() => setShowCreate(true)}>
-                    Faire un post
-                </Button>
-            )}
+            {canCreate &&
+                (showCreate ? (
+                    <CreatePost onCreated={handlePostCreated} />
+                ) : (
+                    <Button className="mb-4" onClick={() => setShowCreate(true)}>
+                        Faire un post
+                    </Button>
+                ))}
             {isLoading ? (
                 <div className="flex justify-center py-10">
                     <Spinner />

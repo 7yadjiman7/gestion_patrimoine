@@ -2,7 +2,7 @@ import { lazy } from "react"
 import { AdminLayout } from "../layouts/AdminLayout"
 
 const AdminDemandeMateriel = lazy(
-    () => import("../pages/admin/AdminDemandeMateriel")
+    () => import("../pages/admin/AdminDemandesMateriel")
 )
 const AdminMaterialTypes = lazy(
     () => import("../pages/admin/AdminMaterialTypes")

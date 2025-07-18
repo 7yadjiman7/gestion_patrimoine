@@ -3,6 +3,8 @@ import postsService from "../../services/postsService"
 import CreatePost from "../../components/posts/CreatePost"
 import PostsList from "../../components/posts/PostsList"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Inbox } from "lucide-react"
 import { toast } from "react-hot-toast"
 
 export default function PostsPage() {
@@ -61,6 +63,15 @@ export default function PostsPage() {
                 <p className="text-center text-slate-400">
                     Chargement des posts...
                 </p>
+            ) : posts.length === 0 ? (
+                <Card className="border-dashed">
+                    <CardContent className="flex flex-col items-center justify-center py-16">
+                        <Inbox className="h-16 w-16 text-gray-300 mb-4" />
+                        <h3 className="text-lg font-semibold text-gray-800">
+                            Aucun post pour l’instant.
+                        </h3>
+                    </CardContent>
+                </Card>
             ) : (
                 // On passe la nouvelle fonction aux enfants
                 <PostsList posts={posts} onPostUpdate={updatePostInList} />

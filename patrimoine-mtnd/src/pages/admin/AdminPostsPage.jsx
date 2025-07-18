@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react"
+import React, { useEffect, useState, useRef, useMemo } from "react"
 import postsService from "@/services/postsService"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,8 +13,6 @@ export default function AdminPostsPage() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [search, setSearch] = useState("")
-    const [startDate, setStartDate] = useState("")
-    const [endDate, setEndDate] = useState("")
     const tableRef = useRef()
 
     const loadPosts = () => {
@@ -71,16 +69,19 @@ export default function AdminPostsPage() {
         }, 500)
     }
 
-    const filteredPosts = posts.filter(p => {
+    const filteredPosts = useMemo(() => {
+        if (!search) return posts
         const q = search.toLowerCase()
-        const titleMatch = (p.title || "").toLowerCase().includes(q)
-        const authorMatch = (p.author || "").toLowerCase().includes(q)
-        const date = p.create_date ? new Date(p.create_date) : null
-        const afterStart = startDate ? date >= new Date(startDate) : true
-        const beforeEnd = endDate ? date <= new Date(endDate) : true
-        const searchMatch = !search || titleMatch || authorMatch
-        return searchMatch && afterStart && beforeEnd
-    })
+        return posts.filter(p => {
+            const titleMatch = (p.title || p.name || "").toLowerCase().includes(q)
+            const authorMatch = (p.author || "").toLowerCase().includes(q)
+            const dateString = p.create_date
+                ? new Date(p.create_date).toLocaleDateString("fr-FR").toLowerCase()
+                : ""
+            const dateMatch = dateString.includes(q)
+            return titleMatch || authorMatch || dateMatch
+        })
+    }, [posts, search])
 
     if (loading) return <div className="p-8 text-center">Chargement...</div>
     if (error) return <div className="p-8 text-center text-red-500">{error}</div>
@@ -100,20 +101,10 @@ export default function AdminPostsPage() {
             </Button>
             <div className="flex flex-col sm:flex-row gap-4 mt-4">
                 <Input
-                    placeholder="Rechercher par titre ou auteur"
+                    placeholder="Rechercher par titre, auteur ou date"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                     className="sm:w-1/3"
-                />
-                <Input
-                    type="date"
-                    value={startDate}
-                    onChange={e => setStartDate(e.target.value)}
-                />
-                <Input
-                    type="date"
-                    value={endDate}
-                    onChange={e => setEndDate(e.target.value)}
                 />
             </div>
             <div ref={tableRef} className="rounded-md border mt-4">

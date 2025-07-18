@@ -3,6 +3,9 @@ import api from './apiConfig'
 const fetchPosts = () =>
   api.get('/api/intranet/posts').then(res => res.data.data)
 
+const fetchPostById = id =>
+  api.get(`/api/intranet/posts/${id}`).then(res => res.data.data)
+
 // CORRECTION FINALE : On ajoute l'option des headers ici
 const createPost = (formData) =>
     api.post('/api/intranet/posts', formData, {
@@ -32,6 +35,7 @@ const deletePost = id =>
 
 export default {
   fetchPosts,
+  fetchPostById,
   createPost,
   likePost,
   addComment,

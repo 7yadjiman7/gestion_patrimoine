@@ -161,3 +161,10 @@ variable `ALLOWED_ORIGIN` on the Odoo server to the URL of your frontend
 appropriate CORS headers based on this value so browsers allow requests that
 include credentials.
 
+## Running the tests
+
+The unit tests can be executed with `pytest`. They rely on small stub
+implementations of the `odoo` package, which are inserted into
+`sys.modules` before the controllers and models are imported. This allows
+the models to be loaded normally even outside an Odoo server.
+

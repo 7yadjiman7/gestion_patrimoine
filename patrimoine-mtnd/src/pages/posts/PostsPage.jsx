@@ -58,10 +58,15 @@ export default function PostsPage() {
     const filteredPosts = useMemo(() => {
         if (!search) return posts
         const q = search.toLowerCase()
-        return posts.filter(p =>
-            ((p.title || p.name || "").toLowerCase().includes(q)) ||
-            ((p.author || "").toLowerCase().includes(q))
-        )
+        return posts.filter(p => {
+            const titleMatch = (p.title || p.name || "").toLowerCase().includes(q)
+            const authorMatch = (p.author || "").toLowerCase().includes(q)
+            const dateString = p.create_date
+                ? new Date(p.create_date).toLocaleDateString("fr-FR").toLowerCase()
+                : ""
+            const dateMatch = dateString.includes(q)
+            return titleMatch || authorMatch || dateMatch
+        })
     }, [posts, search])
 
     const canPost = currentUser && currentUser.role !== 'user'

@@ -3,6 +3,7 @@ import postsService from "../../services/postsService"
 import CreatePost from "../../components/posts/CreatePost"
 import PostsList from "../../components/posts/PostsList"
 import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
 
 export default function PostsPage() {
     const [posts, setPosts] = useState([])
@@ -43,9 +44,9 @@ export default function PostsPage() {
                 </Button>
             )}
             {isLoading ? (
-                <p className="text-center text-slate-400">
-                    Chargement des posts...
-                </p>
+                <div className="flex justify-center py-10">
+                    <Spinner />
+                </div>
             ) : (
                 <PostsList posts={posts} />
             )}

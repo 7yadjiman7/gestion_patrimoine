@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react"
 import postsService from "@/services/postsService"
+import { useParams, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table"
 import { Printer } from "lucide-react"
@@ -8,6 +9,7 @@ const ODOO_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost"
 
 
 export default function AdminPostsPage() {
+    const navigate = useNavigate()
     const [posts, setPosts] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
@@ -112,15 +114,11 @@ export default function AdminPostsPage() {
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            asChild
+                                            onClick={() =>
+                                                navigate(`/admin/posts/${p.id}`)
+                                            }
                                         >
-                                            <a
-                                                href={`${ODOO_BASE_URL}/web#id=${p.id}&model=intranet.post&view_type=form`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
-                                                Voir
-                                            </a>
+                                            Voir
                                         </Button>
                                         <Button
                                             variant="destructive"

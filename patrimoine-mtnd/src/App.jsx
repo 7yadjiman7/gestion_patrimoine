@@ -126,7 +126,7 @@ function AppContent() {
                   }
               />
               <Route
-                  path="/admin/posts/:id"
+                  path="/admin/posts/:postId"
                   element={
                       <ProtectedRoute roles={[ROLES.ADMIN]}>
                           <PostDetailPage />

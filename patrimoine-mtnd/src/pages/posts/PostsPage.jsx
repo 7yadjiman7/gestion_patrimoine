@@ -24,6 +24,14 @@ export default function PostsPage() {
         fetchAndSetPosts()
     }, [fetchAndSetPosts])
 
+    const updatePostInList = useCallback((postId, updatedData) => {
+        setPosts(currentPosts =>
+            currentPosts.map(post =>
+                post.id === postId ? { ...post, ...updatedData } : post
+            )
+        )
+    }, [])
+
     const handlePostCreated = () => {
         // Simplement rafraîchir toute la liste pour voir le nouveau post en haut
         fetchAndSetPosts()
@@ -47,7 +55,8 @@ export default function PostsPage() {
                     Chargement des posts...
                 </p>
             ) : (
-                <PostsList posts={posts} />
+                // On passe la nouvelle fonction aux enfants
+                <PostsList posts={posts} onPostUpdate={updatePostInList} />
             )}
         </div>
     )

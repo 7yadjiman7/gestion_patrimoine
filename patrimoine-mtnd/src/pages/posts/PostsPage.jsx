@@ -5,18 +5,22 @@ import PostsList from "../../components/posts/PostsList"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Inbox } from "lucide-react"
+import { toast } from "react-hot-toast"
 
 export default function PostsPage() {
     const [posts, setPosts] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [showCreate, setShowCreate] = useState(false)
+    const [error, setError] = useState(null)
 
     const fetchAndSetPosts = useCallback(async () => {
         try {
             const fetchedPosts = await postsService.fetchPosts()
             setPosts(Array.isArray(fetchedPosts) ? fetchedPosts : [])
-        } catch (error) {
-            console.error("Failed to fetch posts", error)
+        } catch (err) {
+            console.error("Failed to fetch posts", err)
+            setError("Erreur lors du chargement des posts.")
+            toast.error("Impossible de récupérer les posts")
         } finally {
             setIsLoading(false)
         }
@@ -25,6 +29,14 @@ export default function PostsPage() {
     useEffect(() => {
         fetchAndSetPosts()
     }, [fetchAndSetPosts])
+
+    const updatePostInList = useCallback((postId, updatedData) => {
+        setPosts(currentPosts =>
+            currentPosts.map(post =>
+                post.id === postId ? { ...post, ...updatedData } : post
+            )
+        )
+    }, [])
 
     const handlePostCreated = () => {
         // Simplement rafraîchir toute la liste pour voir le nouveau post en haut
@@ -37,6 +49,9 @@ export default function PostsPage() {
             <h1 className="text-3xl font-bold mb-6 text-white">
                 Fil d'Actualités
             </h1>
+            {error && (
+                <p className="text-red-500 text-center mb-4">{error}</p>
+            )}
             {showCreate ? (
                 <CreatePost onCreated={handlePostCreated} />
             ) : (
@@ -58,7 +73,8 @@ export default function PostsPage() {
                     </CardContent>
                 </Card>
             ) : (
-                <PostsList posts={posts} />
+                // On passe la nouvelle fonction aux enfants
+                <PostsList posts={posts} onPostUpdate={updatePostInList} />
             )}
         </div>
     )

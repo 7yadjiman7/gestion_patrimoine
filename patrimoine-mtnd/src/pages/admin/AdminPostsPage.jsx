@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button"
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table"
 import { Printer } from "lucide-react"
 import { toast } from "react-hot-toast"
+const ODOO_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost"
 
-const ODOO_URL = import.meta.env.VITE_ODOO_URL || "http://localhost:8069"
 
 export default function AdminPostsPage() {
     const [posts, setPosts] = useState([])
@@ -75,7 +75,11 @@ export default function AdminPostsPage() {
             <h1 className="text-5xl mb-10 text-center font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
                 Gestion des Posts
             </h1>
-            <Button onClick={handlePrint} variant="outline" className="hover:bg-orange-500 hover:text-white">
+            <Button
+                onClick={handlePrint}
+                variant="outline"
+                className="hover:bg-orange-500 hover:text-white"
+            >
                 <Printer className="h-4 w-4 mr-2" />
                 Imprimer le tableau
             </Button>
@@ -86,27 +90,43 @@ export default function AdminPostsPage() {
                             <TableHead>Titre</TableHead>
                             <TableHead>Auteur</TableHead>
                             <TableHead>Date</TableHead>
-                            <TableHead className="text-right no-print">Actions</TableHead>
+                            <TableHead className="text-right no-print">
+                                Actions
+                            </TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {posts.length > 0 ? (
                             posts.map(p => (
                                 <TableRow key={p.id}>
-                                    <TableCell className="font-medium">{p.title}</TableCell>
+                                    <TableCell className="font-medium">
+                                        {p.title}
+                                    </TableCell>
                                     <TableCell>{p.author}</TableCell>
-                                    <TableCell>{new Date(p.create_date).toLocaleDateString()}</TableCell>
+                                    <TableCell>
+                                        {new Date(
+                                            p.create_date
+                                        ).toLocaleDateString()}
+                                    </TableCell>
                                     <TableCell className="text-right space-x-2 no-print">
-                                        <Button variant="outline" size="sm" asChild>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            asChild
+                                        >
                                             <a
-                                                href={`${ODOO_URL}/web#id=${p.id}&model=intranet.post&view_type=form`}
+                                                href={`${ODOO_BASE_URL}/web#id=${p.id}&model=intranet.post&view_type=form`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                             >
                                                 Voir
                                             </a>
                                         </Button>
-                                        <Button variant="destructive" size="sm" onClick={() => handleDelete(p.id)}>
+                                        <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            onClick={() => handleDelete(p.id)}
+                                        >
                                             Supprimer
                                         </Button>
                                     </TableCell>
@@ -114,7 +134,10 @@ export default function AdminPostsPage() {
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan="4" className="h-24 text-center">
+                                <TableCell
+                                    colSpan="4"
+                                    className="h-24 text-center"
+                                >
                                     Aucun post trouvé.
                                 </TableCell>
                             </TableRow>

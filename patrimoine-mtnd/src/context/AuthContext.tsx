@@ -12,7 +12,8 @@ export interface User {
     email: string
     session_id?: string
     is_admin: boolean
-    role: "admin" | "admin_patrimoine" | "director" | "agent" | "user"
+    is_intranet_admin: boolean
+    role: "admin" | "admin_patrimoine" | "admin_intranet" | "director" | "agent" | "user"
     department_id?: number
     department_name?: string
 }
@@ -48,56 +49,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const login = async (email: string, password: string): Promise<User> => {
         try {
-            const authResponse = await api.post(
+            const authRes = await api.post(
                 "/web/session/authenticate",
                 {
                     jsonrpc: "2.0",
-                    params: {
-                        login: email,
-                        password: password,
-                        db: ODOO_DB,
-                    },
+                    params: { login: email, password, db: ODOO_DB },
                 },
-                {
-                    headers: { "Content-Type": "application/json" },
-                    withCredentials: true,
-                }
+                { headers: { "Content-Type": "application/json" }, withCredentials: true }
             )
 
-            if (!authResponse.data.result?.uid) {
+            const session = authRes.data.result
+            if (!session?.uid) {
                 throw new Error("Authentification échouée ou UID manquant.")
             }
 
-            localStorage.setItem(
-                "odoo_session_id",
-                authResponse.data.result.session_id
-            )
+            localStorage.setItem("odoo_session_id", session.session_id)
 
-            const userInfoResponse = await api.post(
-                "/api/users/me",
-                {},
-                { withCredentials: true }
-            )
-
-            const userInfo = userInfoResponse.data.result
+            const infoRes = await api.post("/api/users/me", {}, { withCredentials: true })
+            const userInfo = infoRes.data.result
             if (!userInfo) {
                 throw new Error(
                     "Impossible de récupérer les informations détaillées de l'utilisateur."
                 )
             }
 
-            // --- CORRECTION DÉFINITIVE DE LA LOGIQUE DES RÔLES ---
-
-            // 1. On détermine si l'utilisateur est un admin, quel que soit le nom du rôle
             const isAdmin =
-                userInfo.roles.includes("admin") ||
-                userInfo.roles.includes("admin_patrimoine")
+                userInfo.roles.includes("admin") || userInfo.roles.includes("admin_patrimoine")
+            const isIntranetAdmin = userInfo.roles.includes("admin_intranet")
 
-            // 2. On assigne un rôle standardisé pour le reste de l'application
-            let userRole: User["role"] = "user" // Rôle par défaut
+            let userRole: User["role"] = "user"
             if (isAdmin) {
-                // On standardise sur 'admin_patrimoine' car c'est ce que vos routes attendent
                 userRole = "admin_patrimoine"
+            } else if (isIntranetAdmin) {
+                userRole = "admin_intranet"
             } else if (userInfo.roles.includes("director")) {
                 userRole = "director"
             } else if (userInfo.roles.includes("agent")) {
@@ -108,9 +92,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 id: userInfo.uid,
                 name: userInfo.name,
                 email: userInfo.username,
-                session_id: authResponse.data.result.session_id,
-                is_admin: isAdmin, // On utilise notre variable `isAdmin`
-                role: userRole, // On utilise notre variable `userRole`
+                session_id: session.session_id,
+                is_admin: isAdmin,
+                is_intranet_admin: isIntranetAdmin,
+                role: userRole,
                 department_id: userInfo.department_id,
                 department_name: userInfo.department_name,
             }
@@ -124,8 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.error("Erreur détaillée de connexion:", error)
             if (axios.isAxiosError(error)) {
                 throw new Error(
-                    error.response?.data?.error?.data?.message ||
-                        "Identifiants incorrects"
+                    error.response?.data?.error?.data?.message || "Identifiants incorrects"
                 )
             }
             if (error instanceof Error) {

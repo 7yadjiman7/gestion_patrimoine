@@ -24,7 +24,9 @@ class UserApiController(http.Controller):
 
         # Détermination des rôles
         roles = []
-        if user.has_group("gestion_patrimoine.group_patrimoine_admin"):
+        if user.has_group("gestion_patrimoine.group_intranet_admin"):
+            roles.append("admin_intranet")
+        elif user.has_group("gestion_patrimoine.group_patrimoine_admin"):
             roles.append("admin_patrimoine")
         elif user.has_group("base.group_system"):
             roles.append("admin")

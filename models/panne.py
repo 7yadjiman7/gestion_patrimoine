@@ -33,6 +33,13 @@ class PatrimoinePanne(models.Model):
     manager_id = fields.Many2one(
         "hr.employee", string="Manager", compute="_compute_manager", store=True
     )
+    viewer_ids = fields.Many2many(
+        "res.users",
+        "panne_view_rel",
+        "panne_id",
+        "user_id",
+        string="Vues",
+    )
     state = fields.Selection(
         [
             ("draft", "Brouillon"),

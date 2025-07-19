@@ -146,6 +146,42 @@ class AssetControllerTest(unittest.TestCase):
         self.assertEqual(returned['demande_id'], demande_record.id)
 
     @patch('controllers.asset_controller.request')
+    def test_pannes_unread_count(self, mock_request):
+        env = MagicMock()
+        panne_model = MagicMock()
+        env.__getitem__.return_value = panne_model
+        panne_model.sudo.return_value.search_count.return_value = 2
+        mock_request.env = env
+        mock_request.env.user.id = 7
+
+        res = self.controller.pannes_unread_count()
+
+        panne_model.sudo.return_value.search_count.assert_called_with([
+            ('viewer_ids', 'not in', 7),
+            ('manager_id.user_id', '=', 7),
+            ('state', '=', 'to_approve'),
+        ])
+        self.assertIn('application/json', res.headers.get('Content-Type'))
+
+    @patch('controllers.asset_controller.request')
+    def test_pertes_unread_count(self, mock_request):
+        env = MagicMock()
+        perte_model = MagicMock()
+        env.__getitem__.return_value = perte_model
+        perte_model.sudo.return_value.search_count.return_value = 4
+        mock_request.env = env
+        mock_request.env.user.id = 9
+
+        res = self.controller.pertes_unread_count()
+
+        perte_model.sudo.return_value.search_count.assert_called_with([
+            ('viewer_ids', 'not in', 9),
+            ('manager_id.user_id', '=', 9),
+            ('state', '=', 'to_approve'),
+        ])
+        self.assertIn('application/json', res.headers.get('Content-Type'))
+
+    @patch('controllers.asset_controller.request')
     def test_create_demande_json_payload(self, mock_request):
         env = MagicMock()
         demande_model = MagicMock()

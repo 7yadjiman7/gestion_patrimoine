@@ -93,6 +93,12 @@ export const apiConfig = {
         PERTES_CREATE: "/api/patrimoine/pertes",
         PERTES_LIST: "/api/patrimoine/pertes",
         PERTES_PROCESS: perteId => `/api/patrimoine/pertes/${perteId}/process`,
+        PANNES_CREATE: "/api/patrimoine/pannes",
+        PANNES_LIST: "/api/patrimoine/pannes",
+        PANNES_PROCESS: panneId => `/api/patrimoine/pannes/${panneId}/process`,
+        PANNES_MANAGER_LIST: "/api/patrimoine/pannes/manager",
+        PANNES_MANAGER_PROCESS: panneId =>
+            `/api/patrimoine/pannes/manager_process/${panneId}`,
         STATS_BY_DEPARTMENT: "/api/patrimoine/stats/by_department",
         STATS_FOR_DEPARTMENT: deptId =>
             `/api/patrimoine/stats/department/${deptId}`,

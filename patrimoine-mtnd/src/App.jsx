@@ -20,6 +20,8 @@ import AdminDeclarationsPerte from './pages/admin/AdminDeclarationsPerte';
 import AdminPostsPage from './pages/admin/AdminPostsPage';
 import PostDetailPage from './pages/admin/PostDetailPage';
 import AdminStatsPage from './pages/admin/AdminStatsPage';
+import AdminCategoriesPage from './pages/admin/AdminCategoriesPage';
+import AdminSubCategoriesPage from './pages/admin/AdminSubCategoriesPage';
 import DeclarationPerte from './pages/DeclarationPerte';
 import MyDeclarationsPage from './pages/user/MyDeclarationsPage';
 import DirDashboardPage from './pages/director/DirDashboardPage';
@@ -132,6 +134,22 @@ function AppContent() {
                   element={
                       <ProtectedRoute roles={[ROLES.ADMIN, ROLES.ADMIN_INTRANET]}>
                           <PostDetailPage />
+                      </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/admin/categories"
+                  element={
+                      <ProtectedRoute roles={[ROLES.ADMIN, ROLES.ADMIN_INTRANET]}>
+                          <AdminCategoriesPage />
+                      </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/admin/categories/:categoryId/subcategories"
+                  element={
+                      <ProtectedRoute roles={[ROLES.ADMIN, ROLES.ADMIN_INTRANET]}>
+                          <AdminSubCategoriesPage />
                       </ProtectedRoute>
                   }
               />

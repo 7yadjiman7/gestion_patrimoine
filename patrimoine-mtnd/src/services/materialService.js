@@ -69,6 +69,10 @@ const updateItem = (id, formData) =>
         .then(res => res.data)
 const saveMouvement = mouvementData =>
     api.post("/api/patrimoine/mouvements", mouvementData).then(res => res.data)
+const validateMouvement = mouvementId =>
+    api
+        .post(`/api/patrimoine/mouvements/${mouvementId}/validate`)
+        .then(res => res.data)
 const createDemande = demandeData =>
     api.post("/api/patrimoine/demandes", demandeData).then(res => res.data)
 const createPerte = perteData =>
@@ -150,6 +154,7 @@ export default {
     createItem,
     updateItem,
     saveMouvement,
+    validateMouvement,
     createDemande,
     createPerte,
     processDemande,

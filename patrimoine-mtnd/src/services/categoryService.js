@@ -25,7 +25,18 @@ export const updateSubCategory = (categoryId, subcategoryId, subcategoryData) =>
 export const deleteCategory = (categoryId) => 
   del(`/patrimoine/categories/${categoryId}`)
 
-export const deleteSubCategory = (categoryId, subcategoryId) => 
+export const deleteSubCategory = (categoryId, subcategoryId) =>
   del(`/patrimoine/categories/${categoryId}/subcategories/${subcategoryId}`)
 
 // Suppression des fonctions redondantes avec materialService.js
+
+export default {
+  getCategories,
+  getSubCategories,
+  createCategory,
+  createSubCategory,
+  updateCategory,
+  updateSubCategory,
+  deleteCategory,
+  deleteSubCategory
+};

@@ -2556,6 +2556,23 @@ class PatrimoineAssetController(http.Controller):
             _logger.error("Error processing perte %s: %s", perte_id, str(e))
             return {"status": "error", "message": str(e)}
 
+    @http.route('/api/patrimoine/pertes/<int:perte_id>/views', auth='user', type='http', methods=['POST'], csrf=False)
+    def add_perte_view(self, perte_id, **kw):
+        perte = request.env['patrimoine.perte'].sudo().browse(perte_id)
+        if not perte.exists():
+            return Response(json.dumps({'status': 'error', 'message': 'Perte not found'}), status=404, headers=CORS_HEADERS)
+        perte.write({'viewer_ids': [(4, request.env.user.id)]})
+        return Response(json.dumps({'status': 'success'}), headers=CORS_HEADERS)
+
+    @http.route('/api/patrimoine/pertes/unread_count', auth='user', type='http', methods=['GET'], csrf=False)
+    def pertes_unread_count(self, **kw):
+        count = request.env['patrimoine.perte'].sudo().search_count([
+            ('viewer_ids', 'not in', request.env.user.id),
+            ('manager_id.user_id', '=', request.env.user.id),
+            ('state', '=', 'to_approve'),
+        ])
+        return Response(json.dumps({'status': 'success', 'data': {'count': count}}), headers=CORS_HEADERS)
+
     # --- API pour créer un signalement de panne ---
     @http.route(
         "/api/patrimoine/pannes",
@@ -2712,3 +2729,20 @@ class PatrimoineAssetController(http.Controller):
         except Exception as e:
             _logger.error("Error processing panne %s: %s", panne_id, str(e))
             return {"status": "error", "message": str(e)}
+
+    @http.route('/api/patrimoine/pannes/<int:panne_id>/views', auth='user', type='http', methods=['POST'], csrf=False)
+    def add_panne_view(self, panne_id, **kw):
+        panne = request.env['patrimoine.panne'].sudo().browse(panne_id)
+        if not panne.exists():
+            return Response(json.dumps({'status': 'error', 'message': 'Panne not found'}), status=404, headers=CORS_HEADERS)
+        panne.write({'viewer_ids': [(4, request.env.user.id)]})
+        return Response(json.dumps({'status': 'success'}), headers=CORS_HEADERS)
+
+    @http.route('/api/patrimoine/pannes/unread_count', auth='user', type='http', methods=['GET'], csrf=False)
+    def pannes_unread_count(self, **kw):
+        count = request.env['patrimoine.panne'].sudo().search_count([
+            ('viewer_ids', 'not in', request.env.user.id),
+            ('manager_id.user_id', '=', request.env.user.id),
+            ('state', '=', 'to_approve'),
+        ])
+        return Response(json.dumps({'status': 'success', 'data': {'count': count}}), headers=CORS_HEADERS)

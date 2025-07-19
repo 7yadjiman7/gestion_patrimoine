@@ -8,6 +8,7 @@
     <menuitem id="menu_patrimoine_assets" name="Biens" parent="menu_patrimoine_root" sequence="10"/>
     <menuitem id="menu_patrimoine_mouvements" name="Mouvements" parent="menu_patrimoine_root" sequence="20"/>
     <menuitem id="menu_patrimoine_entretiens" name="Entretiens" parent="menu_patrimoine_root" sequence="30"/>
+    <menuitem id="menu_patrimoine_panne" name="Signalements de panne" parent="menu_patrimoine_root" action="action_panne" sequence="31"/>
     <menuitem id="menu_intranet_posts" name="Posts" parent="menu_patrimoine_root" action="action_intranet_post" sequence="40"/>
     <menuitem id="menu_patrimoine_config" name="Configuration" parent="menu_patrimoine_root" sequence="100"/>
 </odoo>

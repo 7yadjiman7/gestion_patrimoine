@@ -15,6 +15,7 @@ from . import fiche_vie
 from . import demande_materiel
 from . import demande_materiel_ligne
 from . import pertes
+from . import panne
 from . import chat
 from . import post
 from . import chat_test

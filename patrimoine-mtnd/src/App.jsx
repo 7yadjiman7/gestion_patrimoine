@@ -11,6 +11,7 @@ import SubCategoriesPage from './pages/admin/SubCategoriesPage';
 import AdminAjouterMateriel from './pages/admin/AdminAjouterMateriel';
 import MaterialDetailPage from './pages/admin/MaterialDetailPage';
 import AgentDashboardPage from './pages/agents/AgentDashboardPage';
+import AgentMaterialActionsPage from './pages/agents/AgentMaterialActionsPage';
 import DirDemandeMateriel from './pages/director/DirDemandeMateriel';
 import DirValidationPerte from './pages/director/DirValidationPerte';
 import CategoryItemsPage from './pages/admin/CategoryItemsPage';
@@ -23,6 +24,7 @@ import AdminStatsPage from './pages/admin/AdminStatsPage';
 import AdminCategoriesPage from './pages/admin/AdminCategoriesPage';
 import AdminSubCategoriesPage from './pages/admin/AdminSubCategoriesPage';
 import DeclarationPerte from './pages/DeclarationPerte';
+import DeclarationPanne from './pages/DeclarationPanne';
 import MyDeclarationsPage from './pages/user/MyDeclarationsPage';
 import DirDashboardPage from './pages/director/DirDashboardPage';
 import UnauthorizedPage from './pages/UnauthorizedPage'; // N'oubliez pas l'import
@@ -225,6 +227,23 @@ function AppContent() {
                   }
               />
 
+              <Route
+                  path="/agent/materiel/:id/actions"
+                  element={
+                      <ProtectedRoute
+                          roles={[
+                              ROLES.AGENT,
+                              ROLES.MANAGER,
+                              ROLES.DIRECTOR,
+                              ROLES.ADMIN,
+                              ROLES.ADMIN_INTRANET,
+                          ]}
+                      >
+                          <AgentMaterialActionsPage />
+                      </ProtectedRoute>
+                  }
+              />
+
               {/* --- Route pour les pages générale --- */}
               {/* Tout utilisateur du système de patrimoine peut déclarer une perte */}
               <Route
@@ -240,6 +259,23 @@ function AppContent() {
                           ]}
                       >
                           <DeclarationPerte />
+                      </ProtectedRoute>
+                  }
+              />
+
+              <Route
+                  path="/declaration-pannes"
+                  element={
+                      <ProtectedRoute
+                          roles={[
+                              ROLES.AGENT,
+                              ROLES.MANAGER,
+                              ROLES.DIRECTOR,
+                              ROLES.ADMIN,
+                              ROLES.ADMIN_INTRANET,
+                          ]}
+                      >
+                          <DeclarationPanne />
                       </ProtectedRoute>
                   }
               />

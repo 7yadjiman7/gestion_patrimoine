@@ -182,7 +182,7 @@ export default function AgentDashboardPage() {
                             key={material.id}
                             className={cardClasses.base}
                             onClick={() =>
-                                navigate(`/admin/materiel/${material.id}`)
+                                navigate(`/agent/materiel/${material.id}/actions`)
                             }
                         >
                             <div className={cardClasses.imageContainer}>

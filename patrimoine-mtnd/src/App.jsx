@@ -11,6 +11,7 @@ import SubCategoriesPage from './pages/admin/SubCategoriesPage';
 import AdminAjouterMateriel from './pages/admin/AdminAjouterMateriel';
 import MaterialDetailPage from './pages/admin/MaterialDetailPage';
 import AgentDashboardPage from './pages/agents/AgentDashboardPage';
+import AgentMaterialActionsPage from './pages/agents/AgentMaterialActionsPage';
 import DirDemandeMateriel from './pages/director/DirDemandeMateriel';
 import DirValidationPerte from './pages/director/DirValidationPerte';
 import CategoryItemsPage from './pages/admin/CategoryItemsPage';
@@ -20,9 +21,13 @@ import AdminDeclarationsPerte from './pages/admin/AdminDeclarationsPerte';
 import AdminPostsPage from './pages/admin/AdminPostsPage';
 import PostDetailPage from './pages/admin/PostDetailPage';
 import AdminStatsPage from './pages/admin/AdminStatsPage';
+import AdminCategoriesPage from './pages/admin/AdminCategoriesPage';
+import AdminSubCategoriesPage from './pages/admin/AdminSubCategoriesPage';
 import DeclarationPerte from './pages/DeclarationPerte';
+import DeclarationPanne from './pages/DeclarationPanne';
 import MyDeclarationsPage from './pages/user/MyDeclarationsPage';
 import DirDashboardPage from './pages/director/DirDashboardPage';
+import ManagerValidationPanne from './pages/manager/ManagerValidationPanne';
 import UnauthorizedPage from './pages/UnauthorizedPage'; // N'oubliez pas l'import
 import ChatPage from './pages/chat/ChatPage';
 import PostsPage from './pages/posts/PostsPage';
@@ -135,6 +140,22 @@ function AppContent() {
                       </ProtectedRoute>
                   }
               />
+              <Route
+                  path="/admin/categories"
+                  element={
+                      <ProtectedRoute roles={[ROLES.ADMIN, ROLES.ADMIN_INTRANET]}>
+                          <AdminCategoriesPage />
+                      </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/admin/categories/:categoryId/subcategories"
+                  element={
+                      <ProtectedRoute roles={[ROLES.ADMIN, ROLES.ADMIN_INTRANET]}>
+                          <AdminSubCategoriesPage />
+                      </ProtectedRoute>
+                  }
+              />
               {/* Alias pour éviter l'erreur 404 lorsque l'on utilise l'ancien chemin */}
               <Route
                   path="/subCategoriesPage/:type"
@@ -187,6 +208,14 @@ function AppContent() {
                       </ProtectedRoute>
                   }
               />
+              <Route
+                  path="/manager/validation-pannes"
+                  element={
+                      <ProtectedRoute roles={[ROLES.MANAGER, ROLES.ADMIN, ROLES.ADMIN_INTRANET]}>
+                          <ManagerValidationPanne />
+                      </ProtectedRoute>
+                  }
+              />
 
               {/* --- Route pour les pages agent --- */}
               {/* Tous les utilisateurs connectés ayant un rôle peuvent voir leur dashboard */}
@@ -206,6 +235,40 @@ function AppContent() {
                       </ProtectedRoute>
                   }
               />
+              {/* Permettre l'accès via l'ancien chemin /agent/dashboard */}
+              <Route
+                  path="/agent/dashboard"
+                  element={
+                      <ProtectedRoute
+                          roles={[
+                              ROLES.AGENT,
+                              ROLES.MANAGER,
+                              ROLES.DIRECTOR,
+                              ROLES.ADMIN,
+                              ROLES.ADMIN_INTRANET,
+                          ]}
+                      >
+                          <AgentDashboardPage />
+                      </ProtectedRoute>
+                  }
+              />
+
+              <Route
+                  path="/agent/materiel/:id/actions"
+                  element={
+                      <ProtectedRoute
+                          roles={[
+                              ROLES.AGENT,
+                              ROLES.MANAGER,
+                              ROLES.DIRECTOR,
+                              ROLES.ADMIN,
+                              ROLES.ADMIN_INTRANET,
+                          ]}
+                      >
+                          <AgentMaterialActionsPage />
+                      </ProtectedRoute>
+                  }
+              />
 
               {/* --- Route pour les pages générale --- */}
               {/* Tout utilisateur du système de patrimoine peut déclarer une perte */}
@@ -222,6 +285,39 @@ function AppContent() {
                           ]}
                       >
                           <DeclarationPerte />
+                      </ProtectedRoute>
+                  }
+              />
+
+              <Route
+                  path="/declaration-pannes"
+                  element={
+                      <ProtectedRoute
+                          roles={[
+                              ROLES.AGENT,
+                              ROLES.MANAGER,
+                              ROLES.DIRECTOR,
+                              ROLES.ADMIN,
+                              ROLES.ADMIN_INTRANET,
+                          ]}
+                      >
+                          <DeclarationPanne />
+                      </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="declaration-pannes"
+                  element={
+                      <ProtectedRoute
+                          roles={[
+                              ROLES.AGENT,
+                              ROLES.MANAGER,
+                              ROLES.DIRECTOR,
+                              ROLES.ADMIN,
+                              ROLES.ADMIN_INTRANET,
+                          ]}
+                      >
+                          <DeclarationPanne />
                       </ProtectedRoute>
                   }
               />

@@ -41,6 +41,13 @@ class PatrimoinePerte(models.Model):
     manager_id = fields.Many2one(
         "hr.employee", string="Manager", compute="_compute_manager", store=True
     )
+    viewer_ids = fields.Many2many(
+        "res.users",
+        "perte_view_rel",
+        "perte_id",
+        "user_id",
+        string="Vues",
+    )
     valide_par_id = fields.Many2one(
         "res.users", string="Validé par (Admin)", readonly=True
     )
@@ -66,7 +73,29 @@ class PatrimoinePerte(models.Model):
             vals["name"] = self.env["ir.sequence"].next_by_code(
                 "patrimoine.perte.code"
             ) or _("Nouveau")
-        return super(PatrimoinePerte, self).create(vals)
+        record = super(PatrimoinePerte, self).create(vals)
+        partners = []
+        if record.manager_id and record.manager_id.user_id.partner_id:
+            partners.append(record.manager_id.user_id.partner_id)
+
+        # Notify the department director if available
+        director_partner = False
+        employee = record.declarer_par_id.employee_ids[:1]
+        if employee and employee.department_id and employee.department_id.manager_id:
+            director_partner = employee.department_id.manager_id.user_id.partner_id
+        if director_partner and director_partner not in partners:
+            partners.append(director_partner)
+
+        if partners:
+            payload = {
+                "type": "new_perte",
+                "id": record.id,
+                "asset_name": record.asset_id.name,
+                "motif": record.motif,
+            }
+            notifications = [(p, payload) for p in partners]
+            self.env["bus.bus"].sendmany(notifications)
+        return record
 
     @api.depends("declarer_par_id")
     def _compute_manager(self):

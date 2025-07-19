@@ -27,6 +27,18 @@ export const getFields = async (subcategoryId) => {
   }
 };
 
+export const getFieldValues = async (itemId) => {
+  try {
+    const response = await axios.get(
+      `${getApiUrl()}/patrimoine/items/${itemId}/field-values`
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching field values:', error);
+    throw error;
+  }
+};
+
 export const createField = async (subcategoryId, fieldData) => {
   try {
     const response = await axios.post(

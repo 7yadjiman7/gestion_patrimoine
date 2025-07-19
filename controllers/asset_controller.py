@@ -2555,3 +2555,194 @@ class PatrimoineAssetController(http.Controller):
         except Exception as e:
             _logger.error("Error processing perte %s: %s", perte_id, str(e))
             return {"status": "error", "message": str(e)}
+
+    @http.route('/api/patrimoine/pertes/<int:perte_id>/views', auth='user', type='http', methods=['POST'], csrf=False)
+    def add_perte_view(self, perte_id, **kw):
+        perte = request.env['patrimoine.perte'].sudo().browse(perte_id)
+        if not perte.exists():
+            return Response(json.dumps({'status': 'error', 'message': 'Perte not found'}), status=404, headers=CORS_HEADERS)
+        perte.write({'viewer_ids': [(4, request.env.user.id)]})
+        return Response(json.dumps({'status': 'success'}), headers=CORS_HEADERS)
+
+    @http.route('/api/patrimoine/pertes/unread_count', auth='user', type='http', methods=['GET'], csrf=False)
+    def pertes_unread_count(self, **kw):
+        count = request.env['patrimoine.perte'].sudo().search_count([
+            ('viewer_ids', 'not in', request.env.user.id),
+            ('manager_id.user_id', '=', request.env.user.id),
+            ('state', '=', 'to_approve'),
+        ])
+        return Response(json.dumps({'status': 'success', 'data': {'count': count}}), headers=CORS_HEADERS)
+
+    # --- API pour créer un signalement de panne ---
+    @http.route(
+        "/api/patrimoine/pannes",
+        auth="user",
+        type="http",
+        methods=["POST"],
+        csrf=False,
+    )
+    def create_panne(self, **post):
+        try:
+            post = request.httprequest.form.to_dict()
+            current_user = request.env.user
+            if not current_user.has_group("gestion_patrimoine.group_patrimoine_agent") and not current_user.has_group(
+                "gestion_patrimoine.group_patrimoine_director"
+            ):
+                raise AccessError(
+                    "Accès refusé. Seuls les agents et directeurs peuvent créer des signalements de panne."
+                )
+
+            asset_id = post.get("asset_id")
+            description = post.get("description")
+            date_panne = post.get("date_panne")
+
+            if not asset_id or not description:
+                raise ValidationError("Asset ou description manquant.")
+
+            asset = request.env["patrimoine.asset"].browse(int(asset_id))
+            if not asset.exists():
+                raise ValidationError("Bien concerné non trouvé.")
+
+            panne_vals = {
+                "asset_id": int(asset_id),
+                "description": description,
+                "date_panne": date_panne,
+                "declarer_par_id": current_user.id,
+                "state": "to_approve",
+            }
+
+            new_panne = request.env["patrimoine.panne"].create(panne_vals)
+            new_panne.action_submit()
+
+            return Response(
+                json.dumps({"status": "success", "panne_id": new_panne.id, "panne_name": new_panne.name}, default=str),
+                headers=CORS_HEADERS,
+            )
+        except Exception as e:
+            _logger.error(f"Erreur lors de la création du signalement de panne : {e}")
+            return Response(json.dumps({"error": str(e)}), status=500, headers=CORS_HEADERS, content_type="application/json")
+
+    # --- API pour lister les pannes ---
+    @http.route("/api/patrimoine/pannes", auth="user", type="http", methods=["GET"])
+    def list_pannes(self, **kw):
+        try:
+            pannes = request.env["patrimoine.panne"].search([], order="date_panne desc")
+            data = []
+            for panne in pannes:
+                data.append(
+                    {
+                        "id": panne.id,
+                        "name": panne.name,
+                        "asset_id": panne.asset_id.id,
+                        "asset_name": panne.asset_id.name,
+                        "date_panne": panne.date_panne.strftime("%Y-%m-%d") if panne.date_panne else None,
+                        "description": panne.description,
+                        "declarer_par_id": panne.declarer_par_id.id,
+                        "declarer_par_name": panne.declarer_par_id.name,
+                        "state": panne.state,
+                    }
+                )
+            return Response(json.dumps(data), headers={"Content-Type": "application/json"})
+        except Exception as e:
+            _logger.error("Error listing pannes: %s", str(e))
+            return Response(json.dumps({"status": "error", "message": str(e)}), status=500, headers={"Content-Type": "application/json"})
+
+    @http.route("/api/patrimoine/pannes/manager", auth="user", type="http", methods=["GET"])
+    def list_pannes_for_manager(self, **kw):
+        try:
+            current_employee = request.env["hr.employee"].search([("user_id", "=", request.env.user.id)], limit=1)
+            if not current_employee:
+                return Response(json.dumps([]), headers={"Content-Type": "application/json"})
+
+            employee_ids = request.env["hr.employee"].search([("parent_id", "=", current_employee.id)]).ids
+            if not employee_ids and current_employee.department_id:
+                employee_ids = request.env["hr.employee"].search([("department_id", "=", current_employee.department_id.id)]).ids
+
+            user_ids_of_team = request.env["hr.employee"].browse(employee_ids).mapped("user_id").ids
+            domain = [("declarer_par_id", "in", user_ids_of_team), ("state", "=", "to_approve")]
+
+            pannes = request.env["patrimoine.panne"].search(domain, order="date_panne desc")
+            data = []
+            for panne in pannes:
+                data.append(
+                    {
+                        "id": panne.id,
+                        "name": panne.name,
+                        "asset_name": panne.asset_id.sudo().name,
+                        "declarer_par_name": panne.declarer_par_id.name,
+                        "date_panne": panne.date_panne.strftime("%Y-%m-%d") if panne.date_panne else None,
+                        "state": panne.state,
+                    }
+                )
+            return Response(json.dumps(data), headers={"Content-Type": "application/json"})
+        except Exception as e:
+            _logger.error(f"Error listing pannes for manager {request.env.user.name}: {e}")
+            return Response(json.dumps({"error": str(e)}), status=500, headers={"Content-Type": "application/json"})
+
+    @http.route("/api/patrimoine/pannes/manager_process/<int:panne_id>", auth="user", type="json", methods=["POST"])
+    def manager_process_panne(self, panne_id, action, **kw):
+        try:
+            panne = request.env["patrimoine.panne"].browse(panne_id)
+            if not panne.exists():
+                return {"status": "error", "message": "Déclaration non trouvée"}
+
+            current_employee = request.env["hr.employee"].search([("user_id", "=", request.env.user.id)], limit=1)
+            if panne.declarer_par_id.employee_ids and panne.declarer_par_id.employee_ids[0].parent_id != current_employee:
+                return {"status": "error", "message": "Action non autorisée."}
+
+            if action == "approve":
+                panne.action_manager_approve()
+            elif action == "reject":
+                panne.action_reject()
+            else:
+                return {"status": "error", "message": "Action invalide"}
+
+            return {"status": "success", "new_state": panne.state}
+        except Exception as e:
+            _logger.error(f"Error processing panne {panne_id} by manager: {e}")
+            return {"status": "error", "message": str(e)}
+
+    @http.route("/api/patrimoine/pannes/<int:panne_id>/process", auth="user", type="json", methods=["POST"], csrf=False)
+    def process_panne(self, panne_id, action, **kw):
+        try:
+            panne = request.env["patrimoine.panne"].browse(panne_id)
+            if not panne.exists():
+                return {"status": "error", "message": "Signalement non trouvé"}
+
+            if not request.env.user.has_group("gestion_patrimoine.group_patrimoine_admin"):
+                raise AccessError("Accès refusé. Seul un administrateur du patrimoine peut traiter les pannes.")
+
+            if action == "approve":
+                panne.action_approve()
+            elif action == "reject":
+                panne.action_reject()
+            else:
+                return {"status": "error", "message": "Action invalide"}
+
+            return {"status": "success", "new_state": panne.state}
+        except AccessError as e:
+            _logger.error("Access denied processing panne %s: %s", panne_id, str(e))
+            return {"status": "error", "message": f"Accès refusé: {e.name}"}
+        except ValidationError as e:
+            _logger.error("Validation error processing panne %s: %s", panne_id, str(e))
+            return {"status": "error", "message": f"Erreur de validation: {e.name}"}
+        except Exception as e:
+            _logger.error("Error processing panne %s: %s", panne_id, str(e))
+            return {"status": "error", "message": str(e)}
+
+    @http.route('/api/patrimoine/pannes/<int:panne_id>/views', auth='user', type='http', methods=['POST'], csrf=False)
+    def add_panne_view(self, panne_id, **kw):
+        panne = request.env['patrimoine.panne'].sudo().browse(panne_id)
+        if not panne.exists():
+            return Response(json.dumps({'status': 'error', 'message': 'Panne not found'}), status=404, headers=CORS_HEADERS)
+        panne.write({'viewer_ids': [(4, request.env.user.id)]})
+        return Response(json.dumps({'status': 'success'}), headers=CORS_HEADERS)
+
+    @http.route('/api/patrimoine/pannes/unread_count', auth='user', type='http', methods=['GET'], csrf=False)
+    def pannes_unread_count(self, **kw):
+        count = request.env['patrimoine.panne'].sudo().search_count([
+            ('viewer_ids', 'not in', request.env.user.id),
+            ('manager_id.user_id', '=', request.env.user.id),
+            ('state', '=', 'to_approve'),
+        ])
+        return Response(json.dumps({'status': 'success', 'data': {'count': count}}), headers=CORS_HEADERS)

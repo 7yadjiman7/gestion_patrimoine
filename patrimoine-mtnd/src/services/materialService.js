@@ -52,6 +52,10 @@ const fetchDeclarationsPerte = () =>
     api.get("/api/patrimoine/pertes").then(res => res.data)
 const fetchPertesForManager = () =>
     api.get("/api/patrimoine/pertes/manager").then(res => res.data)
+const fetchPannes = () =>
+    api.get("/api/patrimoine/pannes").then(res => res.data)
+const fetchPannesForManager = () =>
+    api.get("/api/patrimoine/pannes/manager").then(res => res.data)
 
 // --- Fonctions de Création et Mise à Jour (POST, PUT) ---
 
@@ -69,6 +73,10 @@ const updateItem = (id, formData) =>
         .then(res => res.data)
 const saveMouvement = mouvementData =>
     api.post("/api/patrimoine/mouvements", mouvementData).then(res => res.data)
+const validateMouvement = mouvementId =>
+    api
+        .post(`/api/patrimoine/mouvements/${mouvementId}/validate`)
+        .then(res => res.data)
 const createDemande = demandeData =>
     api.post("/api/patrimoine/demandes", demandeData).then(res => res.data)
 const createPerte = perteData =>
@@ -77,6 +85,8 @@ const createPerte = perteData =>
             headers: { "Content-Type": "multipart/form-data" },
         })
         .then(res => res.data)
+const createPanne = panneData =>
+    api.post("/api/patrimoine/pannes", panneData).then(res => res.data)
 
 // --- Fonctions de Traitement de Workflow (POST) ---
 
@@ -91,6 +101,14 @@ const processPerte = (perteId, action) =>
 const processPerteForManager = (perteId, action) =>
     api
         .post(`/api/patrimoine/pertes/manager_process/${perteId}`, { action })
+        .then(res => res.data)
+const processPanne = (panneId, action) =>
+    api
+        .post(`/api/patrimoine/pannes/${panneId}/process`, { action })
+        .then(res => res.data)
+const processPanneForManager = (panneId, action) =>
+    api
+        .post(`/api/patrimoine/pannes/manager_process/${panneId}`, { action })
         .then(res => res.data)
 
 // --- Fonctions pour les Statistiques ---
@@ -146,15 +164,21 @@ export default {
     fetchDemandeDetails,
     fetchDeclarationsPerte,
     fetchPertesForManager,
+    fetchPannes,
+    fetchPannesForManager,
     getMaterialsByDepartment,
     createItem,
     updateItem,
     saveMouvement,
+    validateMouvement,
     createDemande,
     createPerte,
+    createPanne,
     processDemande,
     processPerte,
     processPerteForManager,
+    processPanne,
+    processPanneForManager,
     fetchStats,
     fetchAllDepartmentStats,
     fetchStatsForOneDepartment,

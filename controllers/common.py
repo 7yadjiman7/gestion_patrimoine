@@ -4,6 +4,7 @@ import os
 from functools import wraps
 from odoo.exceptions import AccessError, ValidationError
 from odoo.http import Response as OdooResponse
+from odoo import http
 
 # Allow overriding the CORS origin via an environment variable so deployments
 # can specify their frontend URL.  Using a specific origin is required when the
@@ -12,6 +13,10 @@ ALLOWED_ORIGIN = os.environ.get("ALLOWED_ORIGIN", "http://localhost:5174")
 
 CORS_HEADERS = {
     "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
+    "Access-Control-Allow-Credentials": "true",
+    "Access-Control-Allow-Headers": "Content-Type, X-Requested-With, X-Openerp-Session-Id",
+    "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
 }
 
 
@@ -58,3 +63,13 @@ def handle_api_errors(func):
             )
 
     return wrapper
+
+
+class CORSController(http.Controller):
+    """Generic controller to respond to CORS preflight requests."""
+
+    @http.route('/<path:any>', type='http', auth='none', methods=['OPTIONS'], csrf=False)
+    def options(self, **_):
+        """Return an empty response with CORS headers for preflight."""
+        return Response(status=200)
+

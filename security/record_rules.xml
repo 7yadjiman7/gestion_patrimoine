@@ -150,9 +150,33 @@
                 eval="1"/>
         </record>
 
+        <record id="rule_panne_agent_create" model="ir.rule">
+            <field name="name">Agent - Déclarer panne</field>
+            <field name="model_id" ref="model_patrimoine_panne"/>
+            <field name="groups" eval="[(4, ref('gestion_patrimoine.group_patrimoine_agent'))]"/>
+            <field name="domain_force">[('asset_id.employee_id.user_id', '=', user.id)]</field>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_create" eval="1"/>
+        </record>
+
         <record id="rule_perte_director_access" model="ir.rule">
             <field name="name">Directeur - Déclarations pertes équipe</field>
             <field name="model_id" ref="model_patrimoine_perte"/>
+            <field name="groups" eval="[(4, ref('gestion_patrimoine.group_patrimoine_director'))]"/>
+            <field name="domain_force">
+                ['|',
+                 ('declarer_par_id', '=', user.id),
+                 ('declarer_par_id.employee_ids.department_id', '=', user.employee_id.department_id.id)
+                ]
+            </field>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="1"/>
+            <field name="perm_create" eval="1"/>
+        </record>
+
+        <record id="rule_panne_director_access" model="ir.rule">
+            <field name="name">Directeur - Signalements panne équipe</field>
+            <field name="model_id" ref="model_patrimoine_panne"/>
             <field name="groups" eval="[(4, ref('gestion_patrimoine.group_patrimoine_director'))]"/>
             <field name="domain_force">
                 ['|',

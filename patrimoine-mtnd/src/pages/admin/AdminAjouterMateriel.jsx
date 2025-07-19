@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom" // CORRECTION: On utilise useLocation
 import materialService from "@/services/materialService"
+import * as fieldService from "@/services/fieldService"
 import { API_BASE_URL } from "@/config/api"
+import DynamicForm from "@/components/DynamicForm"
 import { toast } from "react-hot-toast"
 import Select from "react-select"
 import makeAnimated from "react-select/animated"
@@ -90,6 +92,8 @@ export default function AdminAjouterMateriel() {
         fournisseur: "",
     })
     const [specificData, setSpecificData] = useState({})
+    const [customFields, setCustomFields] = useState([])
+    const [customValues, setCustomValues] = useState({})
 
     useEffect(() => {
         // Initialisation du formulaire selon le mode (création ou édition)
@@ -153,6 +157,21 @@ export default function AdminAjouterMateriel() {
                             `${API_BASE_URL}${materialToEdit.image}`
                         )
                     }
+
+                    try {
+                        const fields = await fieldService.getFields(
+                            materialToEdit.subcategory_id
+                        )
+                        setCustomFields(
+                            fields.map(f => ({ ...f, field_type: f.type }))
+                        )
+                        const values = await fieldService.getFieldValues(
+                            materialIdToEdit
+                        )
+                        setCustomValues(values || {})
+                    } catch (err) {
+                        console.error('Erreur chargement champs perso :', err)
+                    }
                 }
                 setIsLoading(false)
             } catch (error) {
@@ -164,6 +183,27 @@ export default function AdminAjouterMateriel() {
 
         loadDependencies()
     }, [materialIdToEdit, isEditMode]) // Le useEffect se déclenche si on a un ID à modifier
+
+    useEffect(() => {
+        const fetchFields = async () => {
+            if (!selectedSubcategoryId) {
+                setCustomFields([])
+                setCustomValues({})
+                return
+            }
+            try {
+                const fields = await fieldService.getFields(selectedSubcategoryId)
+                setCustomFields(fields.map(f => ({ ...f, field_type: f.type })))
+                if (!isEditMode) {
+                    setCustomValues({})
+                }
+            } catch (err) {
+                console.error('Erreur chargement champs perso :', err)
+                setCustomFields([])
+            }
+        }
+        fetchFields()
+    }, [selectedSubcategoryId])
 
     const handleChangeSelect = (selectedOption, { name }) => {
         setAssetData(prev => ({
@@ -180,6 +220,10 @@ export default function AdminAjouterMateriel() {
     const handleSpecificDataChange = e => {
         const { name, value } = e.target
         setSpecificData(prev => ({ ...prev, [name]: value }))
+    }
+
+    const handleCustomValueChange = (name, value) => {
+        setCustomValues(prev => ({ ...prev, [name]: value }))
     }
 
     const handleImageChange = e => {
@@ -228,15 +272,25 @@ export default function AdminAjouterMateriel() {
         if (bonLivraisonFile) formData.append("bon_livraison", bonLivraisonFile)
 
         try {
+            let itemId = materialIdToEdit
             if (isEditMode) {
                 await materialService.updateItem(materialIdToEdit, formData)
                 toast.success("Matériel mis à jour avec succès !")
-                navigate(`/admin/materiel/${materialIdToEdit}`)
             } else {
                 const response = await materialService.createItem(formData)
+                itemId = response.item_id
                 toast.success("Matériel ajouté avec succès !")
-                navigate(`/admin/materiel/${response.item_id}`)
             }
+
+            if (customFields.length > 0) {
+                await fieldService.saveFieldValues(
+                    selectedSubcategoryId,
+                    customValues,
+                    itemId
+                )
+            }
+
+            navigate(`/admin/materiel/${itemId}`)
         } catch (error) {
             console.error("Erreur lors de l'enregistrement:", error)
             toast.error(
@@ -540,13 +594,22 @@ export default function AdminAjouterMateriel() {
                                                               }
                                                             : null
                                                     }
-                                                    onChange={selected =>
-                                                        setSelectedSubcategoryId(
-                                                            selected
-                                                                ? selected.value
-                                                                : ""
-                                                        )
-                                                    }
+                                                    onChange={async selected => {
+                                                        const id = selected ? selected.value : ""
+                                                        setSelectedSubcategoryId(id)
+                                                        if (id) {
+                                                            try {
+                                                                const fields = await fieldService.getFields(id)
+                                                                setCustomFields(fields.map(f => ({ ...f, field_type: f.type })))
+                                                            } catch (err) {
+                                                                console.error('Erreur chargement champs perso :', err)
+                                                                setCustomFields([])
+                                                            }
+                                                        } else {
+                                                            setCustomFields([])
+                                                            setCustomValues({})
+                                                        }
+                                                    }}
                                                     isDisabled={
                                                         !selectedGeneralType
                                                     }
@@ -787,6 +850,15 @@ export default function AdminAjouterMateriel() {
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             {renderSpecificFields()}
                                         </div>
+                                        {customFields.length > 0 && (
+                                            <div className="mt-6">
+                                                <DynamicForm
+                                                    fields={customFields}
+                                                    values={customValues}
+                                                    onChange={handleCustomValueChange}
+                                                />
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             )}

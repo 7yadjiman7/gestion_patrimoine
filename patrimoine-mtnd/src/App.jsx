@@ -23,8 +23,10 @@ import AdminStatsPage from './pages/admin/AdminStatsPage';
 import AdminCategoriesPage from './pages/admin/AdminCategoriesPage';
 import AdminSubCategoriesPage from './pages/admin/AdminSubCategoriesPage';
 import DeclarationPerte from './pages/DeclarationPerte';
+import DeclarationPanne from './pages/DeclarationPanne';
 import MyDeclarationsPage from './pages/user/MyDeclarationsPage';
 import DirDashboardPage from './pages/director/DirDashboardPage';
+import ManagerValidationPanne from './pages/manager/ManagerValidationPanne';
 import UnauthorizedPage from './pages/UnauthorizedPage'; // N'oubliez pas l'import
 import ChatPage from './pages/chat/ChatPage';
 import PostsPage from './pages/posts/PostsPage';
@@ -205,6 +207,14 @@ function AppContent() {
                       </ProtectedRoute>
                   }
               />
+              <Route
+                  path="/manager/validation-pannes"
+                  element={
+                      <ProtectedRoute roles={[ROLES.MANAGER, ROLES.ADMIN, ROLES.ADMIN_INTRANET]}>
+                          <ManagerValidationPanne />
+                      </ProtectedRoute>
+                  }
+              />
 
               {/* --- Route pour les pages agent --- */}
               {/* Tous les utilisateurs connectés ayant un rôle peuvent voir leur dashboard */}
@@ -240,6 +250,22 @@ function AppContent() {
                           ]}
                       >
                           <DeclarationPerte />
+                      </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="declaration-pannes"
+                  element={
+                      <ProtectedRoute
+                          roles={[
+                              ROLES.AGENT,
+                              ROLES.MANAGER,
+                              ROLES.DIRECTOR,
+                              ROLES.ADMIN,
+                              ROLES.ADMIN_INTRANET,
+                          ]}
+                      >
+                          <DeclarationPanne />
                       </ProtectedRoute>
                   }
               />

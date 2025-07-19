@@ -171,6 +171,16 @@ export default function AppSidebar({ onCollapseChange }: AppSidebarProps) {
                 },
             ],
         }] : []),
+        ...(hasRole('manager') ? [{
+            section: "Manager",
+            items: [
+                {
+                    icon: <CheckSquare className="h-5 w-5" />,
+                    label: "Validation Pannes",
+                    path: "/manager/validation-pannes",
+                },
+            ],
+        }] : []),
         ...(hasRole('agent') ? [{
             section: "Agent",
             items: [
@@ -183,6 +193,11 @@ export default function AppSidebar({ onCollapseChange }: AppSidebarProps) {
                     icon: <AlertCircle className="h-5 w-5" />,
                     label: "Déclarer Perte",
                     path: "/declaration-pertes",
+                },
+                {
+                    icon: <AlertCircle className="h-5 w-5" />,
+                    label: "Déclarer Panne",
+                    path: "/declaration-pannes",
                 },
             ],
         }] : []),

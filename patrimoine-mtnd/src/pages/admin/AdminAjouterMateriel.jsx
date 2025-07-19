@@ -720,9 +720,9 @@ export default function AdminAjouterMateriel() {
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             {/* Localisation */}
                                             <div>
-                                                <label className="block text-sm font-medium text-white mb-1">
-                                                    Localisation
-                                                </label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">
+                                                Localisation
+                                            </label>
                                                 <Select
                                                     name="location_id"
                                                     value={
@@ -750,9 +750,9 @@ export default function AdminAjouterMateriel() {
 
                                             {/* Département */}
                                             <div>
-                                                <label className="block text-sm font-medium text-white mb-1">
-                                                    Département
-                                                </label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">
+                                                Département
+                                            </label>
                                                 <Select
                                                     name="department_id"
                                                     value={
@@ -780,9 +780,9 @@ export default function AdminAjouterMateriel() {
 
                                             {/* Employé */}
                                             <div>
-                                                <label className="block text-sm font-medium text-white mb-1">
-                                                    Employé
-                                                </label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">
+                                                Employé
+                                            </label>
                                                 <Select
                                                     name="employee_id"
                                                     value={
@@ -810,9 +810,9 @@ export default function AdminAjouterMateriel() {
 
                                             {/* Fournisseur */}
                                             <div>
-                                                <label className="block text-sm font-medium text-white mb-1">
-                                                    Fournisseur
-                                                </label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">
+                                                Fournisseur
+                                            </label>
                                                 <Select
                                                     name="fournisseur"
                                                     value={

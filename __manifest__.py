@@ -23,6 +23,7 @@
         "views/intranet_post_views.xml",
         "views/menu.xml",
         "views/mouvement_views.xml",
+        "views/panne_views.xml",
         "views/perte_views.xml",
         "views/demande_materiel_views.xml",
         "views/asset_category_views.xml",

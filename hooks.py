@@ -35,8 +35,7 @@ def pre_init_hook(cr):
     # If not found, data loading will create the group normally
 
 
-def post_init_hook(cr, registry):
+def post_init_hook(env):
     """Ensure XML ID exists when upgrading the module."""
-    env = api.Environment(cr, SUPERUSER_ID, {})
     _link_admin_group(env)
 

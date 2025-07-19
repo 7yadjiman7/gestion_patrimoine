@@ -17,6 +17,29 @@ export default defineConfig({
         host: "0.0.0.0",
         port: 5174,
         strictPort: true,
+        proxy: {
+            "/api": {
+                target: "http://localhost:8069",
+                changeOrigin: true,
+                secure: false,
+            },
+            "/web": {
+                target: "http://localhost:8069",
+                changeOrigin: true,
+                secure: false,
+            },
+            "/websocket": {
+                target: "ws://localhost:8069",
+                ws: true,
+                changeOrigin: true,
+                secure: false,
+            },
+            "/longpolling": {
+                target: "http://localhost:8072",
+                changeOrigin: true,
+                secure: false,
+            },
+        },
     },
     build: {
         outDir: "dist",

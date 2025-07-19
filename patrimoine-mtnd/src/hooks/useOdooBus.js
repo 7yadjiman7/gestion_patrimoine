@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import axios from 'axios'
+import api from '@/services/apiConfig'
 
 export default function useOdooBus(onNotification) {
   useEffect(() => {
@@ -8,7 +8,7 @@ export default function useOdooBus(onNotification) {
 
     const poll = async () => {
       try {
-        const response = await axios.post('/longpolling/poll', {
+        const response = await api.post('/longpolling/poll', {
           channels: [['mail.channel', 'private', 0]],
           last,
           timeout: 50,

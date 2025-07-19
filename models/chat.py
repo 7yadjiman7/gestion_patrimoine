@@ -29,14 +29,12 @@ class ChatMessage(models.Model):
     )
     body = fields.Text(string="Contenu", required=True)
 
-
     @api.model_create_multi
     def create(self, vals_list):
         messages = super().create(vals_list)
         for message in messages:
             # On prépare le payload de la notification
             payload = {
-                "type": "chat_message",
                 "id": message.id,
                 "author_name": message.sender_id.name,
                 "content": message.body,
@@ -47,16 +45,7 @@ class ChatMessage(models.Model):
             # On définit un canal unique pour cette conversation
             channel_name = f"chat_channel_{message.conversation_id.id}"
 
-            # On envoie la notification sur ce canal pour tous les participants
-            # Note: Le 'bus' d'Odoo s'attend à un `partner_id`, pas un `user_id`.
-            # Nous allons notifier le partenaire de chaque utilisateur.
-            notifications = []
-            for partner in message.conversation_id.participant_ids.mapped("partner_id"):
-                if partner:
-                    notifications.append((partner, payload))
-
-            if notifications:
-                # Use public sendmany so it can be easily patched in tests
-                self.env["bus.bus"].sendmany(notifications)
+            # 2. On envoie un seul message à cette salle de discussion
+            self.env["bus.bus"]._sendone(channel_name, "new_message", payload)
 
         return messages

@@ -30,8 +30,8 @@ def _link_admin_group(env):
 
 def pre_init_hook(cr):
     """Link existing admin group by name if present."""
-    env = api.Environment(cr, SUPERUSER_ID, {})
-    _link_admin_group(env)
+    # env = api.Environment(cr, SUPERUSER_ID, {})
+    # _link_admin_group(env)
     # If not found, data loading will create the group normally
 
 

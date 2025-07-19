@@ -224,6 +224,23 @@ function AppContent() {
                       </ProtectedRoute>
                   }
               />
+              {/* Permettre l'accès via l'ancien chemin /agent/dashboard */}
+              <Route
+                  path="/agent/dashboard"
+                  element={
+                      <ProtectedRoute
+                          roles={[
+                              ROLES.AGENT,
+                              ROLES.MANAGER,
+                              ROLES.DIRECTOR,
+                              ROLES.ADMIN,
+                              ROLES.ADMIN_INTRANET,
+                          ]}
+                      >
+                          <AgentDashboardPage />
+                      </ProtectedRoute>
+                  }
+              />
 
               {/* --- Route pour les pages générale --- */}
               {/* Tout utilisateur du système de patrimoine peut déclarer une perte */}

@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import { ArrowUp, ArrowDown } from "lucide-react"
 
@@ -11,19 +11,41 @@ interface StatCardProps {
   className?: string
 }
 
-export function StatCard({ 
-  title, 
-  value, 
-  icon, 
-  trend, 
-  description, 
-  className 
+export function StatCard({
+  title,
+  value,
+  icon,
+  trend,
+  description,
+  className
 }: StatCardProps) {
+  const [displayValue, setDisplayValue] = useState(
+    typeof value === 'number' ? 0 : value
+  )
   const trendColor = {
     up: 'text-green-500',
     down: 'text-red-500',
     neutral: 'text-gray-500'
   }
+
+  useEffect(() => {
+    if (typeof value !== 'number') {
+      setDisplayValue(value)
+      return
+    }
+    let frame: number
+    const duration = 1000
+    const start = performance.now()
+    const animate = (now: number) => {
+      const progress = Math.min((now - start) / duration, 1)
+      setDisplayValue(Math.floor(progress * value))
+      if (progress < 1) {
+        frame = requestAnimationFrame(animate)
+      }
+    }
+    frame = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(frame)
+  }, [value])
 
   return (
     <div className={cn(
@@ -33,7 +55,7 @@ export function StatCard({
       <div className="flex justify-between">
         <div>
           <p className="text-sm text-white">{title}</p>
-          <p className="text-2xl font-bold mt-1">{value}</p>
+          <p className="text-2xl font-bold mt-1">{displayValue}</p>
           {description && <p className="text-xs text-gray-400 mt-1">{description}</p>}
         </div>
         {icon && (

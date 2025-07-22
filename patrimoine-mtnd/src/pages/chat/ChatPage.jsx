@@ -1,163 +1,145 @@
-// src/pages/chat/ChatPage.jsx
-import React, { useEffect, useState, useCallback } from "react"
+import React, { useState, useEffect, useCallback } from "react"
+import { useNavigate } from "react-router-dom"
+import useOdooBus from "@/hooks/useOdooBus"
 import {
     fetchConversations,
     fetchMessages,
-    createConversation,
-} from "@/services/chatService"
-import { useOdooChat } from "@/hooks/useOdooChat" // On importe notre nouveau hook
+    sendMessage,
+} from "@/services/chatService" // Assurez-vous que le chemin est correct
+
+// Importez vos composants de présentation
 import ConversationList from "@/components/chat/ConversationList"
 import ConversationView from "@/components/chat/ConversationView"
-import EmployeeList from "@/components/chat/EmployeeList"
-import { toast } from "react-hot-toast"
-import { useAuth } from "@/context/AuthContext"
+import EmployeeList from "@/components/chat/EmployeeList" // Importez EmployeeList
 
 export default function ChatPage() {
+    const navigate = useNavigate()
     const [conversations, setConversations] = useState([])
-    const [currentConversation, setCurrentConversation] = useState(null)
-    const [showEmployees, setShowEmployees] = useState(false)
-    const [isLoading, setIsLoading] = useState(true)
+    const [messages, setMessages] = useState([])
+    const [activeConversation, setActiveConversation] = useState(null)
+    const [loadingMessages, setLoadingMessages] = useState(false)
+    const [isEmployeeListOpen, setIsEmployeeListOpen] = useState(false)
+    const [showMyPostsOnly, setShowMyPostsOnly] = useState(false)
 
-    // On initialise les canaux à null pour le moment
-    const [chatChannels, setChatChannels] = useState(null)
-
-    // On n'active le hook que si `chatChannels` n'est pas null
-    const { messages, isConnected, sendMessage, setMessages } = useOdooChat(
-        chatChannels ?? []
-    )
-
-    // Ce useEffect charge les données et DÉCLENCHE l'activation du hook
-    useEffect(() => {
-        const loadInitialData = async () => {
-            setIsLoading(true)
-            try {
-                const initialConvs = await fetchConversations()
-
-                // --- LOG 1 : Voir les données brutes de l'API ---
-                console.log(
-                    "Données BRUTES reçues de fetchConversations:",
-                    initialConvs
-                )
-
-                // Assurons-nous que c'est bien un tableau
-                if (Array.isArray(initialConvs)) {
-                    setConversations(initialConvs)
-
-                    if (initialConvs.length > 0) {
-                        const channels = initialConvs.map(
-                            conv => `chat_channel_${conv.id}`
-                        )
-
-                        // --- LOG 2 : Voir les canaux générés ---
-                        console.log("Canaux générés pour le hook:", channels)
-
-                        setChatChannels(channels)
-                        handleSelectConversation(initialConvs[0])
-                    } else {
-                        console.warn(
-                            "Aucune conversation initiale trouvée. Le WebSocket ne démarrera pas."
-                        )
-                    }
-                } else {
-                    console.error(
-                        "Les données reçues ne sont pas un tableau ! Reçu :",
-                        initialConvs
-                    )
-                }
-            } catch (error) {
-                toast.error("Erreur au chargement des conversations.")
-            } finally {
-                setIsLoading(false)
-            }
+    // --- CHARGEMENT DES DONNÉES INITIALES ---
+    const loadConversations = useCallback(async () => {
+        try {
+            const convs = await fetchConversations()
+            setConversations(convs)
+        } catch (error) {
+            console.error(
+                "Erreur lors de la récupération des conversations:",
+                error
+            )
         }
-        loadInitialData()
     }, [])
 
-    
+    useEffect(() => {
+        loadConversations()
+    }, [loadConversations])
+
+    // --- GESTIONNAIRES D'ÉVÉNEMENTS ---
+
+    // Appelé lorsqu'un utilisateur clique sur une conversation dans la liste
     const handleSelectConversation = useCallback(
         async conversation => {
-            if (!conversation) return
-            setCurrentConversation(conversation)
+            // Si on clique sur la même conversation, on ne fait rien
+            if (activeConversation?.id === conversation.id) return
+
+            setActiveConversation(conversation)
+            setLoadingMessages(true)
+            setMessages([]) // Vider les anciens messages immédiatement
             try {
-                const initialMessages = await fetchMessages(conversation.id)
-                setMessages(initialMessages) // On initialise les messages dans le hook
+                const msgs = await fetchMessages(conversation.id)
+                setMessages(msgs.data) // Correction : les messages sont dans la propriété .data
             } catch (error) {
-                toast.error("Erreur au chargement des messages.")
-                setMessages([])
+                console.error(
+                    `Erreur lors de la récupération des messages pour la conv ${conversation.id}:`,
+                    error
+                )
+            } finally {
+                setLoadingMessages(false)
             }
         },
-        [setMessages]
+        [activeConversation]
     )
 
-    const handleSend = useCallback(
-        async content => {
-            if (!currentConversation) return
-            // On utilise la fonction sendMessage de notre hook
-            await sendMessage(currentConversation.id, content)
+    // Appelé lorsqu'un utilisateur envoie un message depuis ConversationView
+    const handleSendMessage = useCallback(
+        async messageText => {
+            if (!activeConversation || !messageText.trim()) return
+
+            try {
+                await sendMessage(activeConversation.id, messageText)
+                // La mise à jour de l'UI se fera via la notification WebSocket
+                // pour rester synchronisé avec le serveur.
+            } catch (error) {
+                console.error("Erreur lors de l'envoi du message:", error)
+            }
         },
-        [currentConversation, sendMessage]
+        [activeConversation]
     )
 
-    const startConversation = useCallback(async employee => {
-        try {
-            await createConversation([employee.id])
-            const updatedConversations = await fetchConversations()
-            setConversations(updatedConversations)
-            setShowEmployees(false)
-            toast.success("Conversation créée !")
-        } catch (error) {
-            toast.error("Impossible de démarrer la conversation.")
-        }
-    }, [])
+    // --- GESTION DES NOTIFICATIONS WEBSOCKET ---
 
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-full">
-                Chargement...
-            </div>
-        )
-    }
+    // Fonction de rappel pour le hook useOdooBus
+    const handleNotification = useCallback(
+        notification => {
+            console.log("Notification WebSocket reçue:", notification)
 
+            if (notification.type === "new_message") {
+                const newMessage = notification.payload
+                // On met à jour les messages SEULEMENT si la notification concerne la conversation active.
+                if (
+                    activeConversation &&
+                    newMessage.conversation_id === activeConversation.id
+                ) {
+                    // MISE À JOUR IMMUABLE : on crée un nouveau tableau.
+                    // C'est ce qui déclenche le re-rendu de React.
+                    setMessages(prevMessages => [...prevMessages, newMessage])
+                }
+                // Mettre à jour la liste des conversations (pour le dernier message, etc.) peut être ajouté ici.
+            }
+        },
+        [activeConversation]
+    ) // La fonction dépend de la conversation active
+
+    // Canaux à écouter. Par exemple, tous les canaux de chat.
+    const channels = conversations.map(c => `chat_channel_${c.id}`)
+
+    // On lance le hook WebSocket
+    useOdooBus(channels, handleNotification)
+
+    // --- RENDU DU COMPOSANT ---
     return (
-        <div className="h-[calc(100vh-5rem)] bg-gray-900 rounded-lg overflow-hidden flex shadow-lg text-white">
-            <div className="w-1/3 border-r border-gray-700 flex flex-col">
-                <div className="p-4 border-b border-gray-700 flex justify-between items-center">
-                    <h2 className="text-lg font-semibold">Conversations</h2>
-                    <button
-                        className="text-blue-400 text-sm"
-                        onClick={() => setShowEmployees(true)}
-                    >
-                        Nouveau
-                    </button>
-                </div>
-                <ConversationList
-                    conversations={conversations}
-                    onSelect={handleSelectConversation}
-                    activeConversationId={currentConversation?.id}
-                />
-            </div>
-            <div className="flex-1 flex flex-col">
-                {currentConversation ? (
-                    <ConversationView
-                        messages={messages}
-                        onSend={handleSend}
-                        conversation={currentConversation}
-                    />
-                ) : (
-                    <div className="flex items-center justify-center h-full text-gray-400">
-                        Sélectionnez une conversation pour commencer
-                    </div>
-                )}
-            </div>
-            {showEmployees && (
+        <div style={{ display: "flex", height: "90vh", position: "relative" }}>
+            <ConversationList
+                conversations={conversations}
+                activeConversationId={activeConversation?.id}
+                onSelectConversation={handleSelectConversation}
+            />
+            {/* CORRECTION CLÉ : Utiliser la prop "key" force ConversationView à se réinitialiser
+                complètement lorsque la conversation active change. C'est ce qui résout
+                le problème du nom qui ne se met pas à jour. */}
+            <ConversationView
+                key={activeConversation?.id}
+                conversation={activeConversation}
+                messages={messages}
+                onSendMessage={handleSendMessage}
+                isLoading={loadingMessages}
+            />
+            {isEmployeeListOpen && (
                 <EmployeeList
-                    onSelect={startConversation}
-                    onClose={() => setShowEmployees(false)}
+                    onSelect={emp => {
+                        // Logique pour créer ou trouver une conversation avec cet employé
+                        console.log("Employé sélectionné:", emp)
+                        setIsEmployeeListOpen(false)
+                        // Vous devez implémenter la fonction createOrFindConversation
+                        // createOrFindConversation(emp.user_id).then(handleSelectConversation);
+                    }}
+                    onClose={() => setIsEmployeeListOpen(false)}
                 />
             )}
-            <div className="absolute top-2 right-2 text-xs p-1 rounded bg-gray-700">
-                {isConnected ? "🟢 Connecté" : "🔴 Déconnecté"}
-            </div>
         </div>
     )
 }

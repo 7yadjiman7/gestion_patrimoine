@@ -18,28 +18,23 @@ export default defineConfig({
         port: 5174,
         strictPort: true,
         proxy: {
-            "/api": {
-                target: "http://localhost:8069",
-                changeOrigin: true,
-                secure: false,
+            // --- DÉBUT DE LA SECTION CRITIQUE ---
+
+            // Règle N°1 : Proxy pour les WebSockets
+            // Toutes les requêtes vers '/websocket' seront redirigées vers votre backend Nginx
+            '/websocket': {
+                target: 'http://localhost:80', // L'adresse de votre Nginx
+                ws: true, // **LA LIGNE LA PLUS IMPORTANTE : active le proxying pour les WebSockets**
+                changeOrigin: true, // Recommandé pour s'assurer que l'origine est correcte
             },
-            "/web": {
-                target: "http://localhost:8069",
+
+            // Règle N°2 : Proxy pour tous les autres appels API
+            // Redirige toutes les requêtes commençant par '/api' vers Nginx
+            '/api': {
+                target: 'http://localhost:80',
                 changeOrigin: true,
-                secure: false,
             },
-            "/websocket": {
-                target: "ws://localhost:8069",
-                ws: true,
-                changeOrigin: true,
-                secure: false,
-            },
-            "/longpolling": {
-                target: "http://localhost:8072",
-                changeOrigin: true,
-                secure: false,
-            },
-        },
+        }
     },
     build: {
         outDir: "dist",

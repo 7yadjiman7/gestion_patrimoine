@@ -1,52 +1,122 @@
-import React, { useEffect, useRef } from 'react'
+// src/components/chat/ConversationView.jsx
 
-export default function ConversationView({ messages, onSend, conversationName }) {
-  const [text, setText] = React.useState('')
-  const endRef = useRef(null)
+import React, { useState, useEffect, useRef } from "react"
 
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+export default function ConversationView({
+    conversation,
+    messages = [],
+    onSendMessage,
+    isLoading,
+}) {
+    // CORRECTION : Le useState doit être initialisé correctement
+    const [inputText, setInputText] = useState("")
+    const messagesEndRef = useRef(null)
 
-  const handleSend = () => {
-    if (text.trim()) {
-      onSend(text)
-      setText('')
+    // Fait défiler la vue vers le bas à chaque nouveau message
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
     }
-  }
 
-  return (
-    <div className="flex flex-col h-full">
-      {conversationName && (
-        <div className="px-4 py-2 border-b border-gray-700 text-sm font-semibold">
-          {conversationName}
-        </div>
-      )}
-      <div className="flex-1 overflow-y-auto p-4 space-y-2">
-        {messages.map(msg => (
-          <div key={msg.id} className="flex flex-col">
-            <span className="text-sm text-blue-300 font-semibold">
-              {msg.author_name}
-            </span>
-            <span>{msg.content}</span>
-          </div>
-        ))}
-        <div ref={endRef} />
-      </div>
-      <div className="p-2 border-t border-gray-700 flex">
-        <input
-          className="flex-1 bg-gray-800 text-white p-2 rounded mr-2"
-          value={text}
-          onChange={e => setText(e.target.value)}
-          placeholder="Tapez un message..."
-        />
-        <button
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-          onClick={handleSend}
+    useEffect(() => {
+        scrollToBottom()
+    }, [messages])
+
+    const handleSubmit = e => {
+        e.preventDefault()
+        if (!inputText.trim()) return
+        onSendMessage(inputText)
+        setInputText("") // Vider le champ de saisie
+    }
+
+    if (!conversation) {
+        return (
+            <div
+                style={{
+                    flex: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#666",
+                }}
+            >
+                <p>Sélectionnez une conversation pour commencer à discuter.</p>
+            </div>
+        )
+    }
+
+    return (
+        <div
+            style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                backgroundColor: "#f9f9f9",
+            }}
         >
-          Envoyer
-        </button>
-      </div>
-    </div>
-  )
+            <header
+                style={{
+                    padding: "10px 20px",
+                    borderBottom: "1px solid #e0e0e0",
+                    fontWeight: "bold",
+                    backgroundColor: "white",
+                }}
+            >
+                {conversation.name}
+            </header>
+
+            <main style={{ flex: 1, overflowY: "auto", padding: "20px" }}>
+                {isLoading ? (
+                    <p>Chargement des messages...</p>
+                ) : (
+                    messages.map(msg => (
+                        <div key={msg.id} style={{ marginBottom: "12px" }}>
+                            <strong>{msg.author_name}: </strong>
+                            {/* Le nom du champ a été corrigé de 'body' à 'content' pour correspondre à vos modèles */}
+                            <span>{msg.content}</span>
+                        </div>
+                    ))
+                )}
+                <div ref={messagesEndRef} />
+            </main>
+
+            <footer
+                style={{
+                    padding: "10px 20px",
+                    borderTop: "1px solid #e0e0e0",
+                    backgroundColor: "white",
+                }}
+            >
+                <form onSubmit={handleSubmit} style={{ display: "flex" }}>
+                    <input
+                        type="text"
+                        value={inputText}
+                        onChange={e => setInputText(e.target.value)}
+                        placeholder="Écrivez un message..."
+                        style={{
+                            flex: 1,
+                            padding: "10px",
+                            border: "1px solid #ccc",
+                            borderRadius: "5px",
+                        }}
+                        disabled={isLoading}
+                    />
+                    <button
+                        type="submit"
+                        style={{
+                            marginLeft: "10px",
+                            padding: "10px 20px",
+                            border: "none",
+                            backgroundColor: "#007bff",
+                            color: "white",
+                            borderRadius: "5px",
+                            cursor: "pointer",
+                        }}
+                        disabled={isLoading}
+                    >
+                        Envoyer
+                    </button>
+                </form>
+            </footer>
+        </div>
+    )
 }

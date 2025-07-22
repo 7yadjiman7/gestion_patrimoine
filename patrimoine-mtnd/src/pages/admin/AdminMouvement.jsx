@@ -131,16 +131,12 @@ function AdminMouvement() {
         e.preventDefault()
         try {
             const dataToSend = { ...formData }
-            const result = await materialService.saveMouvement(dataToSend)
-            const mouvementId = result?.mouvement_id
-            if (mouvementId) {
-                await materialService.validateMouvement(mouvementId)
-                await materialService.fetchMaterialDetails(formData.asset_id)
-                toast.success("Mouvement validé avec succès !")
-            } else {
-                toast.success("Mouvement enregistré avec succès !")
-            }
-            navigate(-1)
+            await materialService.saveMouvement(dataToSend)
+            const successMessage = "Mouvement enregistré avec succès !"
+            navigate("/admin", {
+                state: { successMessage: successMessage },
+            })
+    
         } catch (error) {
             console.error("Erreur lors de l'enregistrement:", error)
             toast.error(error.response?.data?.message || error.message || "Échec de l'enregistrement.")

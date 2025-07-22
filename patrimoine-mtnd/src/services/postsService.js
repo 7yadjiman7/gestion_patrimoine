@@ -1,13 +1,15 @@
 import api from './apiConfig'
 
-const fetchPosts = (page, pageSize) => {
-  const params = {}
-  if (page !== undefined) params.page = page
-  if (pageSize !== undefined) params.page_size = pageSize
-  const options = Object.keys(params).length ? { params } : undefined
-  return api
-    .get('/api/intranet/posts', options)
-    .then(res => res.data.data)
+const fetchPosts = (page, pageSize, userId = undefined) => {
+    const params = {}
+    if (page !== undefined) params.page = page
+    if (pageSize !== undefined) params.page_size = pageSize
+    // 2. Si un userId est fourni, on l'ajoute aux paramètres de la requête
+    if (userId !== undefined) {
+        params.user_id = userId
+    }
+    const options = Object.keys(params).length ? { params } : undefined
+    return api.get("/api/intranet/posts", options).then(res => res.data.data)
 }
 
 const fetchPostById = async (id) => {

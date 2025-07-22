@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react"
+import { useNavigate, useLocation } from "react-router-dom"
 import postsService from "../../services/postsService"
 import CreatePost from "../../components/posts/CreatePost"
 import PostsList from "../../components/posts/PostsList"
@@ -13,9 +14,8 @@ import { usePostNotifications } from "@/context/PostNotificationContext"
 export default function PostsPage() {
     const { currentUser } = useAuth()
     const { setCount } = usePostNotifications()
-    const canCreate = ["admin_patrimoine", "admin_intranet", "admin", "agent"].includes(
-        currentUser?.role
-    )
+    const navigate = useNavigate()
+    
     const [posts, setPosts] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [showCreate, setShowCreate] = useState(false)
@@ -76,8 +76,16 @@ export default function PostsPage() {
         <div className="w-full max-w-2xl mx-auto py-8">
             <div className="sticky top-0 z-10 bg-gray-900 pb-4">
                 <div className="flex items-center justify-between mb-6">
-                    <h1 className="text-3xl font-bold text-white">Fil d'Actualités</h1>
+                    <h1 className="text-3xl font-bold text-white">
+                        Fil d'Actualités
+                    </h1>
                     <Button onClick={handleRefresh}>Rafraîchir</Button>
+                    <Button
+                        variant="secondary"
+                        onClick={() => navigate("/my-posts")}
+                    >
+                        Voir mes posts
+                    </Button>
                 </div>
                 <Input
                     value={search}
@@ -92,7 +100,10 @@ export default function PostsPage() {
                     />
                 ) : (
                     canPost && (
-                        <Button className="mb-4" onClick={() => setShowCreate(true)}>
+                        <Button
+                            className="mb-4"
+                            onClick={() => setShowCreate(true)}
+                        >
                             Faire un post
                         </Button>
                     )

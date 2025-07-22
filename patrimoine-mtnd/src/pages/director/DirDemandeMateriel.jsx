@@ -209,7 +209,7 @@ export default function DirDemandeMateriel() {
                                 {lignes.map((ligne, index) => (
                                     <div
                                         key={index}
-                                        className="p-4 border rounded-lg space-y-4 relative bg-slate-50"
+                                        className="p-4 text-black border rounded-lg space-y-4 relative bg-slate-50"
                                     >
                                         <Label className="font-bold text-slate-700">
                                             Article #{index + 1}

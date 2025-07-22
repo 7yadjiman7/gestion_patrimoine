@@ -9,12 +9,12 @@ import {
     CardDescription,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Menu } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import materialService from "@/services/materialService"
-import AppSidebar from "@/components/app-sidebar"
+import AppLayout from "@/components/AppLayout"
 import { API_BASE_URL } from "@/config/api"
 import {
     Edit,
@@ -27,7 +27,9 @@ import {
 } from "lucide-react"
 
 export default function MaterialDetailPage() {
+    console.log("[DEBUG] Rendering MaterialDetailPage")
     const { id } = useParams()
+    console.log("[DEBUG] Material ID from params:", id)
     const navigate = useNavigate()
 
     const [material, setMaterial] = useState(null)
@@ -37,15 +39,17 @@ export default function MaterialDetailPage() {
 
     // Fonction pour charger les données, réutilisable pour rafraîchir la page
     const loadMaterial = () => {
+        console.log("[DEBUG] Loading material data for ID:", id)
         setIsLoading(true)
         materialService
             .fetchMaterialDetails(id)
             .then(responseData => {
                 // Le service retourne maintenant directement l'objet matériel
+                console.log("[DEBUG] Material data loaded:", responseData)
                 setMaterial(responseData)
             })
             .catch(err => {
-                console.error("Erreur détaillée de chargement:", err)
+                console.error("[DEBUG] Error loading material:", err)
                 setError(err.message || "Erreur de chargement des détails.")
             })
             .finally(() => setIsLoading(false))
@@ -124,56 +128,51 @@ export default function MaterialDetailPage() {
             )
         ) {
             try {
-                // La fonction deleteMaterial est appelée directement
+                // On appelle la fonction corrigée du service
                 await materialService.deleteMaterial(material.id)
                 toast.success("Matériel supprimé avec succès")
-                navigate("/admin/materiels") // Adapter la redirection si nécessaire
+                navigate("/admin") // Redirige vers la page principale
             } catch (error) {
-                console.error("Error deleting material:", error)
+                console.error("Erreur lors de la suppression:", error)
                 toast.error(`Échec de la suppression: ${error.message}`)
             }
         }
     }
 
+    console.log("[DEBUG] Render state - isLoading:", isLoading, "error:", error, "material:", material)
     if (isLoading) {
         return (
-            <div className="flex">
-                <AppSidebar />
-                <div className="flex-1 p-6 ml-[250px] flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-                </div>
+            <div className="flex-1 p-6 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
             </div>
+            
         )
     }
 
     if (error) {
         return (
-            <div className="flex">
-                <AppSidebar />
-                <div className="flex-1 p-6 ml-[250px] text-center">
-                    <Card className="max-w-md mx-auto">
-                        <CardHeader>
-                            <CardTitle className="text-red-600">
-                                Erreur de chargement
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="mb-4">{error}</p>
-                            <Button onClick={() => navigate("/admin")}>
-                                Retour au Dashboard
-                            </Button>
-                        </CardContent>
-                    </Card>
-                </div>
+            <div className="flex-1 p-6 text-center">
+                <Card className="max-w-md mx-auto">
+                    <CardHeader>
+                        <CardTitle className="text-red-600">
+                            Erreur de chargement
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="mb-4">{error}</p>
+                        <Button onClick={() => navigate("/admin")}>
+                            Retour au Dashboard
+                        </Button>
+                    </CardContent>
+                </Card>
             </div>
         )
     }
 
     if (!material) {
         return (
-            <div className="flex">
-                <AppSidebar />
-                <div className="flex-1 p-6 ml-[250px] text-center">
+            
+                <div className="flex-1 p-6 text-center">
                     <Card className="max-w-md mx-auto">
                         <CardHeader>
                             <CardTitle>Matériel non trouvé</CardTitle>
@@ -185,28 +184,30 @@ export default function MaterialDetailPage() {
                         </CardContent>
                     </Card>
                 </div>
-            </div>
+            
         )
     }
 
+    console.log("[DEBUG] Rendering main component content")
     return (
-        <div className="min-h-screen w-full">
-            <AppSidebar />
+        <div className="flex-1 p-4 md:p-6 bg-white rounded-lg shadow-sm text-black">
 
-            <div className="flex-1 p-6 ml-[180px] space-y-6">
-                <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => navigate(-1)}
-                    className="rounded-full border-white"
-                >
-                    <ArrowLeft className="h-4 w-4" />
-                </Button>
+                {/* Main content */}
+                <div className="flex items-center gap-4">
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => navigate(-1)}
+                        className="rounded-full border-white"
+                    >
+                        <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                </div>
                 <div className="space-y-2">
-                    <h1 className="text-5xl text-center font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
+                    <h1 className="text-5xl text-center font-extrabold text-black">
                         Détails du Matériel
                     </h1>
-                    <p className="text-muted-foreground text-center">
+                    <p className="text-gray-800 text-center">
                         Informations complètes et actions disponibles
                     </p>
                 </div>
@@ -624,6 +625,5 @@ export default function MaterialDetailPage() {
                     )}
                 </Tabs>
             </div>
-        </div>
     )
 }

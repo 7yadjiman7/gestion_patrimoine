@@ -89,67 +89,76 @@ class PatrimoineMouvement(models.Model):
         # record.action_valider() # Si vous voulez validation auto
         return record
 
-    def action_valider(
-        self,
-    ):  # Renommée pour action_valider pour correspondre à votre fichier
-        self.ensure_one()
-        if self.state == "valide":  # Si déjà validé, lever une erreur
-            raise ValidationError("Ce mouvement a déjà été validé.")
+    # Dans votre fichier models/mouvement.py
 
-        # Logique de mise à jour de l'asset (depuis votre précédent mouvement.py)
-        # Assurez-vous que le code est complet et correct.
-        asset = self.asset_id
-        if self.type_mouvement == "affectation":
-            asset.write(
-                {
-                    "department_id": self.to_department_id.id,
-                    "employee_id": self.to_employee_id.id,
-                    "location_id": self.to_location_id.id,
-                    "etat": "service",
-                }
-            )
-        elif self.type_mouvement == "transfert":
-            asset.write(
-                {
-                    "department_id": self.to_department_id.id,
-                    "employee_id": self.to_employee_id.id,
-                    "location_id": self.to_location_id.id,
-                }
-            )
-        elif self.type_mouvement == "sortie":
-            asset.write(
-                {
-                    "department_id": False,
-                    "employee_id": False,
-                    "location_id": False,
-                    "etat": "hs",
-                }
-            )
-        elif self.type_mouvement == "reforme":
-            asset.write({"etat": "reforme", "location_id": False, "employee_id": False})
-        elif self.type_mouvement == "retour_stock":
-            asset.write(
-                {
-                    "location_id": (
-                        self.to_location_id.id if self.to_location_id else False
-                    ),
-                    "employee_id": False,
-                    "etat": "stock",
-                }
-            )
 
-        self.state = "valide"  # Mettre le statut du mouvement à 'valide'
+    def action_valider(self):
+        for mouvement in self:
+            if mouvement.state == "valide":
+                continue
 
-        # Création de la fiche de vie (depuis votre précédent mouvement.py)
-        self.env["patrimoine.fiche.vie"].create(
-            {
-                "asset_id": self.asset_id.id,
-                "action": self.type_mouvement,
-                "description": f"Mouvement de type '{dict(self._fields['type_mouvement'].selection).get(self.type_mouvement)}' validé. Motif: {self.motif or 'N/A'}",
-                "utilisateur_id": self.env.uid,
-                "mouvement_id": self.id,
-            }
-        )
+            asset = mouvement.asset_id
+            if not asset:
+                continue
+
+            vals_a_mettre_a_jour = {}
+
+            if mouvement.type_mouvement in ("affectation", "transfert"):
+                vals_a_mettre_a_jour.update(
+                    {
+                        "department_id": mouvement.to_department_id.id,
+                        "employee_id": mouvement.to_employee_id.id,
+                        "location_id": mouvement.to_location_id.id,
+                        "etat": "service",
+                    }
+                )
+            elif mouvement.type_mouvement == "sortie":
+                vals_a_mettre_a_jour.update(
+                    {
+                        "department_id": False,
+                        "employee_id": False,
+                        "location_id": False,
+                        "etat": "hs",
+                    }
+                )
+            elif mouvement.type_mouvement == "reforme":
+                vals_a_mettre_a_jour.update(
+                    {"etat": "reforme", "location_id": False, "employee_id": False}
+                )
+            elif mouvement.type_mouvement == "retour_stock":
+                vals_a_mettre_a_jour.update(
+                    {
+                        "location_id": (
+                            mouvement.to_location_id.id
+                            if mouvement.to_location_id
+                            else False
+                        ),
+                        "employee_id": False,
+                        "etat": "stock",
+                    }
+                )
+            # --- AJOUT DE LA LOGIQUE MANQUANTE ---
+            elif mouvement.type_mouvement == "reparation":
+                vals_a_mettre_a_jour.update(
+                    {
+                        "etat": "maintenance",  # Assurez-vous que la valeur 'maintenance' existe dans votre champ 'etat'
+                    }
+                )
+
+            if vals_a_mettre_a_jour:
+                asset.write(vals_a_mettre_a_jour)
+
+            mouvement.write({"state": "valide"})
+
+            self.env["patrimoine.fiche.vie"].create(
+                {
+                    "asset_id": mouvement.asset_id.id,
+                    "action": mouvement.type_mouvement,
+                    "description": f"Mouvement de type '{dict(mouvement._fields['type_mouvement'].selection).get(mouvement.type_mouvement)}' validé. Motif: {mouvement.motif or 'N/A'}",
+                    "utilisateur_id": self.env.uid,
+                    "mouvement_id": mouvement.id,
+                }
+            )
         return True
 
     def action_cancel(self):  # Si vous voulez une action d'annulation

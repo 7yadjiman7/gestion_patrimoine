@@ -6,7 +6,12 @@ class PatrimoineFicheVie(models.Model):
     _description = "Fiche de vie d’un matériel"
     _order = 'date desc, id desc'
 
-    asset_id = fields.Many2one('patrimoine.asset', string="Matériel concerné", required=True)
+    asset_id = fields.Many2one(
+        "patrimoine.asset",
+        string="Matériel concerné",
+        required=True,
+        ondelete="cascade",
+    )
     # Ajout d'un champ related pour le nom du matériel, utile pour la recherche et le rapport
     asset_name = fields.Char(related='asset_id.name', string="Nom du matériel", store=True)
     asset_code = fields.Char(related='asset_id.code', string="Code du matériel", store=True)

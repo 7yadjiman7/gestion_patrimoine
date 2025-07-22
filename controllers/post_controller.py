@@ -11,15 +11,27 @@ _logger = logging.getLogger(__name__)
 
 class IntranetPostController(http.Controller):
 
-    # Garde la version de 'main' qui est plus complète
     @http.route('/api/intranet/posts', auth='user', type='http', methods=['GET'], csrf=False)
     @handle_api_errors
-    def list_posts(self, **kwargs):
-        posts = request.env['intranet.post'].sudo().search([], order='create_date desc')
+    def list_posts(self, user_id=None, **kwargs): # <-- 1. On accepte le paramètre user_id
+        domain = [] # <-- 2. On prépare un domaine de recherche dynamique
+
+        # 3. Si un user_id est fourni dans l'URL, on l'ajoute au filtre
+        if user_id:
+            try:
+                domain.append(('user_id', '=', int(user_id)))
+            except (ValueError, TypeError):
+                # Ignore les user_id invalides pour ne pas planter
+                pass
+        
+        # 4. On utilise le domaine (vide ou avec filtre) pour la recherche
+        posts = request.env['intranet.post'].sudo().search(domain, order='create_date desc')
+        
+        # Le reste de la fonction ne change pas
         result = []
-        user_id = request.env.user.id
+        session_user_id = request.env.user.id
         for post in posts:
-            liked = any(l.user_id.id == user_id for l in post.like_ids)
+            liked = any(l.user_id.id == session_user_id for l in post.like_ids)
             result.append({
                 'id': post.id,
                 'title': post.name,
@@ -120,43 +132,26 @@ class IntranetPostController(http.Controller):
     @http.route('/api/intranet/posts/<int:post_id>/comments', auth='user', type='http', methods=['POST'], csrf=False)
     @handle_api_errors
     def add_comment(self, post_id, **kw):
-        # 1. On lit les données envoyées par le client React
+        # 1. Lire les données JSON manuellement depuis le corps de la requête
         try:
-            if request.jsonrequest:
-                data = request.jsonrequest
-            elif kw:
-                data = kw
-            elif getattr(request, 'httprequest', None) and getattr(request.httprequest, 'form', None):
-                try:
-                    data = request.httprequest.form.to_dict()
-                except Exception:
-                    data = {}
-            elif getattr(request, 'httprequest', None) and getattr(request.httprequest, 'data', None):
-                try:
-                    data = json.loads(request.httprequest.data)
-                except Exception:
-                    data = {}
-            else:
-                data = {}
-            if not isinstance(data, dict):
-                data = {}
+            data = json.loads(request.httprequest.data)
             content = data.get('content')
             parent_id = data.get('parent_id')
         except Exception as e:
-            _logger.error("Could not parse JSON body: %s", e)
+            _logger.error("Impossible de parser le corps JSON : %s", e)
             raise ValidationError("Format de requête invalide.")
 
-        # 2. On garde votre logique de validation métier
+        # 2. Valider les données reçues
         if not content:
             raise ValidationError('Le contenu du commentaire est requis')
-
+        
         post = request.env['intranet.post'].sudo().browse(post_id)
         if not post.exists():
             return json_response({'status': 'error', 'message': 'Post not found'}, status=404)
 
         comment_model = request.env['intranet.post.comment'].sudo()
-
-        # 3. On garde votre logique pour empêcher de commenter deux fois
+        
+        # 3. Logique métier : empêcher un utilisateur de commenter plusieurs fois (sauf si c'est une réponse)
         existing = comment_model.search([
             ('post_id', '=', post.id),
             ('user_id', '=', request.env.user.id),
@@ -165,7 +160,7 @@ class IntranetPostController(http.Controller):
         if existing and not parent_id:
             return json_response({'status': 'error', 'message': 'Vous avez déjà commenté ce post.'}, status=400)
 
-        # 4. On crée le commentaire
+        # 4. Créer l'enregistrement du commentaire
         vals = {
             'post_id': post.id,
             'user_id': request.env.user.id,
@@ -175,9 +170,9 @@ class IntranetPostController(http.Controller):
             vals['parent_id'] = int(parent_id)
 
         comment = comment_model.create(vals)
-        _logger.info("Comment created with id=%s", comment.id)
+        _logger.info("Commentaire créé avec l'ID : %s", comment.id)
 
-        # 5. On recalcule et on renvoie une réponse complète et correcte
+        # 5. Recalculer le nombre total de commentaires et le renvoyer
         comment_count = comment_model.search_count([
             ('post_id', '=', post.id),
             ('parent_id', '=', False)

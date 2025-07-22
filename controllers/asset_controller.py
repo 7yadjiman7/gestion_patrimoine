@@ -1,4 +1,4 @@
-from odoo import http, _
+from odoo import http, _, fields 
 from odoo.fields import Date
 from dateutil.relativedelta import relativedelta
 from odoo.http import request
@@ -763,48 +763,104 @@ class PatrimoineAssetController(http.Controller):
                 headers={"Content-Type": "application/json"},
             )
 
-    @http.route('/api/patrimoine/assets/<int:asset_id>', auth="user", type="http", methods=["PUT"], csrf=False)
-    def update_asset(self, asset_id, **post):
+    # fonction pour la mise à jour de matériel
+    @http.route(
+        "/api/patrimoine/assets/<int:asset_id>",
+        auth="user",
+        type="http",
+        methods=["PUT"],
+        csrf=False,
+    )
+    @handle_api_errors
+    def update_asset(self, asset_id, **kw):
         _logger.info(f"Début de la mise à jour de l'asset ID {asset_id}")
-        try:
-            asset = request.env["patrimoine.asset"].browse(asset_id)
-            if not asset.exists():
-                return Response("Asset non trouvé", status=404)
 
-            update_vals = {}
-            # Mettre à jour les champs simples
-            for field in ["name", "date_acquisition", "valeur_acquisition", "etat", "department_id", "employee_id", "location_id", "fournisseur"]:
-                if field in post:
-                    update_vals[field] = post[field]
+        asset = request.env["patrimoine.asset"].sudo().browse(asset_id)
+        if not asset.exists():
+            return json_response(
+                {"status": "error", "message": "Asset non trouvé"}, status=404
+            )
 
-            # Mettre à jour l'image si une nouvelle est fournie
-            if 'image' in request.httprequest.files:
-                image_file = request.httprequest.files['image']
-                update_vals['image'] = base64.b64encode(image_file.read())
+        form_data = request.httprequest.form.to_dict()
+        update_vals = {}
 
-            # Appliquer les mises à jour sur l'enregistrement principal
-            if update_vals:
-                asset.write(update_vals)
+        simple_fields = ["name", "date_acquisition", "valeur_acquisition", "etat"]
+        relation_fields = ["department_id", "employee_id", "location_id", "fournisseur"]
 
-            # Mettre à jour les données spécifiques héritées
-            specific_data = {}
-            for key, value in post.items():
-                if key.startswith("specific_inherited_data["):
-                    field_name = key[len("specific_inherited_data["):-1]
-                    specific_data[field_name] = value
+        for field in simple_fields:
+            if field in form_data and form_data[field]:
+                update_vals[field] = form_data[field]
 
-            if specific_data:
-                # Chercher l'enregistrement hérité lié et le mettre à jour
-                specific_model_name = f"patrimoine.asset.{asset.type}"
-                specific_record = request.env[specific_model_name].search([('asset_id', '=', asset.id)], limit=1)
-                if specific_record:
-                    specific_record.write(specific_data)
+        for field in relation_fields:
+            if form_data.get(field):
+                update_vals[field] = int(form_data[field])
 
-            return Response(json.dumps({"status": "success", "asset_id": asset.id}), content_type="application/json")
+        if "image" in request.httprequest.files:
+            image_file = request.httprequest.files["image"]
+            update_vals["image"] = base64.b64encode(image_file.read())
 
-        except Exception as e:
-            _logger.error(f"Erreur lors de la mise à jour de l'asset {asset_id}: {str(e)}")
-            return Response(json.dumps({"status": "error", "message": str(e)}), status=500, content_type="application/json")       
+        if update_vals:
+            asset.write(update_vals)
+            _logger.info(
+                f"Asset {asset_id} (principal) mis à jour avec les champs : {list(update_vals.keys())}"
+            )
+
+        # --- CORRECTION DE LA LOGIQUE POUR LES DONNÉES SPÉCIFIQUES ---
+        specific_data = {}
+        for key, value in form_data.items():
+            if key.startswith("specific_inherited_data["):
+                field_name = key[len("specific_inherited_data[") : -1]
+                specific_data[field_name] = value
+
+        if specific_data:
+            # On cherche l'enregistrement hérité lié (ex: patrimoine.asset.informatique)
+            specific_model_name = f"patrimoine.asset.{asset.type}"
+            specific_record = request.env[specific_model_name].search(
+                [("asset_id", "=", asset.id)], limit=1
+            )
+            if specific_record:
+                specific_record.write(specific_data)
+                _logger.info(
+                    f"Asset {asset_id} (spécifique) mis à jour avec les champs : {list(specific_data.keys())}"
+                )
+            else:
+                # Si l'enregistrement n'existe pas, on le crée
+                specific_data["asset_id"] = asset.id
+                request.env[specific_model_name].create(specific_data)
+                _logger.info(
+                    f"Asset {asset_id} (spécifique) créé avec les champs : {list(specific_data.keys())}"
+                )
+
+        return json_response({"status": "success", "asset_id": asset.id})
+
+    # --- NOUVELLE FONCTION DE SUPPRESSION ---
+    @http.route(
+        "/api/patrimoine/assets/<int:asset_id>",
+        auth="user",
+        type="http",
+        methods=["DELETE"],
+        csrf=False,
+    )
+    @handle_api_errors
+    def delete_asset(self, asset_id, **kw):
+        asset = request.env["patrimoine.asset"].sudo().browse(asset_id)
+        if not asset.exists():
+            return {"status": "error", "message": "Asset not found"}, 404
+
+        # On peut créer une entrée dans la fiche de vie avant de supprimer
+        request.env["patrimoine.fiche.vie"].sudo().create(
+            {
+                "asset_id": asset.id,
+                "action": "sortie",
+                "description": f"Suppression de l'asset {asset.name} (Code: {asset.code})",
+                "utilisateur_id": request.env.uid,
+            }
+        )
+
+        asset.unlink()
+        return json_response(
+            {"status": "success", "message": "Asset supprimé avec succès"}
+        )
 
     @http.route(
         "/api/patrimoine/assets/<int:asset_id>",
@@ -1430,157 +1486,6 @@ class PatrimoineAssetController(http.Controller):
             mimetype="application/json",
             headers=CORS_HEADERS
         )
-
-    @http.route(
-        "/api/patrimoine/items/<int:item_id>",
-        auth="user",
-        type="json",
-        methods=["PUT"],
-        csrf=False)
-    def update_item(self, item_id, **post):
-        try:
-            item = request.env["patrimoine.asset"].browse(item_id)
-            if not item.exists():
-                return {"status": "error", "message": "Item not found"}
-
-            vals = {
-                "name": post.get("name", item.name),
-                "department_id": post.get(
-                    "department_id",
-                    item.department_id.id if item.department_id else False,
-                ),
-                "employee_id": post.get(
-                    "employee_id", item.employee_id.id if item.employee_id else False
-                ),
-                "location_id": post.get(
-                    "location_id", item.location_id.id if item.location_id else False
-                ),
-                "etat": post.get("status", item.etat),
-                "custom_values": post.get(
-                    "custom_values",
-                    item.custom_values or {},
-                ),
-            }
-
-            if "image" in request.httprequest.files:
-                image_file = request.httprequest.files["image"]
-                vals["image"] = base64.b64encode(image_file.read())
-
-            item.write(vals)
-
-            # Mettre à jour les détails spécifiques si nécessaire
-            if item.type == "informatique":
-                details = request.env["patrimoine.asset.informatique"].search(
-                    [("asset_id", "=", item.id)], limit=1
-                )
-                if details:
-                    details.write(
-                        {
-                            "marque": post.get("marque", details.marque),
-                            "modele": post.get("modele", details.modele),
-                            "numero_serie": post.get(
-                                "numero_serie", details.numero_serie
-                            ),
-                            "date_garantie_fin": post.get(
-                                "date_garantie_fin", details.date_garantie_fin
-                            ),
-                        }
-                    )
-
-            return {"status": "success"}
-        except Exception as e:
-            _logger.error("Error updating item: %s", str(e))
-            return {"status": "error", "message": str(e)}
-
-    @http.route(
-        "/api/patrimoine/items/<int:item_id>",
-        auth="user",
-        type="json",
-        methods=["DELETE"],
-        csrf=False)
-    def delete_item(self, item_id, **kw):
-        try:
-            item = request.env["patrimoine.asset"].browse(item_id)
-            if not item.exists():
-                return {"status": "error", "message": "Item not found"}
-
-            # Créer une entrée dans la fiche de vie avant suppression
-            request.env["patrimoine.fiche.vie"].create(
-                {
-                    "asset_id": item.id,
-                    "action": "suppression",
-                    "description": f"Suppression de l'item {item.name}",
-                    "utilisateur_id": request.env.uid,
-                }
-            )
-
-            item.unlink()
-            return {"status": "success"}
-        except Exception as e:
-            _logger.error("Error deleting item: %s", str(e))
-            return {"status": "error", "message": str(e)}
-
-        try:
-            item = request.env["patrimoine.asset"].browse(item_id)
-            if not item.exists():
-                return Response(status=404)
-
-            # Conversion des dates
-            date_acquisition_str = (
-                item.date_acquisition.strftime("%Y-%m-%d")
-                if item.date_acquisition
-                else None
-            )
-
-            details = {}
-            if item.type == "informatique":
-                details_record = request.env["patrimoine.asset.informatique"].search(
-                    [("asset_id", "=", item.id)], limit=1
-                )
-                if details_record:
-                    details_data = details_record.read(
-                        ["marque", "modele", "numero_serie", "date_garantie_fin"]
-                    )[0]
-                    if details_data.get("date_garantie_fin"):
-                        details_data["date_garantie_fin"] = details_data[
-                            "date_garantie_fin"
-                        ].strftime("%Y-%m-%d")
-                    details = details_data
-            elif item.type == "vehicule":
-                details_record = request.env["patrimoine.asset.vehicule"].search(
-                    [("asset_id", "=", item.id)], limit=1
-                )
-                if details_record:
-                    details_data = details_record.read(
-                        ["immatriculation", "marque", "modele", "kilometrage"]
-                    )[0]
-                    details = details_data
-
-            image_url = (
-                f"/web/image/patrimoine.asset/{item.id}/image" if item.image else None
-            )
-
-            item_data = {
-                "id": item.id,
-                "name": item.name,
-                "image": image_url,
-                "code": item.code,
-                "type": item.type,
-                "location": item.location_id.name if item.location_id else None,
-                "department": item.department_id.name if item.department_id else None,
-                "assignedTo": item.employee_id.name if item.employee_id else None,
-                "acquisitionDate": date_acquisition_str,
-                "value": item.valeur_acquisition,
-                "status": item.etat,
-                "details": details,
-                "customValues": item.custom_values or {},
-            }
-            return Response(
-                json.dumps(item_data), headers={"Content-Type": "application/json"}
-            )
-        except Exception as e:
-            _logger.error("Error getting item: %s", str(e))
-            return Response(status=500)
 
     @http.route(
         "/api/patrimoine/assets/<int:asset_id>/print_fiche_vie",
@@ -2575,15 +2480,27 @@ class PatrimoineAssetController(http.Controller):
 
     # --- API pour créer un signalement de panne ---
     @http.route(
-        "/api/patrimoine/pannes",
-        auth="user",
-        type="http",
-        methods=["POST"],
-        csrf=False,
+    "/api/patrimoine/pannes",
+    auth="user",
+    type="http",
+    methods=["POST"],
+    csrf=False,
     )
     def create_panne(self, **post):
+        _logger.info("--- API TRACE: create_panne a été appelée ---")
         try:
-            post = request.httprequest.form.to_dict()
+            # On lit les données JSON envoyées par le formulaire React
+            data = json.loads(request.httprequest.data)
+            _logger.info(f"Données reçues après parsing JSON: {data}")
+
+            asset_id = data.get("asset_id")
+            description = data.get("description")
+            date_panne = data.get("date_panne") # Champ optionnel
+
+            _logger.info(f"Valeurs extraites -> asset_id: {asset_id}, description: {description}")
+            
+            # --- Début de la logique métier ---
+            
             current_user = request.env.user
             if not current_user.has_group("gestion_patrimoine.group_patrimoine_agent") and not current_user.has_group(
                 "gestion_patrimoine.group_patrimoine_director"
@@ -2592,11 +2509,8 @@ class PatrimoineAssetController(http.Controller):
                     "Accès refusé. Seuls les agents et directeurs peuvent créer des signalements de panne."
                 )
 
-            asset_id = post.get("asset_id")
-            description = post.get("description")
-            date_panne = post.get("date_panne")
-
             if not asset_id or not description:
+                _logger.error("VALIDATION ÉCHOUÉE: Asset ou description manquant.")
                 raise ValidationError("Asset ou description manquant.")
 
             asset = request.env["patrimoine.asset"].browse(int(asset_id))
@@ -2606,22 +2520,25 @@ class PatrimoineAssetController(http.Controller):
             panne_vals = {
                 "asset_id": int(asset_id),
                 "description": description,
-                "date_panne": date_panne,
+                "date_panne": date_panne or fields.Date.today(),
                 "declarer_par_id": current_user.id,
                 "state": "to_approve",
             }
 
             new_panne = request.env["patrimoine.panne"].create(panne_vals)
-            new_panne.action_submit()
+            
+            # On suppose que cette méthode existe sur votre modèle
+            if hasattr(new_panne, 'action_submit'):
+                new_panne.action_submit()
 
             return Response(
                 json.dumps({"status": "success", "panne_id": new_panne.id, "panne_name": new_panne.name}, default=str),
                 headers=CORS_HEADERS,
             )
+
         except Exception as e:
             _logger.error(f"Erreur lors de la création du signalement de panne : {e}")
-            return Response(json.dumps({"error": str(e)}), status=500, headers=CORS_HEADERS, content_type="application/json")
-
+            return Response(json.dumps({'error': str(e)}), status=500, headers=CORS_HEADERS)
     # --- API pour lister les pannes ---
     @http.route("/api/patrimoine/pannes", auth="user", type="http", methods=["GET"])
     def list_pannes(self, **kw):

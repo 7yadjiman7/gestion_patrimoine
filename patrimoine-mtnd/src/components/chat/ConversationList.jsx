@@ -1,23 +1,51 @@
-import React from 'react'
+// src/components/ConversationList.jsx
 
-export default function ConversationList({ conversations, onSelect }) {
+import React from "react"
+
+export default function ConversationList({
+    conversations,
+    activeConversationId,
+    onSelectConversation,
+}) {
     return (
-        <div className="flex-1 overflow-y-auto">
-            {conversations.map(conversation => (
-                <div
-                    key={conversation.id}
-                    className="p-4 cursor-pointer hover:bg-gray-700"
-                >
-                    <h3 className="font-semibold">
-                        {/* CORRECTION : On affiche le nom, ou un texte par défaut s'il est vide */}
-                        {conversation.name ||
-                            `Conversation #${conversation.id}`}
-                    </h3>
-                    <p className="text-xs text-gray-400 truncate">
-                        {conversation.last_message}
-                    </p>
-                </div>
-            ))}
+        <div
+            style={{
+                width: "30%",
+                borderRight: "1px solid #ccc",
+                overflowY: "auto",
+            }}
+        >
+            <h2
+                style={{
+                    padding: "10px",
+                    margin: 0,
+                    borderBottom: "1px solid #ccc",
+                }}
+            >
+                Conversations
+            </h2>
+            <ul>
+                {conversations.map(conv => (
+                    <li
+                        key={conv.id}
+                        onClick={() => onSelectConversation(conv)}
+                        style={{
+                            padding: "15px",
+                            cursor: "pointer",
+                            backgroundColor:
+                                conv.id === activeConversationId
+                                    ? "#e0e0e0"
+                                    : "transparent",
+                            fontWeight:
+                                conv.id === activeConversationId
+                                    ? "bold"
+                                    : "normal",
+                        }}
+                    >
+                        {conv.name}
+                    </li>
+                ))}
+            </ul>
         </div>
     )
 }

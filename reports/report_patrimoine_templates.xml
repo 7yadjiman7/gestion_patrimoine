@@ -1,130 +1,128 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <template id="report_fiche_vie_template">
-        <t t-call="web.html_container">
+        <t t-call="web.basic_layout">
             <t t-foreach="docs"
                 t-as="o">
-                <t t-call="web.external_layout">
-                    <div class="page"
-                        style="font-family: Arial, sans-serif; font-size: 12px; position: relative;">
+                <div class="page"
+                    style="font-family: Arial, sans-serif; font-size: 14px;">
 
-                        <img src="/gestion_patrimoine/patrimoine-mtnd/public/images/logos/logo.png"
-                            style="position: absolute; top: 0; left: 0; height: 60px;"/>
-
-                        <h1 style="text-align: center; font-size: 22px; margin-bottom: 25px;">Fiche de Vie du Matériel</h1>
-
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 20px; gap: 15px;">
-                            <table class="table table-sm table-bordered" style="flex: 1;">
-                            <tr>
-                                <th style="width: 25%; background-color: #f2f2f2;">Nom du Matériel</th>
-                                <td>
-                                    <span t-field="o.name"/>
-                                </td>
-                                <th style="width: 25%; background-color: #f2f2f2;">Code / Identifiant</th>
-                                <td>
-                                    <span t-field="o.code"/>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th style="background-color: #f2f2f2;">Type</th>
-                                <td>
-                                    <span t-field="o.type"/>
-                                </td>
-                                <th style="background-color: #f2f2f2;">Catégorie</th>
-                                <td>
-                                    <span t-field="o.subcategory_id.name"/>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th style="background-color: #f2f2f2;">Date d'acquisition</th>
-                                <td>
-                                    <span t-field="o.date_acquisition"
-                                        t-options='{"widget": "date"}'/>
-                                </td>
-                                <th style="background-color: #f2f2f2;">Valeur d'acquisition</th>
-                                <td>
-                                    <span t-field="o.valeur_acquisition"
-                                        t-options='{"widget": "monetary", "display_currency": user.company_id.currency_id}'/>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th style="background-color: #f2f2f2;">État actuel</th>
-                                <td>
-                                    <span t-field="o.etat"/>
-                                </td>
-                                <th style="background-color: #f2f2f2;">Fournisseur</th>
-                                <td>
-                                    <span t-if="o.fournisseur"
-                                        t-field="o.fournisseur.name"/>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th style="background-color: #f2f2f2;">Département</th>
-                                <td>
-                                    <span t-if="o.department_id"
-                                        t-field="o.department_id.name"/>
-                                </td>
-                                <th style="background-color: #f2f2f2;">Employé affecté</th>
-                                <td>
-                                    <span t-if="o.employee_id"
-                                        t-field="o.employee_id.name"/>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th style="background-color: #f2f2f2;">Localisation</th>
-                                <td colspan="3">
-                                    <span t-if="o.location_id"
-                                        t-field="o.location_id.display_name"/>
-                                </td>
-                            </tr>
-                        </table>
-
-                            <div t-if="o.image" style="text-align: right;">
-                                <img t-att-src="'data:image/png;base64,%s' % o.image.decode('utf-8')"
-                                    style="max-height: 200px; border: 1px solid #ddd;"/>
+                    <div class="header"
+                        style="display: flex; justify-content: space-between; align-items: top; border-bottom: 2px solid #ddd; padding-bottom: 15px; margin-bottom: 30px;">
+                        <div class="col-6">
+                            <div style="display: flex; align-items: center; gap: 20px;">
+                                <img src="/gestion_patrimoine/patrimoine-mtnd/public/images/logos/logo.png"
+                                    style="max-height: 80px;"/>
+                                <img src="/gestion_patrimoine/patrimoine-mtnd/public/images/logos/logo_ministère.png"
+                                    style="max-height: 80px;"/>
                             </div>
                         </div>
-
-                        <h2 style="font-size: 18px; margin-top: 20px; border-bottom: 1px solid #ddd;">Historique des Mouvements</h2>
-                        <table class="table table-sm table-striped mt16">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Action</th>
-                                    <th>Description</th>
-                                    <th>Utilisateur</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <t t-if="not o.fiche_vie_ids">
-                                    <tr>
-                                        <td colspan="4"
-                                            class="text-center">Aucun historique disponible.</td>
-                                    </tr>
-                                </t>
-                                <t t-foreach="o.fiche_vie_ids.sorted(key=lambda f: f.date, reverse=True)"
-                                    t-as="ligne">
-                                    <tr>
-                                        <td>
-                                            <span t-field="ligne.date"
-                                                t-options='{"widget": "datetime"}'/>
-                                        </td>
-                                        <td>
-                                            <span t-field="ligne.action"/>
-                                        </td>
-                                        <td>
-                                            <span t-field="ligne.description"/>
-                                        </td>
-                                        <td>
-                                            <span t-if="ligne.utilisateur_id"
-                                                t-field="ligne.utilisateur_id.name"/>
-                                        </td>
-                                    </tr>
-                                </t>
-                            </tbody>
-                        </table>
+                        <div class="col-6 text-end"
+                            style="text-align: right;">
+                            <strong>Date d'impression:</strong>
+                            <br/>
+                            <span t-esc="context_timestamp(datetime.datetime.now()).strftime('%d/%m/%Y')"/>
+                        </div>
                     </div>
-                </t>
+
+                    <h1 style="text-align: center; font-size: 24px; margin-bottom: 30px; color: #333;">Fiche de Vie du Matériel</h1>
+
+                    <div class="row"
+                        style="display: flex; flex-wrap: nowrap; gap: 30px; margin-bottom: 30px;">
+                        <div class="col-7"
+                            style="flex: 7;">
+                            <div style="line-height: 2;">
+                                <strong>Nom du Matériel:</strong>
+                                <span t-field="o.name"/>
+                                <br/>
+                                <strong>Code / Identifiant:</strong>
+                                <span t-field="o.code"/>
+                                <br/>
+                                <strong>Type:</strong>
+                                <span t-field="o.type"/>
+                                <br/>
+                                <strong>Catégorie:</strong>
+                                <span t-field="o.subcategory_id.name"/>
+                                <br/>
+                                <strong>Date d'acquisition:</strong>
+                                <span t-field="o.date_acquisition"
+                                    t-options='{"widget": "date"}'/>
+                                <br/>
+                                <strong>Valeur d'acquisition:</strong>
+                                <span t-field="o.valeur_acquisition"
+                                    t-options='{"widget": "monetary", "display_currency": user.company_id.currency_id}'/>
+                                <br/>
+                                <strong>État actuel:</strong>
+                                <span t-field="o.etat"/>
+                                <br/>
+                                <strong>Fournisseur:</strong>
+                                <span t-if="o.fournisseur"
+                                    t-field="o.fournisseur.name"/>
+                                <br/>
+                                <strong>Département:</strong>
+                                <span t-if="o.department_id"
+                                    t-field="o.department_id.name"/>
+                                <br/>
+                                <strong>Employé affecté:</strong>
+                                <span t-if="o.employee_id"
+                                    t-field="o.employee_id.name"/>
+                                <br/>
+                                <strong>Localisation:</strong>
+                                <span t-if="o.location_id"
+                                    t-field="o.location_id.display_name"/>
+                                <br/>
+                            </div>
+                        </div>
+                        <div class="col-5"
+                            style="flex: 5; text-align: right; align-self: center;">
+                            <img t-if="o.image"
+                                t-att-src="'data:image/png;base64,%s' % o.image.decode('utf-8')"
+                                style="max-height: 250px; max-width: 100%; border: 1px solid #eee; border-radius: 8px;"/>
+                        </div>
+                    </div>
+
+                    <h2 style="font-size: 20px; margin-top: 30px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">Historique des Actions</h2>
+                    <table class="table table-sm table-striped mt16"
+                        style="margin-top: 16px;">
+                        <thead>
+                            <tr style="background-color: #f2f2f2;">
+                                <th style="padding: 8px;">Date</th>
+                                <th style="padding: 8px;">Action</th>
+                                <th style="padding: 8px;">Description</th>
+                                <th style="padding: 8px;">Utilisateur</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-if="not o.fiche_vie_ids">
+                                <tr>
+                                    <td colspan="4"
+                                        class="text-center"
+                                        style="padding: 8px;">Aucun historique disponible.</td>
+                                </tr>
+                            </t>
+                            <t t-foreach="o.fiche_vie_ids.sorted(key=lambda f: f.date, reverse=True)"
+                                t-as="ligne">
+                                <tr>
+                                    <td style="padding: 8px;">
+                                        <span t-field="ligne.date"
+                                            t-options='{"widget": "datetime"}'/>
+                                    </td>
+                                    <td style="padding: 8px;">
+                                        <span t-field="ligne.action"/>
+                                    </td>
+                                    <td style="padding: 8px;">
+                                        <span t-field="ligne.description"/>
+                                    </td>
+                                    <td style="padding: 8px;">
+                                        <span t-if="ligne.utilisateur_id"
+                                            t-field="ligne.utilisateur_id.name"/>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+
+                </div>
             </t>
         </t>
     </template>

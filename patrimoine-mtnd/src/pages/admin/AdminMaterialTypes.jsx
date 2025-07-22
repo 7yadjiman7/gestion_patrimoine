@@ -1,7 +1,19 @@
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom" // <-- Ajoutez useLocation
+import { useEffect } from "react" // <-- Ajoutez useEffect
+import { toast } from "react-hot-toast" // <-- Assurez-vous d'avoir toast ici
 
 export default function AdminMaterialTypes() {
     const navigate = useNavigate()
+    const location = useLocation() 
+
+    useEffect(() => {
+        // On vérifie si un message de succès a été passé dans l'état de la navigation
+        if (location.state?.successMessage) {
+            toast.success(location.state.successMessage)
+            // On nettoie l'état pour que le message ne s'affiche pas à nouveau si on navigue en arrière
+            navigate(location.pathname, { replace: true, state: {} })
+        }
+    }, [location, navigate])
 
     const materialTypes = [
         {

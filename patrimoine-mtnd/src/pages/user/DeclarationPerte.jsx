@@ -126,6 +126,15 @@ export default function DeclarationPerte() {
     return (
         <div className="min-h-screen p-4 sm:p-6 lg:p-8">
             <div className="max-w-7xl mx-auto">
+                <div className="flex justify-between my-4">
+                    <Button
+                        variant="outline"
+                        onClick={() => navigate("/mes-pertes")}
+                        className="hover:bg-orange-500 hover:text-white"
+                    >
+                        Mes déclarations
+                    </Button>
+                </div>
                 <div className="rounded-t bg-gradient-to-r from-orange-500 to-orange-600 px-8 py-6">
                     <div className="p-6 border-b border-slate-200">
                         <h1 className="text-2xl font-bold text-white">
@@ -135,22 +144,6 @@ export default function DeclarationPerte() {
                             Faites une Déclaration de Perte.
                         </p>
                     </div>
-                </div>
-                <div className="flex justify-between my-4">
-                    <Button
-                        className="gap-2"
-                        onClick={() => navigate("/director/demandes")}
-                    >
-                        <PlusCircle className="h-4 w-4" />
-                        Faire une demande
-                    </Button>
-                    <Button
-                        variant="outline"
-                        onClick={() => navigate("/mes-pertes")}
-                        className="hover:bg-orange-500 hover:text-white"
-                    >
-                        Mes déclarations
-                    </Button>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="bg-white shadow-lg border border-slate-200">

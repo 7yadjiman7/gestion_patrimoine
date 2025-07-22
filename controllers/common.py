@@ -13,10 +13,6 @@ ALLOWED_ORIGIN = os.environ.get("ALLOWED_ORIGIN", "http://localhost:5174")
 
 CORS_HEADERS = {
     "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
-    "Access-Control-Allow-Credentials": "true",
-    "Access-Control-Allow-Headers": "Content-Type, X-Requested-With, X-Openerp-Session-Id",
-    "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
 }
 
 

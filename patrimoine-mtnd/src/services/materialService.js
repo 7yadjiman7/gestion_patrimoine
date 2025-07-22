@@ -71,6 +71,7 @@ const updateItem = (id, formData) =>
             headers: { "Content-Type": "multipart/form-data" },
         })
         .then(res => res.data)
+const deleteMaterial = id => api.delete(`/api/patrimoine/assets/${id}`).then(res => res.data)
 const saveMouvement = mouvementData =>
     api.post("/api/patrimoine/mouvements", mouvementData).then(res => res.data)
 const validateMouvement = mouvementId =>
@@ -135,8 +136,6 @@ const fetchStatsForCurrentUser = () =>
     api.get("/api/patrimoine/stats/user").then(res => res.data)
 
 // --- Fonctions Diverses ---
-const deleteMaterial = id =>
-    api.delete(`/api/patrimoine/items/${id}`).then(res => res.data)
 const printFicheViePdf = async assetId => {
     const response = await api.get(
         `/api/patrimoine/assets/${assetId}/print_fiche_vie`,

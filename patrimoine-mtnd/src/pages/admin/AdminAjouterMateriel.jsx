@@ -272,14 +272,13 @@ export default function AdminAjouterMateriel() {
         if (bonLivraisonFile) formData.append("bon_livraison", bonLivraisonFile)
 
         try {
-            let itemId = materialIdToEdit
+            let successMessage = ""
             if (isEditMode) {
                 await materialService.updateItem(materialIdToEdit, formData)
-                toast.success("Matériel mis à jour avec succès !")
+                successMessage = "Matériel mis à jour avec succès !"
             } else {
-                const response = await materialService.createItem(formData)
-                itemId = response.item_id
-                toast.success("Matériel ajouté avec succès !")
+                await materialService.createItem(formData)
+                successMessage = "Matériel ajouté avec succès !"
             }
 
             if (customFields.length > 0) {
@@ -290,7 +289,11 @@ export default function AdminAjouterMateriel() {
                 )
             }
 
-            navigate(`/admin/materiel/${itemId}`)
+            // 1. On redirige vers la page principale de l'administration
+            navigate("/admin", {
+                // 2. On passe le message de succès dans l'état de la navigation
+                state: { successMessage: successMessage },
+            })
         } catch (error) {
             console.error("Erreur lors de l'enregistrement:", error)
             toast.error(
@@ -626,7 +629,7 @@ export default function AdminAjouterMateriel() {
                                             <div className="w-2 h-6 bg-orange-500 rounded-full mr-3"></div>
                                             Informations d'Acquisition
                                         </h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                        <div className="grid grid-cols-1 text-black md:grid-cols-2 lg:grid-cols-4 gap-6">
                                             {/* Nom du matériel */}
                                             <div>
                                                 <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -843,7 +846,7 @@ export default function AdminAjouterMateriel() {
                             )}
                             {activeTab === "specific" && (
                                 <div className="space-y-6">
-                                    <div className="p-4 border rounded-lg bg-white shadow-sm">
+                                    <div className="p-4 border rounded-lg text-black bg-white shadow-sm">
                                         <h3 className="font-semibold text-lg mb-4 text-slate-800">
                                             Champs Spécifiques au Type
                                         </h3>

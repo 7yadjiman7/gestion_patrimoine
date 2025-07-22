@@ -6,6 +6,7 @@ import materialService from "@/services/materialService"
 import { useAuth } from "@/context/AuthContext"
 import { StatCard } from "@/components/ui/stat-card"
 import { Input } from "@/components/ui/input"
+import { motion } from "framer-motion"
 import {
     Search,
     Package,
@@ -38,6 +39,19 @@ const cardClasses = {
   statusBar: "flex justify-between items-center gap-2",
   typeBadge: "text-white text-sm font-medium bg-indigo-600/90 px-3 py-1 rounded-full backdrop-blur-sm",
   statusBadge: "text-white text-sm font-medium px-3 py-1 rounded-full backdrop-blur-sm"
+}
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 }
+  }
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0 }
 }
 
 export default function AgentDashboardPage() {
@@ -175,10 +189,16 @@ export default function AgentDashboardPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="show"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            >
                 {filteredMaterials.length > 0 ? (
                     filteredMaterials.map(material => (
-                        <div
+                        <motion.div
+                            variants={itemVariants}
                             key={material.id}
                             className={cardClasses.base}
                             onClick={() =>
@@ -228,7 +248,7 @@ export default function AgentDashboardPage() {
                                 </span>
                               </div>
                             </div>
-                        </div>
+                        </motion.div>
                     ))
                 ) : (
                     <div className="col-span-full">
@@ -246,7 +266,7 @@ export default function AgentDashboardPage() {
                         </Card>
                     </div>
                 )}
-            </div>
+            </motion.div>
         </div>
     )
 }

@@ -6,10 +6,12 @@ import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
 
-// Composant spinner simple
-function Spinner() {
+// Composant spinner simple avec fondu
+function Spinner({ show }) {
     return (
-        <div className="inline-block h-4 w-4 mr-2 animate-spin rounded-full border-2 border-solid border-current border-r-transparent">
+        <div
+            className={`inline-block h-4 w-4 mr-2 animate-spin rounded-full border-2 border-solid border-current border-r-transparent transition-opacity ${show ? "animate-fade-in opacity-100" : "animate-fade-out opacity-0"}`}
+        >
             <span className="sr-only">Loading...</span>
         </div>
     )
@@ -51,19 +53,20 @@ export default function LoginPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600">
-            <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-                <div className="flex justify-center mb-6">
-                    <img
-                        src="/images/logos/logo.png"
-                        alt="Logo MTND"
-                        className="h-20"
-                    />
-                </div>
-                <h2 className="text-2xl font-bold text-center mb-6">
-                    Connexion à Odoo
-                </h2>
-                {error && <p className="text-red-500 mb-4">{error}</p>}
-                <form onSubmit={handleSubmit}>
+            <div className="animate-fade-in opacity-0">
+                <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+                    <div className="flex justify-center mb-6">
+                        <img
+                            src="/images/logos/logo.png"
+                            alt="Logo MTND"
+                            className="h-20"
+                        />
+                    </div>
+                    <h2 className="text-2xl font-bold text-center mb-6">
+                        Connexion à Odoo
+                    </h2>
+                    {error && <p className="text-red-500 mb-4">{error}</p>}
+                    <form onSubmit={handleSubmit}>
                     <div className="mb-4">
                         <Label htmlFor="email">Email</Label>
                         <Input
@@ -86,19 +89,14 @@ export default function LoginPage() {
                     </div>
                     <Button
                         type="submit"
-                        className="w-full cursor-pointer"
+                        className="w-full cursor-pointer flex items-center justify-center"
                         disabled={isLoading}
                     >
-                        {isLoading ? (
-                            <>
-                                <Spinner />
-                                Connexion en cours...
-                            </>
-                        ) : (
-                            "Se connecter"
-                        )}
+                        <Spinner show={isLoading} />
+                        {isLoading ? "Connexion en cours..." : "Se connecter"}
                     </Button>
                 </form>
+            </div>
             </div>
         </div>
     )

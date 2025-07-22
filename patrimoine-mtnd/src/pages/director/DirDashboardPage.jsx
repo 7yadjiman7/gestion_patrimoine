@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { API_BASE_URL } from "@/config/api"
+import { motion } from "framer-motion"
 import {
     Search,
     PlusCircle,
@@ -28,6 +29,19 @@ const cardClasses = {
     statusBar: "flex justify-between items-center gap-2",
     typeBadge: "text-white text-sm font-medium bg-indigo-600/90 px-3 py-1 rounded-full backdrop-blur-sm",
     statusBadge: "text-white text-sm font-medium px-3 py-1 rounded-full backdrop-blur-sm",
+}
+
+const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+        opacity: 1,
+        transition: { staggerChildren: 0.1 }
+    }
+}
+
+const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
 }
 
 const getStatusColor = status => {
@@ -191,10 +205,16 @@ export default function DirDashboardPage() {
                 </Button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="show"
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
+            >
                 {filteredMaterials.length > 0 ? (
                     filteredMaterials.map(material => (
-                        <div
+                        <motion.div
+                            variants={itemVariants}
                             key={material.id}
                             className={cardClasses.base}
                             onClick={() => handleMaterialClick(material.id)}
@@ -247,7 +267,7 @@ export default function DirDashboardPage() {
                                     </span>
                                 </div>
                             </div>
-                        </div>
+                        </motion.div>
                     ))
                 ) : (
                     <div className="col-span-full">
@@ -265,7 +285,7 @@ export default function DirDashboardPage() {
                         </Card>
                     </div>
                 )}
-            </div>
+            </motion.div>
         </div>
     )
 }

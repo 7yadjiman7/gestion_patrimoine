@@ -1,0 +1,26 @@
+@startuml
+' Style du diagramme
+left to right direction
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor #AED6F1
+    BorderColor #1B4F72
+    ArrowColor #1B4F72
+}
+
+' Acteur principal
+actor "Membre du Ministère" as User
+
+' Cas d'utilisation
+rectangle "Système Intranet" {
+    usecase "Faire une publication" as UC_Post
+    usecase "S'authentifier" as UC_Auth
+    usecase "Joindre un fichier" as UC_Attach
+}
+
+' Relations
+User -- UC_Post
+UC_Post .> UC_Auth : <<include>>
+UC_Post <. UC_Attach : <<extend>>
+
+@enduml

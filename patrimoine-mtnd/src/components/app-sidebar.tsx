@@ -33,11 +33,7 @@ export default function AppSidebar({
     const navigate = useNavigate()
     const location = useLocation()
     const { currentUser, logout } = useAuth()
-    const { count } = usePostNotifications()
 
-    // La barre est toujours visible sur desktop, pas de réduction
-    const isVisible = isMobile ? isOpen : true
-    const isCollapsed = false // Désactivé la réduction sur desktop
 
     if (!currentUser) {
         return null
@@ -182,14 +178,33 @@ export default function AppSidebar({
                   },
               ]
             : []),
-        // ... (vos autres sections 'manager' et 'agent' ici) ...
+        ...(hasRole("agent")
+            ? [
+                  {
+                      section: "Agent",
+                      items: [
+                          {
+                              icon: <Home className="h-5 w-5" />,
+                              label: "Page d'Accueil",
+                              path: "/agent/dashboard",
+                          },
+                          {
+                              icon: <List className="h-5 w-5" />,
+                              label: "Déclarer une perte",
+                              path: "declaration-pertes",
+                          },
+                          {
+                              icon: <CheckSquare className="h-5 w-5" />,
+                              label: "Déclarer une panne",
+                              path: "declaration-pannes",
+                          },
+                      ],
+                  },
+              ]
+            : []),
     ]
 
-    // Si la barre ne doit pas être visible (ex: fermée sur mobile), on ne rend rien
-    if (!isVisible) {
-        return null
-    }
-
+    
     return (
         <>
             {/* Overlay qui n'apparaît que sur mobile quand le menu est ouvert */}
@@ -201,8 +216,11 @@ export default function AppSidebar({
             )}
 
             <aside
-                className={`fixed left-0 top-0 h-full bg-slate-900 border-r border-slate-700 transition-all duration-300 ${
+                className={`fixed left-0 top-0 h-full bg-slate-900 border-r border-slate-700 transition-transform duration-300 ease-in-out flex flex-col ${
+                    // Notez : transition-transform
                     isMobile ? "z-50 w-64 mt-20" : "z-10 w-64"
+                } ${
+                    isMobile && !isOpen ? "-translate-x-full" : "translate-x-0"
                 }`}
             >
                 {!isMobile && (
@@ -217,62 +235,45 @@ export default function AppSidebar({
                     </div>
                 )}
 
-                <nav className="p-2 space-y-4 mt-4">
+                <nav className="flex-grow p-2 space-y-2 mt-2 overflow-y-auto">
                     {menuItems.map(section => (
                         <div key={section.section}>
-                            {
-                                <h3 className="px-4 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                    {section.section}
-                                </h3>
-                            }
-                            {section.items.map(
-                                (item: {
-                                    icon: React.ReactNode
-                                    label: string
-                                    path: string
-                                }) => {
-                                    const isActive =
-                                        location.pathname === item.path
-                                    return (
-                                        <Button
-                                            key={item.path}
-                                            variant="ghost"
-                                            className={`w-full justify-start gap-3 px-4 py-2.5 text-sm font-medium transition-colors ${isActive ? "bg-slate-700 text-white" : "text-slate-400 hover:bg-slate-700/50 hover:text-white"}`}
-                                            onClick={() => {
-                                                // Notification count handling removed
-                                                navigate(item.path)
-                                                if (isMobile) setIsOpen(false) // Ferme le menu après un clic sur mobile
-                                            }}
-                                        >
-                                            <div className="flex-shrink-0">
-                                                {item.icon}
-                                            </div>
-                                            {!isCollapsed && (
-                                                <span className="flex-grow text-left flex items-center justify-between">
-                                                    <span>{item.label}</span>
-                                                    {/* Notification badge removed */}
-                                                </span>
-                                            )}
-                                        </Button>
-                                    )
-                                }
-                            )}
+                            <h3 className="px-4 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                {section.section}
+                            </h3>
+                            {section.items.map(item => {
+                                const isActive = location.pathname === item.path
+                                return (
+                                    <Button
+                                        key={item.path}
+                                        variant="ghost"
+                                        className={`w-full justify-start gap-3 px-4 py-2.5 text-sm font-medium transition-colors ${isActive ? "bg-slate-700 text-white" : "text-slate-400 hover:bg-slate-700/50 hover:text-white"}`}
+                                        onClick={() => {
+                                            navigate(item.path)
+                                            if (isMobile) setIsOpen(false)
+                                        }}
+                                    >
+                                        <div className="flex-shrink-0">
+                                            {item.icon}
+                                        </div>
+                                        <span className="flex-grow text-left">
+                                            {item.label}
+                                        </span>
+                                    </Button>
+                                )
+                            })}
                         </div>
                     ))}
                 </nav>
 
-                <div className="absolute bottom-0 w-full p-2 border-t border-slate-700">
+                <div className="w-full p-2 border-t border-slate-700">
                     <Button
                         variant="ghost"
                         className="w-full justify-start gap-3 px-4 py-3 text-sm font-medium transition-colors text-slate-400 hover:bg-red-500/10 hover:text-red-400"
                         onClick={handleLogout}
                     >
                         <LogOut className="h-5 w-5" />
-                        {!isCollapsed && (
-                            <span className="flex-grow text-left">
-                                Déconnexion
-                            </span>
-                        )}
+                        <span className="flex-grow text-left">Déconnexion</span>
                     </Button>
                 </div>
             </aside>

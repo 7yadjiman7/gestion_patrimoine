@@ -23,10 +23,10 @@ class IntranetPostController(http.Controller):
             except (ValueError, TypeError):
                 # Ignore les user_id invalides pour ne pas planter
                 pass
-        
+
         # 4. On utilise le domaine (vide ou avec filtre) pour la recherche
         posts = request.env['intranet.post'].sudo().search(domain, order='create_date desc')
-        
+
         # Le reste de la fonction ne change pas
         result = []
         session_user_id = request.env.user.id
@@ -144,13 +144,13 @@ class IntranetPostController(http.Controller):
         # 2. Valider les données reçues
         if not content:
             raise ValidationError('Le contenu du commentaire est requis')
-        
+
         post = request.env['intranet.post'].sudo().browse(post_id)
         if not post.exists():
             return json_response({'status': 'error', 'message': 'Post not found'}, status=404)
 
         comment_model = request.env['intranet.post.comment'].sudo()
-        
+
         # 3. Logique métier : empêcher un utilisateur de commenter plusieurs fois (sauf si c'est une réponse)
         existing = comment_model.search([
             ('post_id', '=', post.id),
@@ -185,7 +185,6 @@ class IntranetPostController(http.Controller):
                 'comment_count': comment_count
             }
         })
-
 
     @http.route('/api/intranet/posts/<int:post_id>/comments', auth='user', type='http', methods=['GET'], csrf=False)
     @handle_api_errors
@@ -293,3 +292,82 @@ class IntranetPostController(http.Controller):
         if post.exists():
             post.unlink()
         return request.redirect('/admin/posts')
+
+    @http.route('/api/intranet/comments/<int:comment_id>', auth='user', type='http', methods=['PUT'], csrf=False)
+    @handle_api_errors
+    def update_comment(self, comment_id, **kw):
+        comment = request.env['intranet.post.comment'].sudo().browse(comment_id)
+        if not comment.exists():
+            return json_response({'status': 'error', 'message': 'Commentaire non trouvé'}, status=404)
+
+        # Sécurité : Seul l'auteur peut modifier son commentaire
+        if comment.user_id.id != request.env.user.id:
+            return json_response({'status': 'error', 'message': 'Non autorisé'}, status=403)
+
+        # CORRECTION : On lit les données JSON manuellement depuis le corps de la requête HTTP
+        try:
+            data = json.loads(request.httprequest.data)
+        except Exception:
+            return json_response({'status': 'error', 'message': 'Format de données invalide'}, status=400)
+
+        if 'content' in data:
+            comment.write({'content': data['content']})
+            return json_response({
+                'status': 'success',
+                'data': {
+                    'id': comment.id,
+                    'content': comment.content
+                }
+            })
+
+        return json_response({'status': 'error', 'message': 'Contenu manquant'}, status=400)
+
+    @http.route('/api/intranet/comments/<int:comment_id>', auth='user', type='http', methods=['DELETE'], csrf=False)
+    @handle_api_errors
+    def delete_comment(self, comment_id, **kw):
+        comment = request.env['intranet.post.comment'].sudo().browse(comment_id)
+        if not comment.exists():
+            return json_response({'status': 'error', 'message': 'Commentaire non trouvé'}, status=404)
+
+        # Sécurité : Seul l'auteur ou un admin peut supprimer
+        is_author = comment.user_id.id == request.env.user.id
+        is_admin = request.env.user.has_group('base.group_system') # ou un groupe plus spécifique
+
+        if not is_author and not is_admin:
+            return json_response({'status': 'error', 'message': 'Non autorisé'}, status=403)
+
+        comment.unlink()
+        return json_response({'status': 'success', 'message': 'Commentaire supprimé'})
+
+    @http.route('/api/intranet/comments/<int:comment_id>/thread', auth='user', type='http', methods=['GET'], csrf=False)
+    @handle_api_errors
+    def get_comment_thread(self, comment_id, **kw):
+        comment_model = request.env['intranet.post.comment'].sudo()
+        parent_comment = request.env["intranet.post.comment"].sudo().browse(comment_id)
+
+        if not parent_comment.exists():
+            return json_response({'status': 'error', 'message': 'Commentaire non trouvé'}, status=404)
+
+        # Fonction pour sérialiser les commentaires
+        def serialize(comment):
+            return {
+                "id": comment.id,
+                "post_id": comment.post_id.id,
+                "user_id": comment.user_id.id,
+                "user_name": comment.user_id.name,
+                "content": comment.content,
+                "parent_id": comment.parent_id.id if comment.parent_id else None,
+                "create_date": comment.create_date,
+                "children": [serialize(c) for c in comment.child_ids],
+            }
+
+        # Sérialiser le commentaire parent et ses réponses directes
+        parent_data = serialize(parent_comment)
+        replies_data = [serialize(reply) for reply in parent_comment.child_ids]
+
+        response_data = {
+            'parent': parent_data,
+            'replies': replies_data
+        }
+
+        return Response(json.dumps({'status': 'success', 'data': response_data}, default=str), headers=CORS_HEADERS)

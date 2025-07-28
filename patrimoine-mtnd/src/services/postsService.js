@@ -30,35 +30,48 @@ const createPost = (formData) =>
     }).then(res => res.data);
 
 const likePost = id =>
-  api.post(`/api/intranet/posts/${id}/likes`).then(res => res.data)
+    api.post(`/api/intranet/posts/${id}/likes`).then(res => res.data)
 
 const viewPost = id =>
-  api.post(`/api/intranet/posts/${id}/views`).then(res => res.data)
+    api.post(`/api/intranet/posts/${id}/views`).then(res => res.data)
 
 const fetchUnreadCount = () =>
-  api.get('/api/intranet/posts/unread_count').then(res => res.data.data.count)
+    api.get('/api/intranet/posts/unread_count').then(res => res.data.data.count)
 
 const addComment = (id, content, parentId = null) => {
-  console.debug('addComment payload', { id, content, parent_id: parentId })
+    console.debug('addComment payload', { id, content, parent_id: parentId })
   return api
     .post(`/api/intranet/posts/${id}/comments`, { content, parent_id: parentId })
     .then(res => res.data)
 }
 
 const fetchComments = id =>
-  api.get(`/api/intranet/posts/${id}/comments`).then(res => res.data.data)
+    api.get(`/api/intranet/posts/${id}/comments`).then(res => res.data.data)
 
 const deletePost = id =>
-  api.get(`/admin/posts/${id}/delete`)
+    api.get(`/admin/posts/${id}/delete`)
+
+const fetchCommentThread = (commentId) =>
+    api.get(`/api/intranet/comments/${commentId}/thread`).then(res => res.data.data)
+  
+const updateComment = (commentId, content) =>
+    api.put(`/api/intranet/comments/${commentId}`, { content }).then(res => res.data)
+  
+const deleteComment = (commentId) =>
+    api.delete(`/api/intranet/comments/${commentId}`).then(res => res.data)
+  
 
 export default {
-  fetchPosts,
-  fetchPostById,
-  createPost,
-  likePost,
-  addComment,
-  viewPost,
-  fetchComments,
-  deletePost,
-  fetchUnreadCount
+    fetchPosts,
+    fetchPostById,
+    createPost,
+    likePost,
+    addComment,
+    viewPost,
+    fetchComments,
+    deletePost,
+    fetchUnreadCount,
+    fetchCommentThread,
+    updateComment,
+    deleteComment,
 }

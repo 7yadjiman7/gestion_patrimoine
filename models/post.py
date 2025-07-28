@@ -108,6 +108,26 @@ class IntranetPostComment(models.Model):
         string='Réponses'
     )
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        comments = super().create(vals_list)
+        for comment in comments:
+            # On ne notifie que pour les commentaires parents pour éviter le bruit
+            if not comment.parent_id:
+                channel_name = f"post_comments_{comment.post_id.id}"
+                comment_data = {
+                    "id": comment.id,
+                    "content": comment.content,
+                    "user_id": comment.user_id.id,
+                    "user_name": comment.user_id.name,
+                    "create_date": comment.create_date.isoformat(),
+                    "parent_id": None,
+                    "children": [],
+                }
+                # On envoie la notification sur le canal spécifique du post
+                self.env["bus.bus"]._sendone(channel_name, "new_comment", comment_data)
+        return comments
+
 
 class IntranetPostLike(models.Model):
     _name = "intranet.post.like"

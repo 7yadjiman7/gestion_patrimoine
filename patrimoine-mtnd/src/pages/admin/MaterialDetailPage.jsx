@@ -190,386 +190,366 @@ export default function MaterialDetailPage() {
 
     console.log("[DEBUG] Rendering main component content")
     return (
-        <div className="flex-1 p-4 md:p-6 bg-white rounded-lg shadow-sm text-black">
+        <div className="flex-1 p-4 md:p-6 rounded-lg shadow-sm ">
+            {/* Main content */}
+            <div className="flex items-center gap-4">
+                <Button variant="outline" onClick={() => navigate(-1)}>
+                    Retour
+                </Button>
+            </div>
+            <div className="space-y-2">
+                <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
+                    Détails du Matériel
+                </h1>
+                <p className="text-gray-800 text-center">
+                    Informations complètes et actions disponibles
+                </p>
+            </div>
 
-                {/* Main content */}
-                <div className="flex items-center gap-4">
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => navigate(-1)}
-                        className="rounded-full border-white"
+            <Tabs defaultValue="informations" className="space-y-6">
+                <div className="flex border-b border-orange-500 rounded-t overflow-hidden bg-white">
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab("informations")}
+                        className={`w-1/3 py-4 px-1 text-center font-medium text-sm border-b-2 transition-all duration-300 ${
+                            activeTab === "informations"
+                                ? "border-orange-500 text-orange-600 bg-orange-50"
+                                : "border-transparent text-slate-600 hover:text-slate-800 hover:bg-orange-100/50"
+                        }`}
                     >
-                        <ArrowLeft className="h-4 w-4" />
-                    </Button>
+                        Informations Générales
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab("historique")}
+                        className={`w-1/3 py-4 px-1 text-center font-medium text-sm border-b-2 transition-all duration-300 ${
+                            activeTab === "historique"
+                                ? "border-orange-500 text-orange-600 bg-orange-50"
+                                : "border-transparent text-slate-600 hover:text-slate-800 hover:bg-orange-100/50"
+                        }`}
+                    >
+                        Historique
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab("documents")}
+                        className={`w-1/3 py-4 px-1 text-center font-medium text-sm border-b-2 transition-all duration-300 ${
+                            activeTab === "documents"
+                                ? "border-orange-500 text-orange-600 bg-orange-50"
+                                : "border-transparent text-slate-600 hover:text-slate-800 hover:bg-orange-100/50"
+                        }`}
+                    >
+                        Documents
+                    </button>
                 </div>
-                <div className="space-y-2">
-                    <h1 className="text-5xl text-center font-extrabold text-black">
-                        Détails du Matériel
-                    </h1>
-                    <p className="text-gray-800 text-center">
-                        Informations complètes et actions disponibles
-                    </p>
-                </div>
 
-                <Tabs defaultValue="informations" className="space-y-6">
-                    <div className="flex border-b border-orange-500 rounded-t overflow-hidden bg-white">
-                        <button
-                            type="button"
-                            onClick={() => setActiveTab("informations")}
-                            className={`w-1/3 py-4 px-1 text-center font-medium text-sm border-b-2 transition-all duration-300 ${
-                                activeTab === "informations"
-                                    ? "border-orange-500 text-orange-600 bg-orange-50"
-                                    : "border-transparent text-slate-600 hover:text-slate-800 hover:bg-orange-100/50"
-                            }`}
-                        >
-                            Informations Générales
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={() => setActiveTab("historique")}
-                            className={`w-1/3 py-4 px-1 text-center font-medium text-sm border-b-2 transition-all duration-300 ${
-                                activeTab === "historique"
-                                    ? "border-orange-500 text-orange-600 bg-orange-50"
-                                    : "border-transparent text-slate-600 hover:text-slate-800 hover:bg-orange-100/50"
-                            }`}
-                        >
-                            Historique
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={() => setActiveTab("documents")}
-                            className={`w-1/3 py-4 px-1 text-center font-medium text-sm border-b-2 transition-all duration-300 ${
-                                activeTab === "documents"
-                                    ? "border-orange-500 text-orange-600 bg-orange-50"
-                                    : "border-transparent text-slate-600 hover:text-slate-800 hover:bg-orange-100/50"
-                            }`}
-                        >
-                            Documents
-                        </button>
-                    </div>
-
-                    {activeTab === "informations" && (
-                        <div className="mt-6">
-                            <Card>
-                                <CardHeader className="pb-0">
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <CardTitle className="text-xl flex items-center gap-3">
-                                                {material.name}
-                                                <Badge
-                                                    variant="outline"
-                                                    className="text-sm"
-                                                >
-                                                    {material.code}
-                                                </Badge>
-                                            </CardTitle>
-                                            <CardDescription className="mt-1">
-                                                {/* CORRECTION : Utilise material.category qui existe dans les données */}
-                                                {material.category ||
-                                                    "Catégorie non définie"}
-                                            </CardDescription>
-                                        </div>
+                {activeTab === "informations" && (
+                    <div className="mt-6">
+                        <Card>
+                            <CardHeader className="pb-0">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <CardTitle className="text-xl flex items-center gap-3">
+                                            {material.name}
+                                            <Badge
+                                                variant="outline"
+                                                className="text-sm"
+                                            >
+                                                {material.code}
+                                            </Badge>
+                                        </CardTitle>
+                                        <CardDescription className="mt-1">
+                                            {/* CORRECTION : Utilise material.category qui existe dans les données */}
+                                            {material.category ||
+                                                "Catégorie non définie"}
+                                        </CardDescription>
                                     </div>
-                                </CardHeader>
+                                </div>
+                            </CardHeader>
 
-                                <CardContent className="pt-6">
-                                    <div className="flex flex-col md:flex-row gap-8">
-                                        {/* Image à gauche */}
-                                        <div className="w-full md:w-1/3 flex justify-center">
-                                            <img
-                                                src={
-                                                    material.image
-                                                        ? `${import.meta.env.VITE_ODOO_URL || 'http://localhost:8069'}${material.image}`
-                                                        : '/images/default-material.jpg'
-                                                }
-                                                alt={material.name}
-                                                className="rounded-lg border shadow-sm max-h-96 w-full object-contain"
-                                                onError={e => {
-                                                    e.target.src = '/images/default-material.jpg'
-                                                }}
-                                            />
+                            <CardContent className="pt-6">
+                                <div className="flex flex-col md:flex-row gap-8">
+                                    {/* Image à gauche */}
+                                    <div className="w-full md:w-1/3 flex justify-center">
+                                        <img
+                                            src={
+                                                material.image
+                                                    ? `${import.meta.env.VITE_ODOO_URL || "http://localhost:8069"}${material.image}`
+                                                    : "/images/default-material.jpg"
+                                            }
+                                            alt={material.name}
+                                            className="rounded-lg border shadow-sm max-h-96 w-full object-contain"
+                                            onError={e => {
+                                                e.target.src =
+                                                    "/images/default-material.jpg"
+                                            }}
+                                        />
+                                    </div>
+
+                                    {/* Informations à droite */}
+                                    <div className="w-full md:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        {/* Section Principale */}
+                                        <div className="space-y-4">
+                                            <h3 className="font-semibold text-lg">
+                                                Informations Générales
+                                            </h3>
+                                            <div className="space-y-3">
+                                                <div>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        Type
+                                                    </p>
+                                                    <p>{material.type}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        Statut
+                                                    </p>
+                                                    <Badge
+                                                        className={
+                                                            material.status ===
+                                                            "service"
+                                                                ? "bg-green-500 hover:bg-green-600"
+                                                                : material.status ===
+                                                                    "stock"
+                                                                  ? "bg-yellow-500 hover:bg-yellow-600"
+                                                                  : "bg-red-500 hover:bg-red-600"
+                                                        }
+                                                    >
+                                                        {material.status}
+                                                    </Badge>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        Date d'acquisition
+                                                    </p>
+                                                    <p>
+                                                        {material.acquisitionDate
+                                                            ? new Date(
+                                                                  material.acquisitionDate
+                                                              ).toLocaleDateString()
+                                                            : "N/A"}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        Valeur
+                                                    </p>
+                                                    <p>
+                                                        {material.value
+                                                            ? `${material.value} €`
+                                                            : "N/A"}
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </div>
 
-                                        {/* Informations à droite */}
-                                        <div className="w-full md:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-8">
-                                            {/* Section Principale */}
-                                            <div className="space-y-4">
-                                                <h3 className="font-semibold text-lg">
-                                                    Informations Générales
-                                                </h3>
-                                                <div className="space-y-3">
-                                                    <div>
-                                                        <p className="text-sm text-muted-foreground">
-                                                            Type
-                                                        </p>
-                                                        <p>{material.type}</p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm text-muted-foreground">
-                                                            Statut
-                                                        </p>
-                                                        <Badge
-                                                            className={
-                                                                material.status ===
-                                                                "service"
-                                                                    ? "bg-green-500 hover:bg-green-600"
-                                                                    : material.status ===
-                                                                        "stock"
-                                                                      ? "bg-yellow-500 hover:bg-yellow-600"
-                                                                      : "bg-red-500 hover:bg-red-600"
-                                                            }
-                                                        >
-                                                            {material.status}
-                                                        </Badge>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm text-muted-foreground">
-                                                            Date d'acquisition
-                                                        </p>
-                                                        <p>
-                                                            {material.acquisitionDate
-                                                                ? new Date(
-                                                                      material.acquisitionDate
-                                                                  ).toLocaleDateString()
-                                                                : "N/A"}
-                                                        </p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm text-muted-foreground">
-                                                            Valeur
-                                                        </p>
-                                                        <p>
-                                                            {material.value
-                                                                ? `${material.value} €`
-                                                                : "N/A"}
-                                                        </p>
-                                                    </div>
+                                        {/* Section Localisation */}
+                                        <div className="space-y-4">
+                                            <h3 className="font-semibold text-lg">
+                                                Localisation
+                                            </h3>
+                                            <div className="space-y-3">
+                                                <div>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        Emplacement
+                                                    </p>
+                                                    <p>
+                                                        {material.location ||
+                                                            "N/A"}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        Département
+                                                    </p>
+                                                    <p>
+                                                        {material.department ||
+                                                            "N/A"}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        Assigné à
+                                                    </p>
+                                                    <p>
+                                                        {material.assignedTo ||
+                                                            "Non affecté"}
+                                                    </p>
                                                 </div>
                                             </div>
+                                        </div>
 
-                                            {/* Section Localisation */}
-                                            <div className="space-y-4">
-                                                <h3 className="font-semibold text-lg">
-                                                    Localisation
-                                                </h3>
-                                                <div className="space-y-3">
-                                                    <div>
-                                                        <p className="text-sm text-muted-foreground">
-                                                            Emplacement
-                                                        </p>
-                                                        <p>
-                                                            {material.location ||
-                                                                "N/A"}
-                                                        </p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm text-muted-foreground">
-                                                            Département
-                                                        </p>
-                                                        <p>
-                                                            {material.department ||
-                                                                "N/A"}
-                                                        </p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm text-muted-foreground">
-                                                            Assigné à
-                                                        </p>
-                                                        <p>
-                                                            {material.assignedTo ||
-                                                                "Non affecté"}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Section Détails Spécifiques */}
-                                            {material.type === "informatique" &&
-                                                material.details && (
-                                                    <div className="space-y-4">
-                                                        <h3 className="font-semibold text-lg">
-                                                            Détails Informatique
-                                                        </h3>
-                                                        <div className="space-y-3">
-                                                            <div>
-                                                                <p className="text-sm text-muted-foreground">
-                                                                    Marque
-                                                                </p>
-                                                                <p>
-                                                                    {material
-                                                                        .details
-                                                                        .marque ||
-                                                                        "N/A"}
-                                                                </p>
-                                                            </div>
-                                                            <div>
-                                                                <p className="text-sm text-muted-foreground">
-                                                                    Modèle
-                                                                </p>
-                                                                <p>
-                                                                    {material
-                                                                        .details
-                                                                        .modele ||
-                                                                        "N/A"}
-                                                                </p>
-                                                            </div>
-                                                            <div>
-                                                                <p className="text-sm text-muted-foreground">
-                                                                    N° de série
-                                                                </p>
-                                                                <p>
-                                                                    {material
-                                                                        .details
-                                                                        .numero_serie ||
-                                                                        "N/A"}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                            {material.type === "vehicule" &&
-                                                material.details && (
-                                                    <div className="space-y-4">
-                                                        <h3 className="font-semibold text-lg">
-                                                            Détails Véhicule
-                                                        </h3>
-                                                        <div className="space-y-3">
-                                                            <div>
-                                                                <p className="text-sm text-muted-foreground">
-                                                                    Immatriculation
-                                                                </p>
-                                                                <p>
-                                                                    {material
-                                                                        .details
-                                                                        .immatriculation ||
-                                                                        "N/A"}
-                                                                </p>
-                                                            </div>
-                                                            <div>
-                                                                <p className="text-sm text-muted-foreground">
-                                                                    Kilométrage
-                                                                </p>
-                                                                <p>
-                                                                    {material
-                                                                        .details
-                                                                        .kilometrage ||
-                                                                        "N/A"}{" "}
-                                                                    km
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                            {material.customValues && (
+                                        {/* Section Détails Spécifiques */}
+                                        {material.type === "informatique" &&
+                                            material.details && (
                                                 <div className="space-y-4">
                                                     <h3 className="font-semibold text-lg">
-                                                        Champs Personnalisés
+                                                        Détails Informatique
                                                     </h3>
                                                     <div className="space-y-3">
-                                                        {Object.entries(
-                                                            material.customValues
-                                                        ).map(
-                                                            ([key, value]) => (
-                                                                <div key={key}>
-                                                                    <p className="text-sm text-muted-foreground">
-                                                                        {key}
-                                                                    </p>
-                                                                    <p>
-                                                                        {String(
-                                                                            value
-                                                                        )}
-                                                                    </p>
-                                                                </div>
-                                                            )
-                                                        )}
+                                                        <div>
+                                                            <p className="text-sm text-muted-foreground">
+                                                                Marque
+                                                            </p>
+                                                            <p>
+                                                                {material
+                                                                    .details
+                                                                    .marque ||
+                                                                    "N/A"}
+                                                            </p>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm text-muted-foreground">
+                                                                Modèle
+                                                            </p>
+                                                            <p>
+                                                                {material
+                                                                    .details
+                                                                    .modele ||
+                                                                    "N/A"}
+                                                            </p>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm text-muted-foreground">
+                                                                N° de série
+                                                            </p>
+                                                            <p>
+                                                                {material
+                                                                    .details
+                                                                    .numero_serie ||
+                                                                    "N/A"}
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             )}
-                                        </div>
+
+                                        {material.type === "vehicule" &&
+                                            material.details && (
+                                                <div className="space-y-4">
+                                                    <h3 className="font-semibold text-lg">
+                                                        Détails Véhicule
+                                                    </h3>
+                                                    <div className="space-y-3">
+                                                        <div>
+                                                            <p className="text-sm text-muted-foreground">
+                                                                Immatriculation
+                                                            </p>
+                                                            <p>
+                                                                {material
+                                                                    .details
+                                                                    .immatriculation ||
+                                                                    "N/A"}
+                                                            </p>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm text-muted-foreground">
+                                                                Kilométrage
+                                                            </p>
+                                                            <p>
+                                                                {material
+                                                                    .details
+                                                                    .kilometrage ||
+                                                                    "N/A"}{" "}
+                                                                km
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                        {material.customValues && (
+                                            <div className="space-y-4">
+                                                <h3 className="font-semibold text-lg">
+                                                    Champs Personnalisés
+                                                </h3>
+                                                <div className="space-y-3">
+                                                    {Object.entries(
+                                                        material.customValues
+                                                    ).map(([key, value]) => (
+                                                        <div key={key}>
+                                                            <p className="text-sm text-muted-foreground">
+                                                                {key}
+                                                            </p>
+                                                            <p>
+                                                                {String(value)}
+                                                            </p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                </CardContent>
+                                </div>
+                            </CardContent>
 
-                                <Separator className="my-4" />
+                            <Separator className="my-4" />
 
-                                <CardContent>
-                                    <h3 className="font-semibold text-lg mb-4">
-                                        Actions
-                                    </h3>
-                                    <div className="flex flex-wrap gap-3">
+                            <CardContent>
+                                <h3 className="font-semibold text-lg mb-4">
+                                    Actions
+                                </h3>
+                                <div className="flex flex-wrap gap-3">
+                                    <button
+                                        onClick={handleModifier}
+                                        className="flex items-center gap-2 px-4 py-2 bg-yellow-400 text-yellow-900 font-semibold rounded-lg shadow-sm hover:bg-yellow-500 transition-colors"
+                                    >
+                                        <Edit size={16} />
+                                        Modifier
+                                    </button>
+
+                                    {/* Actions selon le statut du matériel */}
+                                    {material.status === "stock" && (
                                         <button
-                                            onClick={handleModifier}
-                                            className="flex items-center gap-2 px-4 py-2 bg-yellow-400 text-yellow-900 font-semibold rounded-lg shadow-sm hover:bg-yellow-500 transition-colors"
+                                            onClick={() =>
+                                                handleNavigateToMouvement(
+                                                    "affectation"
+                                                )
+                                            }
+                                            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-sm hover:bg-green-700 transition-colors"
                                         >
-                                            <Edit size={16} />
-                                            Modifier
+                                            <CheckCircle size={16} />
+                                            Affecter
                                         </button>
+                                    )}
 
-                                        {/* Actions selon le statut du matériel */}
-                                        {material.status === "stock" && (
+                                    {material.status === "service" && (
+                                        <>
                                             <button
                                                 onClick={() =>
                                                     handleNavigateToMouvement(
-                                                        "affectation"
+                                                        "transfert"
                                                     )
                                                 }
-                                                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-sm hover:bg-green-700 transition-colors"
+                                                className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white font-semibold rounded-lg shadow-sm hover:bg-cyan-700 transition-colors"
                                             >
-                                                <CheckCircle size={16} />
-                                                Affecter
+                                                <RefreshCw size={16} />
+                                                Transférer
                                             </button>
-                                        )}
-
-                                        {material.status === "service" && (
-                                            <>
-                                                <button
-                                                    onClick={() =>
-                                                        handleNavigateToMouvement(
-                                                            "transfert"
-                                                        )
-                                                    }
-                                                    className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white font-semibold rounded-lg shadow-sm hover:bg-cyan-700 transition-colors"
-                                                >
-                                                    <RefreshCw size={16} />
-                                                    Transférer
-                                                </button>
-                                                <button
-                                                    onClick={() =>
-                                                        handleNavigateToMouvement(
-                                                            "reparation"
-                                                        )
-                                                    }
-                                                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg shadow-sm hover:bg-purple-700 transition-colors"
-                                                >
-                                                    <Wrench size={16} />
-                                                    Réparation
-                                                </button>
-                                                <button
-                                                    onClick={() =>
-                                                        handleNavigateToMouvement(
-                                                            "sortie"
-                                                        )
-                                                    }
-                                                    className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white font-semibold rounded-lg shadow-sm hover:bg-red-700 transition-colors"
-                                                >
-                                                    <AlertTriangle size={16} />
-                                                    Mettre HS
-                                                </button>
-                                                <button
-                                                    onClick={handleVoirFicheVie}
-                                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-sm hover:bg-blue-700 transition-colors"
-                                                >
-                                                    <FileText size={16} />
-                                                    Fiche de vie
-                                                </button>
-                                            </>
-                                        )}
-
-                                        {material.status === "hs" && (
+                                            <button
+                                                onClick={() =>
+                                                    handleNavigateToMouvement(
+                                                        "reparation"
+                                                    )
+                                                }
+                                                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg shadow-sm hover:bg-purple-700 transition-colors"
+                                            >
+                                                <Wrench size={16} />
+                                                Réparation
+                                            </button>
+                                            <button
+                                                onClick={() =>
+                                                    handleNavigateToMouvement(
+                                                        "sortie"
+                                                    )
+                                                }
+                                                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white font-semibold rounded-lg shadow-sm hover:bg-red-700 transition-colors"
+                                            >
+                                                <AlertTriangle size={16} />
+                                                Mettre HS
+                                            </button>
                                             <button
                                                 onClick={handleVoirFicheVie}
                                                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-sm hover:bg-blue-700 transition-colors"
@@ -577,53 +557,62 @@ export default function MaterialDetailPage() {
                                                 <FileText size={16} />
                                                 Fiche de vie
                                             </button>
-                                        )}
+                                        </>
+                                    )}
 
+                                    {material.status === "hs" && (
                                         <button
-                                            onClick={handleSupprimer}
-                                            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 font-semibold rounded-lg shadow-sm hover:bg-red-700 transition-colors ml-auto hover:text-white"
+                                            onClick={handleVoirFicheVie}
+                                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-sm hover:bg-blue-700 transition-colors"
                                         >
-                                            <Trash2 size={16} />
-                                            Supprimer
+                                            <FileText size={16} />
+                                            Fiche de vie
                                         </button>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </div>
-                    )}
+                                    )}
 
-                    {activeTab === "historique" && (
-                        <div className="mt-6">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>
-                                        Historique des mouvements
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <p className="text-muted-foreground">
-                                        Fonctionnalité à venir
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        </div>
-                    )}
+                                    <button
+                                        onClick={handleSupprimer}
+                                        className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 font-semibold rounded-lg shadow-sm hover:bg-red-700 transition-colors ml-auto hover:text-white"
+                                    >
+                                        <Trash2 size={16} />
+                                        Supprimer
+                                    </button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
 
-                    {activeTab === "documents" && (
-                        <div className="mt-6">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Documents associés</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <p className="text-muted-foreground">
-                                        Fonctionnalité à venir
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        </div>
-                    )}
-                </Tabs>
-            </div>
+                {activeTab === "historique" && (
+                    <div className="mt-6">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Historique des mouvements</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-muted-foreground">
+                                    Fonctionnalité à venir
+                                </p>
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
+
+                {activeTab === "documents" && (
+                    <div className="mt-6">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Documents associés</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-muted-foreground">
+                                    Fonctionnalité à venir
+                                </p>
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
+            </Tabs>
+        </div>
     )
 }

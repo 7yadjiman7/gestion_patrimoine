@@ -72,13 +72,8 @@ export default function SubCategoriesPage() {
     return (
         <div className="min-h-screen w-full">
             <div className="w-full max-w-6xl mx-auto mb-8">
-                <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => navigate(-1)}
-                    className="rounded-full border-white"
-                >
-                    <ArrowLeft className="h-5 w-5" />
+                <Button variant="outline" onClick={() => navigate(-1)}>
+                    Retour
                 </Button>
             </div>
 

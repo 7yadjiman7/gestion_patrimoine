@@ -85,13 +85,13 @@ export default function AdminStatsPage() {
         }
         const filterValue = statusMap[data.name]
         if (filterValue)
-            navigate(`/admin/materiels/filtres?status=${filterValue}`)
+            navigate(`/admin/materiels/table?status=${filterValue}`)
     }
 
     const handleDepartmentClick = data => {
         if (data?.activePayload?.[0]?.payload?.id) {
             navigate(
-                `/admin/materiels/filtres?departmentId=${data.activePayload[0].payload.id}`
+                `/admin/materiels/table?departmentId=${data.activePayload[0].payload.id}`
             )
         }
     }
@@ -99,7 +99,7 @@ export default function AdminStatsPage() {
     const handleTypeClick = data => {
         if (data?.activePayload?.[0]?.payload?.code) {
             navigate(
-                `/admin/materiels/filtres?type=${data.activePayload[0].payload.code}`
+                `/admin/materiels/table?type=${data.activePayload[0].payload.code}`
             )
         }
     }
@@ -107,7 +107,7 @@ export default function AdminStatsPage() {
     const handleAgeClick = data => {
         if (data?.activeLabel) {
             navigate(
-                `/admin/materiels/filtres?age=${encodeURIComponent(data.activeLabel)}`
+                `/admin/materiels/table?age=${encodeURIComponent(data.activeLabel)}`
             )
         }
     }
@@ -115,7 +115,7 @@ export default function AdminStatsPage() {
     const handleDepartmentValueClick = data => {
         if (data?.activePayload?.[0]?.payload?.id) {
             navigate(
-                `/admin/materiels/filtres?departmentId=${data.activePayload[0].payload.id}`
+                `/admin/materiels/table?departmentId=${data.activePayload[0].payload.id}`
             )
         }
     }

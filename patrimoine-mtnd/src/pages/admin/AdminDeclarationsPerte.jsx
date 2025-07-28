@@ -1,6 +1,7 @@
 import PerteDetailModal from "@/components/PerteDetailModal"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
     Table,
     TableBody,
@@ -11,15 +12,16 @@ import {
 } from "@/components/ui/table"
 import materialService from "@/services/materialService"
 import { Printer } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useMemo } from "react"
 import { toast } from "react-hot-toast"
-
 export default function AdminDeclarationsPerte() {
     const [declarations, setDeclarations] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [selectedPerte, setSelectedPerte] = useState(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
+    const [search, setSearch] = useState("")
+
 
     // La référence pour cibler le tableau est toujours nécessaire
     const tableRef = useRef()
@@ -97,8 +99,23 @@ export default function AdminDeclarationsPerte() {
             })
             .finally(() => setLoading(false))
     }
+useEffect(loadDeclarations, [])
 
-    useEffect(loadDeclarations, [])
+const filteredDeclarations = useMemo(() => {
+    if (!search) return declarations
+    const q = search.toLowerCase()
+    return declarations.filter(d => {
+        const declarantMatch = (d.declarer_par_name || "").toLowerCase().includes(q)
+        const assetMatch = (d.asset_name || "").toLowerCase().includes(q)
+        const dateString = d.date_perte
+            ? new Date(d.date_perte).toLocaleDateString("fr-FR").toLowerCase()
+            : ""
+        const dateMatch = dateString.includes(q)
+        const statusMatch = (d.state || "").toLowerCase().includes(q)
+        return declarantMatch || assetMatch || dateMatch || statusMatch
+    })
+}, [declarations, search])
+
 
     const handleProcess = async (id, action) => {
         try {
@@ -166,7 +183,15 @@ export default function AdminDeclarationsPerte() {
                 <Printer className="h-4 w-4 mr-2" />
                 Imprimer le tableau
             </Button>
-            <div ref={tableRef} className="rounded-md border ">
+            <div className="flex flex-col sm:flex-row gap-4 mt-4">
+                <Input
+                    placeholder="Rechercher par déclarant, matériel, date ou statut"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    className="sm:w-1/3"
+                />
+            </div>
+            <div ref={tableRef} className="rounded-md border mt-4">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -180,8 +205,8 @@ export default function AdminDeclarationsPerte() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {declarations.length > 0 ? (
-                            declarations.map(perte => (
+                        {filteredDeclarations.length > 0 ? (
+                            filteredDeclarations.map(perte => (
                                 <TableRow key={perte.id}>
                                     <TableCell className="font-medium">
                                         {perte.declarer_par_name}

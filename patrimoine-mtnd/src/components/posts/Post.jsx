@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import postsService from "../../services/postsService"
 import { ThumbsUp, MessageCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { API_BASE_URL } from "@/config/api"
 import { useAuth } from "@/context/AuthContext"
+import CommentItem from "./CommentItem"
+import useOdooBus from "../../hooks/useOdooBus" 
 
-// Fonction pour formater la date
 const formatDate = dateString => {
     if (!dateString) return ""
     const date = new Date(dateString)
@@ -20,42 +21,44 @@ const formatDate = dateString => {
 }
 
 export default function Post({ post, onPostUpdate }) {
-    // On suppose que ces données viennent de l'API
     const { currentUser } = useAuth()
     const [likes, setLikes] = useState(post.like_count || 0)
     const [hasLiked, setHasLiked] = useState(post.liked || false)
     const [comments, setComments] = useState([])
-    const [commentCount, setCommentCount] = useState(post.comment_count || 0)
     const [replyTo, setReplyTo] = useState(null)
     const [hasCommented, setHasCommented] = useState(false)
     const [showComment, setShowComment] = useState(false)
+    const [newComment, setNewComment] = useState("")
+    const channelName = `post_comments_${post.id}`
 
-    useEffect(() => {
-        postsService.viewPost(post.id).catch(() => {})
-    }, [post.id])
+    const handleNewCommentNotification = useCallback(
+        notification => {
+            // On vérifie que la notification est bien un nouveau commentaire
+            if (notification.type === "new_comment" && notification.payload) {
+                const newCommentData = notification.payload
+                // On ajoute le nouveau commentaire à la liste existante
+                setComments(prevComments => {
+                    if (prevComments.some(c => c.id === newCommentData.id)) {
+                        return prevComments
+                    }
+                    return [...prevComments, newCommentData]
+                })
+                // On met à jour le compteur global
+                onPostUpdate(post.id, { comment_count: post.comment_count + 1 })
+            }
+        },
+        [post.id, post.comment_count, onPostUpdate]
+    )
 
-    useEffect(() => {
-        postsService
-            .fetchComments(post.id)
-            .then(data => {
-                setCommentCount(Array.isArray(data) ? data.length : 0)
-                setHasCommented(
-                    Array.isArray(data) &&
-                        data.some(
-                            c => c.user_id === currentUser.id && !c.parent_id
-                        )
-                )
-            })
-            .catch(() => {})
-    }, [post.id, currentUser.id])
+    // On active l'écoute des notifications pour ce post
+    useOdooBus([channelName], handleNewCommentNotification)
 
-    useEffect(() => {
+    const fetchPostComments = useCallback(() => {
         if (showComment) {
             postsService
                 .fetchComments(post.id)
                 .then(data => {
-                    setComments(data)
-                    setCommentCount(Array.isArray(data) ? data.length : 0)
+                    setComments(data || [])
                     setHasCommented(
                         Array.isArray(data) &&
                             data.some(
@@ -67,7 +70,10 @@ export default function Post({ post, onPostUpdate }) {
                 .catch(() => {})
         }
     }, [showComment, post.id, currentUser.id])
-    const [newComment, setNewComment] = useState("")
+
+    useEffect(() => {
+        fetchPostComments()
+    }, [fetchPostComments])
 
     const handleLike = async () => {
         try {
@@ -79,42 +85,59 @@ export default function Post({ post, onPostUpdate }) {
         }
     }
 
-    // --- CORRECTION DE LA LOGIQUE D'ENVOI DE COMMENTAIRE ---
     const handleSendComment = async () => {
         if (!newComment.trim()) return
         try {
-            // 1. On appelle l'API avec l'ID du commentaire parent s'il existe
-            const response = await postsService.addComment(
-                post.id,
-                newComment,
-                replyTo
-            )
-
-            // 2. On utilise la fonction du parent pour mettre à jour l'état global
-            onPostUpdate(post.id, {
-                comment_count: response.data.comment_count,
-            })
-
-            // 3. On met à jour la liste des commentaires affichés localement pour un effet instantané
-            setComments(prev => [
-                ...prev,
-                {
-                    content: newComment,
-                    user_name: currentUser.name,
-                    create_date: new Date().toISOString(),
-                    id: response.data.id, // On utilise l'ID renvoyé par l'API
-                    // On inclut l'ID du parent pour un affichage immédiat
-                    parent_id: replyTo,
-                },
-            ])
-
-            // 4. On réinitialise le champ de saisie et la cible de la réponse
+            await postsService.addComment(post.id, newComment, replyTo)
             setNewComment("")
             setReplyTo(null)
+            fetchPostComments()
+            onPostUpdate(post.id, { comment_count: post.comment_count + 1 })
         } catch (e) {
             console.error(e)
         }
     }
+
+    // --- CORRECTION CLÉ : Fonctions pour mettre à jour l'état des commentaires ---
+
+    const handleCommentUpdated = useCallback(updatedComment => {
+        const updateRecursively = commentList => {
+            return commentList.map(comment => {
+                if (comment.id === updatedComment.id) {
+                    return { ...comment, content: updatedComment.content }
+                }
+                if (comment.children && comment.children.length > 0) {
+                    return {
+                        ...comment,
+                        children: updateRecursively(comment.children),
+                    }
+                }
+                return comment
+            })
+        }
+        setComments(prev => updateRecursively(prev))
+    }, [])
+
+    const handleCommentDeleted = useCallback(
+        deletedCommentId => {
+            const filterRecursively = commentList => {
+                return commentList
+                    .filter(comment => comment.id !== deletedCommentId)
+                    .map(comment => {
+                        if (comment.children && comment.children.length > 0) {
+                            return {
+                                ...comment,
+                                children: filterRecursively(comment.children),
+                            }
+                        }
+                        return comment
+                    })
+            }
+            setComments(prev => filterRecursively(prev))
+            onPostUpdate(post.id, { comment_count: post.comment_count - 1 })
+        },
+        [post.id, post.comment_count, onPostUpdate]
+    )
 
     return (
         <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md mb-8">
@@ -151,14 +174,14 @@ export default function Post({ post, onPostUpdate }) {
                 )}
             </div>
 
-            {/* Stats (Likes/Commentaires/Vues) */}
+            {/* Stats */}
             <div className="px-4 py-2 flex justify-between items-center text-sm text-slate-500 dark:text-slate-400 border-t border-b border-slate-200 dark:border-slate-700">
                 <span>{likes} J'aime</span>
                 <span>{post.comment_count || 0} Commentaires</span>
                 <span>{post.view_count || 0} Vues</span>
             </div>
 
-            {/* Barre d'actions */}
+            {/* Actions */}
             <div className="flex justify-around p-1">
                 <Button
                     variant="ghost"
@@ -176,6 +199,7 @@ export default function Post({ post, onPostUpdate }) {
                 </Button>
             </div>
 
+            {/* Modale des commentaires */}
             {showComment && (
                 <div
                     className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"
@@ -191,7 +215,7 @@ export default function Post({ post, onPostUpdate }) {
                             </p>
                         )}
                         <Textarea
-                            className="w-full mb-2 text-base border rounded-md bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 focus-visible:ring-blue-500"
+                            className="w-full mb-2 text-black"
                             value={newComment}
                             onChange={e => setNewComment(e.target.value)}
                             placeholder={
@@ -217,32 +241,15 @@ export default function Post({ post, onPostUpdate }) {
                                 Envoyer
                             </Button>
                         </div>
-                        <div className="space-y-4 max-h-60 overflow-y-auto">
+                        <div className="space-y-2 max-h-60 overflow-y-auto">
                             {comments.map(c => (
-                                <div
+                                <CommentItem
                                     key={c.id}
-                                    className="border-t pt-2 text-sm"
-                                >
-                                    <div className="flex justify-between">
-                                        <span className="font-semibold text-slate-800 dark:text-slate-300">
-                                            {c.author || c.user_name}
-                                        </span>
-                                        <span className="text-xs text-slate-500">
-                                            {formatDate(c.create_date)}
-                                        </span>
-                                    </div>
-                                    <p className="mt-1 mb-1 text-slate-800 dark:text-slate-300">
-                                        {c.content}
-                                    </p>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => setReplyTo(c.id)}
-                                        className="text-xs"
-                                    >
-                                        Répondre
-                                    </Button>
-                                </div>
+                                    comment={c}
+                                    onReply={setReplyTo}
+                                    onCommentUpdated={handleCommentUpdated}
+                                    onCommentDeleted={handleCommentDeleted}
+                                />
                             ))}
                         </div>
                     </div>

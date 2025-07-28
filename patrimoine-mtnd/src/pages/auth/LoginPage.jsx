@@ -7,6 +7,7 @@ import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
 
 // Composant spinner simple avec fondu
+// Pas de changement nécessaire ici
 function Spinner({ show }) {
     return (
         <div
@@ -31,18 +32,8 @@ export default function LoginPage() {
         setError("") // Réinitialiser les erreurs précédentes
 
         try {
-            // 1. Attendre les informations de l'utilisateur après le login
             const user = await login(email, password)
-
-            // 2. Déterminer la page de destination en fonction du rôle
-            let targetPath = "/agent" // Page par défaut pour les utilisateurs
-            if (user.is_admin) {
-                targetPath = "/admin"
-            } else if (user.role === "director") {
-                targetPath = "/director/dashboard"
-            }
-
-            // 3. Rediriger l'utilisateur vers la bonne page
+            const targetPath = "/posts" // Page par défaut
             navigate(targetPath, { replace: true })
         } catch (err) {
             setError(err.message || "Identifiants incorrects")
@@ -52,51 +43,69 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600">
-            <div className="animate-fade-in opacity-0">
-                <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+        // Le conteneur principal prend tout l'écran et centre son contenu.
+        // On ajoute un padding `p-4` pour que le formulaire ne colle pas aux bords sur mobile.
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600 p-4">
+            <div className="animate-fade-in opacity-0 w-full">
+                {/* * CORRECTION RESPONSIVE :
+                 * 1. `w-full` : prend toute la largeur disponible sur mobile.
+                 * 2. `sm:max-w-md` : À partir des petits écrans (sm), on limite la largeur maximale à `md` (medium).
+                 * 3. `mx-auto` : Centre le formulaire horizontalement sur les écrans plus larges.
+                 * 4. `p-6 sm:p-8` : Le padding interne est plus petit sur mobile (p-6) et plus grand sur les autres écrans (sm:p-8).
+                 */}
+                <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg w-full sm:max-w-md mx-auto">
                     <div className="flex justify-center mb-6">
                         <img
                             src="/images/logos/logo.png"
                             alt="Logo MTND"
-                            className="h-20"
+                            className="h-25"
                         />
                     </div>
-                    <h2 className="text-2xl font-bold text-center mb-6">
-                        Connexion à Odoo
+                    {/*
+                     * CORRECTION RESPONSIVE :
+                     * La taille du titre s'adapte également à la taille de l'écran.
+                     */}
+                    <h2 className="text-xl sm:text-2xl font-bold text-center mb-6">
+                        Connexion à l'Intranet
                     </h2>
-                    {error && <p className="text-red-500 mb-4">{error}</p>}
+                    {error && (
+                        <p className="text-red-500 mb-4 text-center">{error}</p>
+                    )}
                     <form onSubmit={handleSubmit}>
-                    <div className="mb-4">
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                            id="email"
-                            type="text"
-                            value={email}
-                            onChange={e => setEmail(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div className="mb-6">
-                        <Label htmlFor="password">Mot de passe</Label>
-                        <Input
-                            id="password"
-                            type="password"
-                            value={password}
-                            onChange={e => setPassword(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <Button
-                        type="submit"
-                        className="w-full cursor-pointer flex items-center justify-center"
-                        disabled={isLoading}
-                    >
-                        <Spinner show={isLoading} />
-                        {isLoading ? "Connexion en cours..." : "Se connecter"}
-                    </Button>
-                </form>
-            </div>
+                        <div className="mb-4">
+                            <Label htmlFor="email">Email</Label>
+                            <Input
+                                id="email"
+                                type="text"
+                                value={email}
+                                onChange={e => setEmail(e.target.value)}
+                                required
+                                className="mt-1" // Ajoute un petit espace
+                            />
+                        </div>
+                        <div className="mb-6">
+                            <Label htmlFor="password">Mot de passe</Label>
+                            <Input
+                                id="password"
+                                type="password"
+                                value={password}
+                                onChange={e => setPassword(e.target.value)}
+                                required
+                                className="mt-1" // Ajoute un petit espace
+                            />
+                        </div>
+                        <Button
+                            type="submit"
+                            className="w-full cursor-pointer flex items-center justify-center text-base py-3" // Augmente légèrement la taille du bouton
+                            disabled={isLoading}
+                        >
+                            <Spinner show={isLoading} />
+                            {isLoading
+                                ? "Connexion en cours..."
+                                : "Se connecter"}
+                        </Button>
+                    </form>
+                </div>
             </div>
         </div>
     )

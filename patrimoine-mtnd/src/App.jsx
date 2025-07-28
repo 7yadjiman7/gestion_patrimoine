@@ -31,7 +31,9 @@ import ManagerValidationPanne from './pages/manager/ManagerValidationPanne';
 import UnauthorizedPage from './pages/UnauthorizedPage'; // N'oubliez pas l'import
 import ChatPage from './pages/chat/ChatPage';
 import PostsPage from './pages/posts/PostsPage';
-import MyPostsPage from "./pages/MyPostsPage"
+import MyPostsPage from "./pages/posts/MyPostsPage"
+import CommentThreadPage from './pages/posts/CommentThreadPage';
+import FilteredTableView from "./pages/admin/FilteredTableView"
 
 // Définir les rôles pour une meilleure lisibilité
 const ROLES = {
@@ -203,6 +205,16 @@ function AppContent() {
                           roles={[ROLES.ADMIN, ROLES.ADMIN_INTRANET]}
                       >
                           <SubCategoriesPage />
+                      </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/admin/materiels/table"
+                  element={
+                      <ProtectedRoute
+                          roles={[ROLES.ADMIN, ROLES.ADMIN_INTRANET]}
+                      >
+                          <FilteredTableView />
                       </ProtectedRoute>
                   }
               />
@@ -423,18 +435,34 @@ function AppContent() {
               <Route
                   path="/my-posts"
                   element={
-                    <ProtectedRoute
-                    roles={[
-                        ROLES.AGENT,
-                        ROLES.MANAGER,
-                        ROLES.DIRECTOR,
-                        ROLES.ADMIN,
-                        ROLES.ADMIN_INTRANET,
-                    ]}
-                    >
-                        <MyPostsPage />
-                    </ProtectedRoute>
-                   }
+                      <ProtectedRoute
+                          roles={[
+                              ROLES.AGENT,
+                              ROLES.MANAGER,
+                              ROLES.DIRECTOR,
+                              ROLES.ADMIN,
+                              ROLES.ADMIN_INTRANET,
+                          ]}
+                      >
+                          <MyPostsPage />
+                      </ProtectedRoute>
+                  }
+              />
+              <Route
+                  path="/posts/comment/:commentId"
+                  element={
+                      <ProtectedRoute
+                          roles={[
+                              ROLES.AGENT,
+                              ROLES.MANAGER,
+                              ROLES.DIRECTOR,
+                              ROLES.ADMIN,
+                              ROLES.ADMIN_INTRANET,
+                          ]}
+                      >
+                          <CommentThreadPage />
+                      </ProtectedRoute>
+                  }
               />
           </Route>
 

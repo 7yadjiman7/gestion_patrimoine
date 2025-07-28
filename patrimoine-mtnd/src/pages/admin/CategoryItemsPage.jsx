@@ -187,13 +187,8 @@ export default function CategoryItemsPage() {
             <div className="mb-8">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => navigate(-1)}
-                            className="rounded-full border-white"
-                        >
-                            <ArrowLeft className="h-4 w-4" />
+                        <Button variant="outline" onClick={() => navigate(-1)}>
+                            Retour
                         </Button>
                         <div>
                             <h1 className="text-3xl font-bold text-slate-100">

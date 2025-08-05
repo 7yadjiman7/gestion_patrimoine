@@ -103,8 +103,7 @@ export default function FilteredTableView() {
         <div className="container mx-auto p-4 sm:p-6 lg:p-8">
             <div className="flex items-center justify-between mb-6">
                 <Button variant="outline" onClick={() => navigate(-1)}>
-                    <ArrowLeft className="mr-2 h-4 w-4" /> Retour aux
-                    statistiques
+                    Retour 
                 </Button>
                 <div className="flex items-center gap-4">
                     <div className="relative">

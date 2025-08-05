@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table"
-import { Printer } from "lucide-react"
+import { Printer, Search } from "lucide-react"
 import { toast } from "react-hot-toast"
 const ODOO_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost"
 
@@ -93,24 +93,24 @@ export default function AdminPostsPage() {
             <h1 className="text-5xl mb-10 text-center font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
                 Gestion des Posts
             </h1>
-            <Button
-                onClick={handlePrint}
-                variant="outline"
-                className="hover:bg-orange-500 hover:text-white"
-            >
-                <Printer className="h-4 w-4 mr-2" />
-                Imprimer le tableau
-            </Button>
-            <div className="flex flex-col sm:flex-row gap-4 mt-4">
-                <Input
-                    placeholder="Rechercher par titre, auteur ou date"
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                    className="sm:w-1/3"
-                />
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                        <Input
+                            placeholder="Rechercher par titre, auteur ou date"
+                            className="pl-10"
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                        />
+                    </div>
+                    <Button onClick={handlePrint}>
+                        <Printer className="mr-2 h-4 w-4" /> Imprimer
+                    </Button>
+                </div>
             </div>
-            <div ref={tableRef} className="rounded-md border mt-4">
-                <Table>
+            <div ref={tableRef} className="rounded-md border mt-4 bg-white text-black">
+                <Table className="[&_th]:bg-white [&_td]:bg-white">
                     <TableHeader>
                         <TableRow>
                             <TableHead>Titre</TableHead>
@@ -170,4 +170,3 @@ export default function AdminPostsPage() {
         </div>
     )
 }
-

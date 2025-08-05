@@ -197,21 +197,21 @@ export default function MaterialDetailPage() {
                     Retour
                 </Button>
             </div>
-            <div className="space-y-2">
+            <div className="text-center mb-12">
                 <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
                     Détails du Matériel
                 </h1>
-                <p className="text-gray-800 text-center">
+                <p className="mt-3 text-xl text-black">
                     Informations complètes et actions disponibles
                 </p>
             </div>
 
             <Tabs defaultValue="informations" className="space-y-6">
-                <div className="flex border-b border-orange-500 rounded-t overflow-hidden bg-white">
+                <div className="text-center border-b border-orange-500 rounded-t overflow-hidden bg-white">
                     <button
                         type="button"
                         onClick={() => setActiveTab("informations")}
-                        className={`w-1/3 py-4 px-1 text-center font-medium text-sm border-b-2 transition-all duration-300 ${
+                        className={`w-1/3 py-4 px-1 text-center mr-5 font-medium text-sm border-b-2 transition-all duration-300 ${
                             activeTab === "informations"
                                 ? "border-orange-500 text-orange-600 bg-orange-50"
                                 : "border-transparent text-slate-600 hover:text-slate-800 hover:bg-orange-100/50"
@@ -222,20 +222,8 @@ export default function MaterialDetailPage() {
 
                     <button
                         type="button"
-                        onClick={() => setActiveTab("historique")}
-                        className={`w-1/3 py-4 px-1 text-center font-medium text-sm border-b-2 transition-all duration-300 ${
-                            activeTab === "historique"
-                                ? "border-orange-500 text-orange-600 bg-orange-50"
-                                : "border-transparent text-slate-600 hover:text-slate-800 hover:bg-orange-100/50"
-                        }`}
-                    >
-                        Historique
-                    </button>
-
-                    <button
-                        type="button"
                         onClick={() => setActiveTab("documents")}
-                        className={`w-1/3 py-4 px-1 text-center font-medium text-sm border-b-2 transition-all duration-300 ${
+                        className={`w-1/3 py-4 px-1 text-center ml-5 font-medium text-sm border-b-2 transition-all duration-300 ${
                             activeTab === "documents"
                                 ? "border-orange-500 text-orange-600 bg-orange-50"
                                 : "border-transparent text-slate-600 hover:text-slate-800 hover:bg-orange-100/50"
@@ -246,7 +234,7 @@ export default function MaterialDetailPage() {
                 </div>
 
                 {activeTab === "informations" && (
-                    <div className="mt-6">
+                    <div className="mt-6 bg-white">
                         <Card>
                             <CardHeader className="pb-0">
                                 <div className="flex justify-between items-start">
@@ -599,14 +587,17 @@ export default function MaterialDetailPage() {
                 )}
 
                 {activeTab === "documents" && (
-                    <div className="mt-6">
+                    <div className="mt-6 bg-white">
                         <Card>
                             <CardHeader>
                                 <CardTitle>Documents associés</CardTitle>
+                                <div className="bg-black h-0.5"></div>
                             </CardHeader>
                             <CardContent>
                                 <p className="text-muted-foreground">
-                                    Fonctionnalité à venir
+                                    Aucun document pour le moment. Vous pourrez
+                                    télécharger ou visualiser les documents
+                                    associés à ce matériel ici.
                                 </p>
                             </CardContent>
                         </Card>

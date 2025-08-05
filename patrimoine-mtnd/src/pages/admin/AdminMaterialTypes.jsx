@@ -42,7 +42,7 @@ export default function AdminMaterialTypes() {
                 <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
                     E-Gestion du Patrimoine matériel du MTND
                 </h1>
-                <p className="mt-3 text-xl text-gray-300">
+                <p className="mt-3 text-xl text-black">
                     Veuillez sélectionner un type de matériel à consulter.
                 </p>
             </div>

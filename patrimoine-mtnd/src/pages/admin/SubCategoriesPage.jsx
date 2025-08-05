@@ -81,7 +81,7 @@ export default function SubCategoriesPage() {
                 <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
                     {generalTypeName}
                 </h1>
-                <p className="mt-3 text-xl text-gray-300">
+                <p className="mt-3 text-xl text-black">
                     Veuillez sélectionner une sous-catégorie à consulter.
                 </p>
             </div>
@@ -95,11 +95,11 @@ export default function SubCategoriesPage() {
                         }
                         className="relative rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 cursor-pointer group"
                     >
-                      <img
+                        <img
                             src={
                                 category.image_url
-                                    ? `${import.meta.env.VITE_ODOO_URL || 'http://localhost:8069'}${category.image_url}`
-                                    : '/placeholder.jpeg'
+                                    ? `${import.meta.env.VITE_ODOO_URL || "http://localhost:8069"}${category.image_url}`
+                                    : "/placeholder.jpeg"
                             }
                             alt={category.name}
                             className="w-full h-80 object-cover brightness-110 contrast-110 saturate-125 transition-transform duration-700 group-hover:scale-105"

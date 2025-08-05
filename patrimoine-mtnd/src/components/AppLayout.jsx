@@ -13,7 +13,7 @@ export default function AppLayout() {
     const showSidebar = isLarge || sidebarOpen
 
     return (
-        <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+        <div className="min-h-screen w-full bg-gray-100 text-gray-800">
             {/* -- EN-TÊTE DÉDIÉ AUX MOBILES -- */}
             {isMobile && (
                 <div className="fixed top-0 left-0 right-0 h-20 bg-slate-900 z-50 flex items-center justify-between px-4 border-b border-slate-700">

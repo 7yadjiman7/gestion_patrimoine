@@ -191,10 +191,10 @@ export default function CategoryItemsPage() {
                             Retour
                         </Button>
                         <div>
-                            <h1 className="text-3xl font-bold text-slate-100">
+                            <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
                                 {pageTitle}
                             </h1>
-                            <p className="text-gray-400">
+                            <p className="text-black">
                                 Consultez les biens correspondant à votre
                                 sélection.
                             </p>

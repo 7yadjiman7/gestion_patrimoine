@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef, useMemo } from "react"
 import { toast } from "react-hot-toast"
 import {
     Table,
@@ -10,14 +10,16 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
 import materialService from "@/services/materialService"
 import DemandeDetailModal from "@/components/DemandeDetailModal" // Importer la modal
-import { Printer } from "lucide-react" 
+import { Printer, Search } from "lucide-react"
 
 export default function AdminDemandeMateriel() {
     const [demandes, setDemandes] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
+    const [search, setSearch] = useState("")
     const tableRef = useRef()
 
     // États pour gérer la modal
@@ -95,6 +97,20 @@ export default function AdminDemandeMateriel() {
         fetchDemandesData()
     }, [])
 
+    const filteredDemandes = useMemo(() => {
+        if (!search) return demandes
+        const q = search.toLowerCase()
+        return demandes.filter(d => {
+            const demandeurMatch = (d.demandeur_name || "").toLowerCase().includes(q)
+            const deptMatch = (d.departement_demandeur || "").toLowerCase().includes(q)
+            const dateString = d.date_demande
+                ? new Date(d.date_demande).toLocaleDateString("fr-FR").toLowerCase()
+                : ""
+            const dateMatch = dateString.includes(q)
+            return demandeurMatch || deptMatch || dateMatch
+        })
+    }, [demandes, search])
+
     const handleProcessDemand = async (demandeId, action) => {
         try {
             await materialService.processDemande(demandeId, action)
@@ -136,22 +152,30 @@ export default function AdminDemandeMateriel() {
             <h1 className="text-5xl mb-10 text-center font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
                 Gestion des Demandes de Matériel
             </h1>
-            <Button
-                onClick={handlePrint}
-                variant="outline"
-                className="hover:bg-orange-500 hover:text-white"
-            >
-                <Printer className="h-4 w-4 mr-2" />
-                Imprimer le tableau
-            </Button>
-            <div ref={tableRef} className="rounded-md border">
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                        <Input
+                            placeholder="Rechercher par demandeur, département ou date"
+                            className="pl-10"
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                        />
+                    </div>
+                    <Button onClick={handlePrint}>
+                        <Printer className="mr-2 h-4 w-4" /> Imprimer
+                    </Button>
+                </div>
+            </div>
+            <div ref={tableRef} className="rounded-md border bg-white text-black">
                 <div className="print-only:block hidden p-4 border-b">
                     <h2 className="text-xl font-bold">
                         Liste des Demandes de matériel
                     </h2>
                     <p>Imprimé le {new Date().toLocaleDateString("fr-FR")}</p>
                 </div>
-                <Table>
+                <Table className="[&_th]:bg-white [&_td]:bg-white">
                     <TableHeader>
                         <TableRow>
                             <TableHead>Demandeur</TableHead>
@@ -164,8 +188,8 @@ export default function AdminDemandeMateriel() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {demandes.length > 0 ? (
-                            demandes.map(demande => (
+                        {filteredDemandes.length > 0 ? (
+                            filteredDemandes.map(demande => (
                                 <TableRow key={demande.id}>
                                     <TableCell className="font-medium">
                                         {demande.demandeur_name}

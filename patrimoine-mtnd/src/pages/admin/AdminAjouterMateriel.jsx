@@ -529,7 +529,7 @@ export default function AdminAjouterMateriel() {
                         <div className="p-6">
                             {activeTab === "general" && (
                                 <div className="space-y-6">
-                                    <div className="p-4 border rounded-lg bg-white shadow-sm">
+                                    <div className="bg-gray-50 p-4 border rounded-lg shadow-sm">
                                         {/* Section Type */}
                                         <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center">
                                             <div className="w-2 h-6 bg-orange-500 rounded-full mr-3"></div>

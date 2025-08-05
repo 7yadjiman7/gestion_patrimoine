@@ -76,13 +76,16 @@ export default function PostsPage() {
         <div className="w-full max-w-2xl mx-auto py-8">
             <div className="sticky top-0 z-10 bg-gray-900 pb-4">
                 <div className="flex items-center justify-between mb-6">
-                    <h1 className="text-3xl font-bold text-white">
+                    <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
                         Fil d'Actualités
                     </h1>
-                    <Button onClick={handleRefresh}>Rafraîchir</Button>
+                    <Button className="mt-5" onClick={handleRefresh}>
+                        Rafraîchir
+                    </Button>
                     <Button
                         variant="secondary"
                         onClick={() => navigate("/my-posts")}
+                        className="bg-white mt-5 text-black"
                     >
                         Voir mes posts
                     </Button>

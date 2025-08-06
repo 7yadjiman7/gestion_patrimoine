@@ -37,22 +37,63 @@ export default function DemandeDetailModal({ demande, onClose }) {
                 </div>
 
                 <h3 className="font-semibold mb-2">Articles demandés :</h3>
-                <ul className="space-y-2">
+                <ul className="space-y-3">
                     {demande.lignes.map(ligne => (
                         <li
                             key={ligne.id}
-                            className="p-3 border rounded-md bg-white"
+                            className="p-4 border rounded-md bg-gray-50"
                         >
-                            <p className="font-semibold">
-                                {ligne.demande_subcategory_name} (Quantité :{" "}
-                                {ligne.quantite})
+                            {/* Ligne principale pour le nom de l'article et la quantité */}
+                            <p className="font-bold text-base">
+                                {ligne.demande_subcategory_name}
                             </p>
-                            <p className="text-sm text-gray-600">
-                                Pour :{" "}
-                                {ligne.destinataire_employee_name ||
-                                    ligne.destinataire_department_name ||
-                                    "Non spécifié"}
+                            <p className="text-sm text-gray-600 mb-2">
+                                Quantité : {ligne.quantite}
                             </p>
+
+                            {/* Section détaillée pour le destinataire */}
+                            <div className="mt-2 pt-2 border-t border-gray-200">
+                                <h4 className="font-semibold text-sm mb-1 text-gray-800">
+                                    Destinataire :
+                                </h4>
+                                <div className="text-sm text-gray-700 pl-4">
+                                    {/* Affiche le nom de l'employé s'il existe */}
+                                    {ligne.destinataire_employee_name && (
+                                        <p>
+                                            <span className="font-medium">
+                                                Employé :
+                                            </span>{" "}
+                                            {ligne.destinataire_employee_name}
+                                        </p>
+                                    )}
+                                    {/* Affiche le nom du département s'il existe */}
+                                    {ligne.destinataire_department_name && (
+                                        <p>
+                                            <span className="font-medium">
+                                                Département :
+                                            </span>{" "}
+                                            {ligne.destinataire_department_name}
+                                        </p>
+                                    )}
+                                    {/* Affiche la localisation si elle existe */}
+                                    {ligne.destinataire_location_name && (
+                                        <p>
+                                            <span className="font-medium">
+                                                Localisation :
+                                            </span>{" "}
+                                            {ligne.destinataire_location_name}
+                                        </p>
+                                    )}
+                                    {/* Message si aucune information de destinataire n'est fournie */}
+                                    {!ligne.destinataire_employee_name &&
+                                        !ligne.destinataire_department_name &&
+                                        !ligne.destinataire_localisation && (
+                                            <p className="text-gray-500 italic">
+                                                Non spécifié
+                                            </p>
+                                        )}
+                                </div>
+                            </div>
                         </li>
                     ))}
                 </ul>

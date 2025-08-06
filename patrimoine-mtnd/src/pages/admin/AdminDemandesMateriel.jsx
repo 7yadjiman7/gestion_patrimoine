@@ -84,6 +84,7 @@ export default function AdminDemandeMateriel() {
         setLoading(true)
         try {
             const data = await materialService.fetchDemandes()
+            console.log("Données reçues du backend:", data) 
             setDemandes(data)
         } catch (err) {
             setError("Impossible de charger les demandes.")

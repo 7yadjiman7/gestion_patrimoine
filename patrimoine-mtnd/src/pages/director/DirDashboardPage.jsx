@@ -149,10 +149,10 @@ export default function DirDashboardPage() {
     return (
         <div className="container mx-auto p-4 sm:p-6 lg:p-8">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-slate-100">
+                <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
                     Matériels de la Direction - {user?.department_name || "N/A"}
                 </h1>
-                <p className="text-gray-400 mt-1">
+                <p className="text-black mt-1">
                     Consultez les biens affectés à votre direction.
                 </p>
             </div>
@@ -223,14 +223,14 @@ export default function DirDashboardPage() {
                                 <img
                                     src={
                                         material.image
-                                            ? `${import.meta.env.VITE_ODOO_URL || 'http://localhost:8069'}${material.image}`
-                                            : '/images/default-material.jpg'
+                                            ? `${import.meta.env.VITE_ODOO_URL || "http://localhost:8069"}${material.image}`
+                                            : "/images/default-material.jpg"
                                     }
                                     alt={material.name}
                                     className={cardClasses.image}
                                     onError={e => {
                                         e.target.src =
-                                            '/images/default-material.jpg'
+                                            "/images/default-material.jpg"
                                     }}
                                 />
                                 <div className={cardClasses.imageOverlay} />

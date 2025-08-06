@@ -58,7 +58,12 @@ export default function MyDeclarationsPage() {
         <div className="min-h-screen w-full p-4 sm:p-6 lg:p-8">
             <div className="max-w-5xl mx-auto space-y-6">
                 <div className="flex justify-between items-center">
-                    <h1 className="text-2xl font-bold">Mes Déclarations de Perte</h1>
+                    <Button variant="outline" onClick={() => navigate(-1)}>
+                        Retour
+                    </Button>
+                    <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
+                        Mes Déclarations de Perte
+                    </h1>
                     <Button
                         variant="outline"
                         onClick={() => navigate("/declaration-pertes")}
@@ -67,7 +72,7 @@ export default function MyDeclarationsPage() {
                         Nouvelle déclaration
                     </Button>
                 </div>
-                <div className="rounded-md border">
+                <div className="rounded-md border bg-white">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -80,14 +85,25 @@ export default function MyDeclarationsPage() {
                             {declarations.length > 0 ? (
                                 declarations.map(perte => (
                                     <TableRow key={perte.id}>
-                                        <TableCell>{getStatusBadge(perte.state)}</TableCell>
-                                        <TableCell>{perte.asset_name}</TableCell>
-                                        <TableCell>{new Date(perte.date_perte).toLocaleDateString()}</TableCell>
+                                        <TableCell>
+                                            {getStatusBadge(perte.state)}
+                                        </TableCell>
+                                        <TableCell>
+                                            {perte.asset_name}
+                                        </TableCell>
+                                        <TableCell>
+                                            {new Date(
+                                                perte.date_perte
+                                            ).toLocaleDateString()}
+                                        </TableCell>
                                     </TableRow>
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan="3" className="h-24 text-center">
+                                    <TableCell
+                                        colSpan="3"
+                                        className="h-24 text-center"
+                                    >
                                         Aucune déclaration trouvée.
                                     </TableCell>
                                 </TableRow>

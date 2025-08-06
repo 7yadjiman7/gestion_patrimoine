@@ -147,7 +147,7 @@ export default function DirDemandeMateriel() {
     if (isLoading) return <div className="p-8 text-center">Chargement...</div>
 
     return (
-        <div className="min-h-screen bg-slate-800 p-8">
+        <div className="min-h-screen">
             <div className="max-w-4xl mx-auto">
                 <div className="bg-white shadow-2xl rounded-2xl overflow-hidden">
                     <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-8 py-6">

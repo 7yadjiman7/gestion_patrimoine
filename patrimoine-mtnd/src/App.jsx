@@ -23,9 +23,9 @@ import PostDetailPage from './pages/admin/PostDetailPage';
 import AdminStatsPage from './pages/admin/AdminStatsPage';
 import AdminCategoriesPage from './pages/admin/AdminCategoriesPage';
 import AdminSubCategoriesPage from './pages/admin/AdminSubCategoriesPage';
-import DeclarationPerte from './pages/user/DeclarationPerte';
-import DeclarationPanne from './pages/user/DeclarationPanne';
-import MyDeclarationsPage from './pages/user/MyDeclarationsPage';
+import DeclarationPerte from './pages/agents/DeclarationPerte';
+import DeclarationPanne from './pages/agents/DeclarationPanne';
+import MyDeclarationsPage from './pages/agents/MyDeclarationsPage';
 import DirDashboardPage from './pages/director/DirDashboardPage';
 import ManagerValidationPanne from './pages/manager/ManagerValidationPanne';
 import UnauthorizedPage from './pages/UnauthorizedPage'; // N'oubliez pas l'import
@@ -352,22 +352,6 @@ function AppContent() {
 
               <Route
                   path="/declaration-pannes"
-                  element={
-                      <ProtectedRoute
-                          roles={[
-                              ROLES.AGENT,
-                              ROLES.MANAGER,
-                              ROLES.DIRECTOR,
-                              ROLES.ADMIN,
-                              ROLES.ADMIN_INTRANET,
-                          ]}
-                      >
-                          <DeclarationPanne />
-                      </ProtectedRoute>
-                  }
-              />
-              <Route
-                  path="declaration-pannes"
                   element={
                       <ProtectedRoute
                           roles={[

@@ -2281,6 +2281,14 @@ class PatrimoineAssetController(http.Controller):
 
             perte_data = []
             for perte in pertes:
+                # On recherche la pièce jointe pour cette déclaration
+                attachment = request.env['ir.attachment'].search([
+                    ('res_model', '=', 'patrimoine.perte'),
+                    ('res_id', '=', perte.id)
+                ], limit=1)
+
+                # On construit l'URL si une pièce jointe est trouvée
+                document_url = f'/web/content/{attachment.id}/{attachment.name}' if attachment else None
                 perte_data.append(
                     {
                         "id": perte.id,
@@ -2302,6 +2310,7 @@ class PatrimoineAssetController(http.Controller):
                         "circonstances": perte.circonstances,
                         "actions_entreprises": perte.actions_entreprises,
                         "rapport_police": perte.rapport_police,
+                        "document_url": document_url,
                     }
                 )
             return Response(
@@ -2360,6 +2369,15 @@ class PatrimoineAssetController(http.Controller):
             # La logique pour formater les données reste la même
             perte_data = []
             for perte in pertes:
+                # On recherche la pièce jointe pour cette déclaration
+                attachment = request.env['ir.attachment'].search([
+                    ('res_model', '=', 'patrimoine.perte'),
+                    ('res_id', '=', perte.id)
+                ], limit=1)
+
+                # On construit l'URL si une pièce jointe est trouvée
+                document_url = f'/web/content/{attachment.id}/{attachment.name}' if attachment else None
+
                 perte_data.append(
                     {
                         "id": perte.id,
@@ -2372,6 +2390,12 @@ class PatrimoineAssetController(http.Controller):
                             else None
                         ),
                         "state": perte.state,
+                        # On ajoute tous les champs nécessaires pour la modale
+                        "lieu_perte": perte.lieu_perte,
+                        "circonstances": perte.circonstances,
+                        "actions_entreprises": perte.actions_entreprises,
+                        "rapport_police": perte.rapport_police,
+                        "document_url": document_url,
                     }
                 )
 
@@ -2498,9 +2522,9 @@ class PatrimoineAssetController(http.Controller):
             date_panne = data.get("date_panne") # Champ optionnel
 
             _logger.info(f"Valeurs extraites -> asset_id: {asset_id}, description: {description}")
-            
+
             # --- Début de la logique métier ---
-            
+
             current_user = request.env.user
             if not current_user.has_group("gestion_patrimoine.group_patrimoine_agent") and not current_user.has_group(
                 "gestion_patrimoine.group_patrimoine_director"
@@ -2526,7 +2550,7 @@ class PatrimoineAssetController(http.Controller):
             }
 
             new_panne = request.env["patrimoine.panne"].create(panne_vals)
-            
+
             # On suppose que cette méthode existe sur votre modèle
             if hasattr(new_panne, 'action_submit'):
                 new_panne.action_submit()

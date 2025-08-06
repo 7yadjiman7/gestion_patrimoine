@@ -191,7 +191,7 @@ export default function CategoryItemsPage() {
                             Retour
                         </Button>
                         <div>
-                            <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
+                            <h1 className="text-5xl text-center font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
                                 {pageTitle}
                             </h1>
                             <p className="text-black">

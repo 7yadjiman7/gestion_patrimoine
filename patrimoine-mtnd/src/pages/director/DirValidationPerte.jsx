@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef, useMemo } from "react"
 import { toast } from "react-hot-toast"
+import { Input } from "@/components/ui/input"
+import { Search, Printer } from "lucide-react"
 import {
     Table,
     TableHeader,
@@ -11,9 +13,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import materialService from "@/services/materialService"
-import { Printer } from "lucide-react" 
-// Assurez-vous d'avoir un composant Modal ou utilisez celui de l'admin
-// import PerteDetailModal from '@/components/PerteDetailModal';
+import PerteDetailModal from "@/components/PerteDetailModal" // <-- 1. IMPORTER LA MODALE
+
 
 export default function DirValidationPerte() {
     const [declarations, setDeclarations] = useState([])
@@ -21,6 +22,7 @@ export default function DirValidationPerte() {
     const [error, setError] = useState(null)
     const [selectedPerte, setSelectedPerte] = useState(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
+    const [search, setSearch] = useState("")
     const tableRef = useRef()
 
     // --- FONCTION D'IMPRESSION AMÉLIORÉE ---
@@ -107,12 +109,8 @@ export default function DirValidationPerte() {
     }
 
     const handleViewDetails = perte => {
-        // Pour l'instant, une alerte. À remplacer par l'ouverture d'une modal.
-        alert(
-            `Détails pour ${perte.asset_name} déclaré par ${perte.declarer_par_name}`
-        )
-        // setSelectedPerte(perte);
-        // setIsModalOpen(true);
+        setSelectedPerte(perte)
+        setIsModalOpen(true)
     }
 
     const getStatusBadge = status => {
@@ -129,6 +127,20 @@ export default function DirValidationPerte() {
         return <Badge {...props}>{label}</Badge>
     }
 
+    const filteredDeclarations = useMemo(() => {
+        if (!search) return declarations
+        const q = search.toLowerCase()
+        return declarations.filter(d => {
+            const declarantMatch = (d.declarer_par_name || "").toLowerCase().includes(q)
+            const assetMatch = (d.asset_name || "").toLowerCase().includes(q)
+            const dateString = d.date_perte
+                ? new Date(d.date_perte).toLocaleDateString("fr-FR").toLowerCase()
+                : ""
+            const dateMatch = dateString.includes(q)
+            return declarantMatch || assetMatch || dateMatch
+        })
+    }, [declarations, search])
+
     if (loading) return <div className="p-8 text-center">Chargement...</div>
     if (error)
         return <div className="p-8 text-center text-red-500">{error}</div>
@@ -140,18 +152,31 @@ export default function DirValidationPerte() {
                     Validation des Déclarations de Perte
                 </h1>
             </div>
-            <Button
-                onClick={handlePrint}
-                variant="outline"
-                className="hover:bg-orange-500 hover:text-white"
-            >
-                <Printer className="h-4 w-4 mr-2" />
-                Imprimer le tableau
-            </Button>
-            <div ref={tableRef} className="rounded-md border">
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                        <Input
+                            placeholder="Rechercher par déclarant, matériel ou date"
+                            className="pl-10"
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                        />
+                    </div>
+                    <Button
+                        onClick={handlePrint}
+                        variant="outline"
+                        className="hover:bg-orange-500 hover:text-white"
+                    >
+                        <Printer className="h-4 w-4 mr-2" />
+                        Imprimer le tableau
+                    </Button>
+                </div>
+            </div>
+            <div ref={tableRef} className="rounded-md border bg-white">
                 <div className="print-only:block hidden p-4 border-b">
                     <h2 className="text-xl font-bold">
-                        Liste des Demandes de matériel
+                        Liste des Déclarations de perte
                     </h2>
                     <p>Imprimé le {new Date().toLocaleDateString("fr-FR")}</p>
                 </div>
@@ -168,8 +193,8 @@ export default function DirValidationPerte() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {declarations.length > 0 ? (
-                            declarations.map(perte => (
+                        {filteredDeclarations.length > 0 ? (
+                            filteredDeclarations.map(perte => (
                                 <TableRow key={perte.id}>
                                     <TableCell className="font-medium">
                                         {perte.declarer_par_name}
@@ -236,7 +261,12 @@ export default function DirValidationPerte() {
             </div>
 
             {/* Le code pour la modal de détails sera ici si vous la créez */}
-            {/* {isModalOpen && <PerteDetailModal perte={selectedPerte} onClose={() => setIsModalOpen(false)} />} */}
+            {isModalOpen && (
+                <PerteDetailModal
+                    perte={selectedPerte}
+                    onClose={() => setIsModalOpen(false)}
+                />
+            )}
         </div>
     )
 }

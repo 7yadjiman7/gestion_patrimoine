@@ -43,7 +43,9 @@ export default function MyPostsPage() {
     return (
         <div className="w-full max-w-2xl mx-auto py-8">
             <div className="flex items-center justify-between mb-6">
-                <h1 className="text-3xl font-bold text-white">Mes Publications</h1>
+                <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
+                    Mes Publications
+                </h1>
                 <Button variant="outline" onClick={() => navigate(-1)}>
                     Retour
                 </Button>
@@ -56,7 +58,9 @@ export default function MyPostsPage() {
             ) : posts.length > 0 ? (
                 <PostsList posts={posts} onPostUpdate={updatePostInList} />
             ) : (
-                <p className="text-center text-gray-400">Vous n'avez encore rien publié.</p>
+                <p className="text-center text-gray-400">
+                    Vous n'avez encore rien publié.
+                </p>
             )}
         </div>
     )

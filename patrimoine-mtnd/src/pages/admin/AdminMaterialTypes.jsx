@@ -19,19 +19,19 @@ export default function AdminMaterialTypes() {
         {
             id: 1,
             name: "Matériels Informatiques",
-            image: "/images/pc1.jpeg",
+            image: "/images/informatique/général.jpg",
             route: "/admin/informatique",
         },
         {
             id: 2,
             name: "Matériels Mobiliers",
-            image: "/images/tableBureau1.jpeg",
+            image: "/images/mobilier/tableBureau1.jpeg",
             route: "/admin/mobilier",
         },
         {
             id: 3,
             name: "Matériels Roulants",
-            image: "/images/voiture1.jpeg",
+            image: "/images/roulant/voiture1.jpeg",
             route: "/admin/vehicule",
         },
     ]

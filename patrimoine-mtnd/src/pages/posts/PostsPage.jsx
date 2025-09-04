@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom"
 import postsService from "../../services/postsService"
 import CreatePost from "../../components/posts/CreatePost"
 import PostsList from "../../components/posts/PostsList"
+import { useQuery } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 // Pagination removed as navigation buttons duplicated refresh
@@ -15,32 +16,18 @@ export default function PostsPage() {
     const { currentUser } = useAuth()
     const { setCount } = usePostNotifications()
     const navigate = useNavigate()
-    
-    const [posts, setPosts] = useState([])
-    const [isLoading, setIsLoading] = useState(true)
     const [showCreate, setShowCreate] = useState(false)
-    const PAGE_SIZE = 10
+    
     const [search, setSearch] = useState("")
-    const [error, setError] = useState(null)
-
-    const fetchAndSetPosts = useCallback(async () => {
-        setIsLoading(true)
-        setError(null)
-        try {
-            const fetchedPosts = await postsService.fetchPosts(undefined, PAGE_SIZE)
-            setPosts(Array.isArray(fetchedPosts) ? fetchedPosts : [])
-         } catch (error) {
-            console.error("Failed to fetch posts", error)
-            setError("Erreur de chargement des posts")
-            toast.error("Erreur lors du chargement des posts.")
-        } finally {
-            setIsLoading(false)
-        }
-    }, [])
-
-    useEffect(() => {
-        fetchAndSetPosts().then(() => setCount(0))
-    }, [fetchAndSetPosts])
+    const {
+        data: posts,
+        isLoading,
+        refetch,
+    } = useQuery({
+        queryKey: ["posts"],
+        queryFn: () => postsService.fetchPosts(undefined, 10),
+        onSuccess: () => setCount(0), // Déplacez setCount ici pour le déclencher après un fetch réussi
+    })
 
     const handlePostCreated = () => {
         fetchAndSetPosts()
@@ -68,7 +55,7 @@ export default function PostsPage() {
     const canPost = currentUser && currentUser.role !== 'user'
 
     const handleRefresh = async () => {
-        await fetchAndSetPosts()
+        await refetch()
         toast.success("Posts mis à jour")
     }
 

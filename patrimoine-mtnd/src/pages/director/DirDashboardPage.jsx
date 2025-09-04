@@ -162,25 +162,25 @@ export default function DirDashboardPage() {
                     <StatCard
                         title="Total Matériels"
                         value={stats.total}
-                        icon={<Package />}
+                        icon="📊"
                         className="bg-blue-600 text-white"
                     />
                     <StatCard
                         title="En Service"
                         value={stats.inService}
-                        icon={<CheckCircle />}
+                        icon="🔄"
                         className="bg-green-600 text-white"
                     />
                     <StatCard
                         title="En Stock"
                         value={stats.inStock}
-                        icon={<Archive />}
+                        icon="📦"
                         className="bg-yellow-500 text-white"
                     />
                     <StatCard
                         title="Hors Service"
                         value={stats.outOfService}
-                        icon={<AlertTriangle />}
+                        icon="⚠️"
                         className="bg-red-600 text-white"
                     />
                 </div>

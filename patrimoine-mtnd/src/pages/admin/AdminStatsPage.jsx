@@ -134,7 +134,7 @@ export default function AdminStatsPage() {
             <div className="grid grid-cols-1 text-black lg:grid-cols-2 gap-8">
                 <Card className="bg-white">
                     <CardHeader>
-                        <CardTitle>Répartition par Statut Global</CardTitle>
+                        <CardTitle>Répartition Globale par statut </CardTitle>
                     </CardHeader>
                     <CardContent style={{ height: "300px" }}>
                         <ResponsiveContainer>
